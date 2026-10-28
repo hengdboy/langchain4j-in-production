@@ -28,8 +28,10 @@ import com.example.hiring.mapper.CandidateMapper;
 import com.example.hiring.mapper.ReceivedEmailMapper;
 import com.example.hiring.mapper.SentEmailMapper;
 import com.example.hiring.observability.AgentCallContext;
+import com.example.hiring.tools.BackgroundCheckTool;
 import com.example.hiring.tools.CalendarTool;
 import com.example.hiring.tools.MailGateway;
+import com.example.hiring.audit.AuditService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.data.message.UserMessage;
@@ -116,6 +118,8 @@ public class CandidatePipelineService {
 
     private final CalendarTool calendarTool;
     private final MailGateway mailGateway;
+    private final BackgroundCheckTool backgroundCheckTool;
+    private final AuditService auditService;
 
     // ============================================================
     // 外部事件入口：投递 / 回复 / 面试反馈 / HR 复核 / DPO 修正
@@ -324,12 +328,6 @@ public class CandidatePipelineService {
                 Map.of("humanApproved", approve));
     }
 
-    /** HR 修正 AI 产出 → DPO 偏好样本。 */
-    public void correction(Long candidateId, String prompt, String chosen, String rejected) {
-        // DpoSampleWriter 由 controller 直调（见 CandidateController#correction），此处仅留编排位
-        throw new UnsupportedOperationException("由 CandidateController 直接调用 DpoSampleWriter");
-    }
-
     // ============================================================
     // FSM 迁移事件监听：确定性推进
     // ============================================================
@@ -439,6 +437,14 @@ public class CandidatePipelineService {
                 "【" + COMPANY + "】offer：欢迎加入 " + jobTitle, body, "zh");
         insertSent(candidate, 0, "【" + COMPANY + "】offer：欢迎加入 " + jobTitle, body, messageId);
         log.info("🎉 [Pipeline] candidateId={} offer letter sent", candidateId);
+
+        // 背调在 offer 发出后自动发起（候选人已表露入职意向=授权语境；教学 mock，生产换学信网/第三方并须书面授权）
+        BackgroundCheckTool.CheckResult check =
+                backgroundCheckTool.verify(candidate.getName(), null);
+        auditService.record("system", "background_check", "candidate",
+                candidate.getId(), candidate.getId(),
+                "{\"caseId\":\"" + check.caseId() + "\",\"verdict\":\"" + check.verdict()
+                        + "\",\"passed\":" + check.passed() + "}");
     }
 
     // ============================================================

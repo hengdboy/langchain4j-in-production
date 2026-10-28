@@ -1,6 +1,5 @@
 package com.example.hiring.core;
 
-import com.example.hiring.config.HiringProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.support.MessageBuilder;
@@ -43,7 +42,6 @@ public class CandidateStateMachineService {
 
     private final StateMachineFactory<CandidateStatus, FsmEvent> stateMachineFactory;
     private final CandidateStateMachinePersist persist;
-    private final HiringProperties props;
 
     /**
      * 给指定候选人发送事件。

@@ -6,7 +6,6 @@ import com.example.hiring.core.CandidateStatus;
 import com.example.hiring.entity.JobPosition;
 import com.example.hiring.mapper.CandidateMapper;
 import com.example.hiring.mapper.JobPositionMapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -48,7 +47,6 @@ public class DemoService {
     private final JobPositionService jobPositionService;
     private final CandidateMapper candidateMapper;
     private final JobPositionMapper jobPositionMapper;
-    private final ObjectMapper objectMapper;
 
     /**
      * 跑通四条路线，返回每一步的状态轨迹。
@@ -123,14 +121,6 @@ public class DemoService {
     /** demo 邮箱带运行时间戳，防重跑撞 (email, job_id) 唯一键 */
     private String demoEmail(String tag) {
         return "demo-" + tag + "-" + System.currentTimeMillis() + "@example.com";
-    }
-
-    private String toJson(Object o) {
-        try {
-            return objectMapper.writeValueAsString(o);
-        } catch (Exception e) {
-            return "{}";
-        }
     }
 
     /** demo 结果。 */

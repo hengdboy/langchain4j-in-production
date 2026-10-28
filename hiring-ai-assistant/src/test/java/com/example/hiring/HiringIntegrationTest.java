@@ -9,6 +9,7 @@ import com.example.hiring.entity.JobPosition;
 import com.example.hiring.entity.SentEmail;
 import com.example.hiring.guardrail.DecisionFieldFilter;
 import com.example.hiring.mapper.CandidateEventMapper;
+import com.example.hiring.mapper.AuditLogMapper;
 import com.example.hiring.mapper.CandidateMapper;
 import com.example.hiring.mapper.InterviewMapper;
 import com.example.hiring.mapper.SentEmailMapper;
@@ -63,6 +64,7 @@ class HiringIntegrationTest {
     @Autowired CandidateEventMapper candidateEventMapper;
     @Autowired SentEmailMapper sentEmailMapper;
     @Autowired InterviewMapper interviewMapper;
+    @Autowired AuditLogMapper auditLogMapper;
     @Autowired CandidateService candidateService;
     @Autowired CandidatePipelineService pipeline;
     @Autowired JobPositionService jobPositionService;
@@ -132,6 +134,10 @@ class HiringIntegrationTest {
         pipeline.completeInterview(c.getId(), "Java 基础扎实，LangChain4j 与 RAG 项目经验丰富，通过");
         assertThat(candidateMapper.selectById(c.getId()).getStatus())
                 .isEqualTo(CandidateStatus.OFFER_SENT);
+
+        // offer 发出后背调自动发起（教学 mock），审计留痕
+        assertThat(auditLogMapper.selectCount(new QueryWrapper<com.example.hiring.entity.AuditLog>()
+                .eq("candidate_id", c.getId()).eq("action", "background_check"))).isEqualTo(1);
 
         // offer 函已发 + 延迟事件已排
         assertThat(sentEmailMapper.selectCount(

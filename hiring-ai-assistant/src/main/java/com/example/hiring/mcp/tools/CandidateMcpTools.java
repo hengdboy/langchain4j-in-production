@@ -30,8 +30,9 @@ public class CandidateMcpTools {
         if (c == null) {
             return "未找到候选人 id=" + candidateId;
         }
-        return "候选人 %d：%s（%s）状态=%s 匹配分=%s 职位=%s".formatted(
-                c.id(), c.name(), c.email(), c.status(), c.matchScore(), c.jobTitle());
+        // 最小披露：姓名/状态/匹配分可以出去，邮箱/电话/简历原文绝不出去（Ch25 §25.6）
+        return "候选人 %d：%s 状态=%s 匹配分=%s 职位=%s".formatted(
+                c.id(), c.name(), c.status(), c.matchScore(), c.jobTitle());
     }
 
     @Tool(name = "listCandidatesByStatus",

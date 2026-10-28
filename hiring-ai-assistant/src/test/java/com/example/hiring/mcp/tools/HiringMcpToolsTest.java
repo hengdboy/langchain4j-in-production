@@ -20,11 +20,12 @@ class HiringMcpToolsTest {
     private final HiringDirectoryMock directory = new HiringDirectoryMock();
 
     @Test
-    @DisplayName("【候选人】按 ID 查状态；不含简历原文")
+    @DisplayName("【候选人】按 ID 查状态；不含简历原文，也不含联系方式（最小披露）")
     void testGetCandidateStatus() {
         CandidateMcpTools tools = new CandidateMcpTools(directory);
         String out = tools.getCandidateStatus(1L);
-        assertThat(out).contains("张伟").contains("OFFER_SENT").contains("85");
+        assertThat(out).contains("张伟").contains("OFFER_SENT").contains("85")
+                .doesNotContain("@").doesNotContain("138");
         log.info("✅ {}", out);
     }
 
