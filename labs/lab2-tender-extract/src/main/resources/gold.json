@@ -1,0 +1,10 @@
+{
+  "a1.txt":   {"projectName": "杭州临平新区实验学校改扩建工程", "purchaserName": "杭州市临平区教育局", "budgetYuan": 35000000, "submissionDeadline": "2026-11-20", "requiredQualifications": ["建筑工程施工总承包二级及以上", "安全生产许可证"], "performanceBondYuan": 500000},
+  "a2.txt":   {"projectName": "智慧园区物业管理服务", "purchaserName": "宁波高新产业园开发有限公司", "budgetYuan": 2800000, "submissionDeadline": "2026-12-01", "requiredQualifications": ["物业服务企业资质", "近三年内至少一个同类项目业绩"], "performanceBondYuan": 0},
+  "a3.txt":   {"projectName": "数字减影血管造影机DSA采购", "purchaserName": "市第三人民医院", "budgetYuan": 12000000, "submissionDeadline": "2026-12-15", "requiredQualifications": ["医疗器械经营许可证", "放射性设备使用许可"], "performanceBondYuan": -1},
+  "a4.txt":   {"projectName": "数据中心UPS系统更新改造项目", "purchaserName": "浙江云枢数据科技有限公司", "budgetYuan": 4500000, "submissionDeadline": "2026-11-28", "requiredQualifications": ["ISO9001质量管理体系认证", "电力设施承装（修、试）许可"], "performanceBondYuan": 100000},
+  "a5.txt":   {"projectName": "乡村振兴农村公路养护工程", "purchaserName": "安吉县交通运输局", "budgetYuan": 19000000, "submissionDeadline": "2026-11-15", "requiredQualifications": ["公路工程施工总承包三级及以上"], "performanceBondYuan": 0},
+  "a6.txt":   {"projectName": "高校实验实训设备采购", "purchaserName": "杭州职业技术学院", "budgetYuan": 7600000, "submissionDeadline": "2026-11-25", "requiredQualifications": ["独立法人资格", "制造商ISO9001认证", "医疗器械经营许可证"], "performanceBondYuan": 80000},
+  "a7.txt":   {"projectName": "办公区域保洁服务", "purchaserName": "某软件园区运营管理有限公司", "budgetYuan": 960000, "submissionDeadline": "2026-11-30", "requiredQualifications": [], "performanceBondYuan": 0},
+  "a8.txt":   {"projectName": "河道生态修复工程施工监理", "purchaserName": "湖州南太湖建设投资集团有限公司", "budgetYuan": 5200000, "submissionDeadline": "2026-12-05", "requiredQualifications": ["水利工程施工监理乙级及以上", "水利工程质量检测单位资质"], "performanceBondYuan": 60000}
+}

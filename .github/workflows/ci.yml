@@ -16,6 +16,8 @@ jobs:
             services: false
           - project: sdr-ai-assistant
             services: true   # 集成测试要真 MySQL + Redis（Ch24 前置）
+          - project: labs
+            services: false  # 5 个 lab 的离线测试零 key、零外部服务
     name: build ${{ matrix.project }}
 
     # MySQL 与 Redis 仅 sdr 作业需要；smart-doc 默认进程内存储

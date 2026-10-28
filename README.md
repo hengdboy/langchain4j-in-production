@@ -39,6 +39,18 @@
 |---|---|---|
 | [Ch24 企业级实战](chapters/ch24-sdr-ai-assistant.md) | B2B 外贸 SDR 自动化 | FSM 12 状态 13 转换全景图、E2E 全链路实跑、64/64 测试全绿 |
 
+## 实验室（Labs）：5 个小业务场景
+
+跟着教程改过一个大项目之后，还需要一层"自己从零搭、规模可控"的台阶——[`labs/`](labs/) 就是它。每个 lab 独立 Maven 模块、从空目录搭起、**离线测试零 key 可跑**，统一验收三件套：金标集 + 成本报表 + 踩坑记录。
+
+| Lab | 场景 | 巩固 | 实测（2026-10-29） |
+|---|---|---|---|
+| [Lab1 合同条款问答](labs/lab1-contract-qa/README.md) | 条款+表格混合语料的 RAG | Ch10–13 | 四档切块曲线，MRR 0.370→0.692，门禁进测试 |
+| [Lab2 招投标字段抽取](labs/lab2-tender-extract/README.md) | 8 份公告→48 个字段 | Ch07 | 字段级 89.6%，归一化器是主角 |
+| [Lab3 电商售后 Agent](labs/lab3-after-sale-agent/README.md) | 退货退款判定 | Ch14/16/21 | 4 剧本全对，7999 元被拦自动转人工 |
+| [Lab4 会议室预订 MCP](labs/lab4-meeting-mcp/README.md) | 有写操作的 MCP 服务端 | Ch17/19 | stdio 实测，冲突被拒；零 LLM 成本 |
+| [Lab5 简历初筛](labs/lab5-resume-screen/README.md) | PII 脱敏 + 判级 | 总装 | 6 份判级 5/6，"模型只见打码版"有请求级证据 |
+
 ## 配套项目
 
 | 项目 | 端口 | 是什么 |

@@ -1,0 +1,4 @@
+姓名：周立诚  电话：13812345678  邮箱：zhoulicheng@example.com  身份证：330106199203154612
+2018 年至今（8 年）：某头部电商平台 Java 后端。主导订单中心微服务化（Spring Cloud，峰值 3 万 QPS），
+负责库存扣减与分布式事务改造；K8s 集群落地由其推动；带教 4 名初级工程师。
+技术栈：Java/Spring Boot/Spring Cloud/MySQL/Redis/Kafka/K8s。

@@ -1,0 +1,4 @@
+姓名：郑晓兰  电话：13666663333  邮箱：zhengxl@example.org  身份证：330108199109087890
+2020 年至今（6 年）：某 ERP 厂商 .NET 开发（4 年），2025 年转 Java（2 年）。
+参与采购模块重构（Java/Spring Boot）。无 K8s 与消息队列经验。
+技术栈：C#/.NET（主）、Java/Spring Boot（近两年）。

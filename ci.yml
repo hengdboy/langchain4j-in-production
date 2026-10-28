@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - project: smart-doc-assistant
+            services: false
+          - project: sdr-ai-assistant
+            services: true   # 集成测试要真 MySQL + Redis（Ch24 前置）
+          - project: labs
+            services: false  # 5 个 lab 的离线测试零 key、零外部服务
+    name: build ${{ matrix.project }}
+
+    # MySQL 与 Redis 仅 sdr 作业需要；smart-doc 默认进程内存储
+    services:
+      mysql:
+        image: mysql:8
+        if: ${{ matrix.services }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sdrdb
+          MYSQL_USER: sdr
+          MYSQL_PASSWORD: sdr_pass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+      redis:
+        image: redis:8
+        if: ${{ matrix.services }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    env:
+      MYSQL_HOST: 127.0.0.1
+      REDIS_HOST: 127.0.0.1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # sdr 不做 Spring 自动建表——schema.sql 是手动导入的（见项目 README），
+      # CI 里同样先导再测
+      - name: Init MySQL schema (sdr only)
+        if: ${{ matrix.services }}
+        working-directory: sdr-ai-assistant
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client > /dev/null
+          mysql -h 127.0.0.1 -usdr -psdr_pass sdrdb < src/main/resources/db/schema.sql
+
+      # 父 pom 的 enforcer 强制 JDK 21（更高版本 Lombok 失效）；
+      # runner 默认 JDK 可能更新——setup-java 已把 JAVA_HOME 指到 21
+      - name: Build & Test (${{ matrix.project }})
+        working-directory: ${{ matrix.project }}
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
+          mvn -B verify
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-${{ matrix.project }}
+          path: ${{ matrix.project }}/target/surefire-reports/
+          retention-days: 7

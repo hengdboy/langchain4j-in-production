@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"question": "租房押金是多少？多久退？", "needle": "13,600 元", "doc": "rental-contract.md"},
+    {"question": "房租晚交一天滞纳金怎么算？", "needle": "0.5%", "doc": "rental-contract.md"},
+    {"question": "卖方逾期交货怎么罚？", "needle": "0.03%", "doc": "procurement-contract.md"},
+    {"question": "这批机器人合同总价多少钱？", "needle": "1,020,000", "doc": "procurement-contract.md"},
+    {"question": "设备性能验收要达到什么指标？", "needle": "±0.05mm", "doc": "procurement-contract.md"},
+    {"question": "设备质保期多长？", "needle": "24 个月", "doc": "procurement-contract.md"},
+    {"question": "我可以把房子转租给同事吗？", "needle": "不得转租、转借", "doc": "rental-contract.md"},
+    {"question": "房东提前收房要赔多少？", "needle": "两个月租金的违约金", "doc": "rental-contract.md"},
+    {"question": "货款是 3-6-1 分期吗？", "needle": "3-6-1", "doc": "procurement-contract.md"},
+    {"question": "我想装修一下墙面可以吗？", "needle": "书面征得甲方同意", "doc": "rental-contract.md"}
+  ]
+}
