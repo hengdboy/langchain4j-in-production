@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch13 / Ch23：RagEvaluator.parseYesNo 单元测试。
+ * / ：RagEvaluator.parseYesNo 单元测试。
  *
- * <p>背景（Ch13 修复记录）：旧实现用 {@code contains("是")}，「这是编造」也会被判忠实。
+ * <p>背景（ 修复记录）：旧实现用 {@code contains("是")}，「这是编造」也会被判忠实。
  * 现实现只认「是 / 否 / 不是」打头，其余返回 null（按未判定处理）。
  *
  * @author langchain4j-tutorial

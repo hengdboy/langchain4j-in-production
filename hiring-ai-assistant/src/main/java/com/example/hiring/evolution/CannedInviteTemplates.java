@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch24 v0.30 约面邀请模板（按 arm_id 选 tone + cta）。
+ * v0.30 约面邀请模板（按 arm_id 选 tone + cta）。
  *
  * <h2>臂空间</h2>
  * <p>6 个臂：{@code tone ∈ {formal, warm, concise}} × {@code cta ∈ {calendar-link, reply-slot}}
  * × {@code channel=email}。每个臂一个固定模板，canned 模式直接渲染；
  * 真实模式下臂信息作为 prompt 参数交给 {@code InviteContentAgent}。
  *
- * <p>哪种话术回复率高，由 Bandit 用数据说话（Ch25 §25.4）。
+ * <p>哪种话术回复率高，由 Bandit 用数据说话。
  *
  * @author langchain4j-tutorial
  * @since v0.30
@@ -40,7 +40,7 @@ public final class CannedInviteTemplates {
                             —— {{company}} 招聘团队
                             """.strip())),
             Map.entry("warm:calendar-link:email", new Template(
-                    "{{name}} 你好呀，{{job}} 面试时间你来挑 👋",
+                    "{{name}} 你好呀，{{job}} 面试时间你来挑",
                     """
                             {{name}} 你好！
 
@@ -69,7 +69,7 @@ public final class CannedInviteTemplates {
                             —— {{company}} 招聘团队
                             """.strip())),
             Map.entry("warm:reply-slot:email", new Template(
-                    "{{name}}，来聊聊「{{job}}」吧 ☕",
+                    "{{name}}，来聊聊「{{job}}」吧",
                     """
                             {{name}} 你好！
 

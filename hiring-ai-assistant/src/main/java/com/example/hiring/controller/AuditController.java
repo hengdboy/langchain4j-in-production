@@ -21,9 +21,9 @@ import java.util.Map;
  *
  * <h2>端点</h2>
  * <ul>
- *   <li>{@code GET /api/audit} — 所有审计记录（最近 100 条）</li>
- *   <li>{@code GET /api/audit/lead/{candidateId}} — 单个候选人的审计链</li>
- *   <li>{@code GET /api/audit/summary} — 聚合：各动作类型 + 各资源类型 计数</li>
+ * <li>{@code GET /api/audit} — 所有审计记录（最近 100 条）</li>
+ * <li>{@code GET /api/audit/lead/{candidateId}} — 单个候选人的审计链</li>
+ * <li>{@code GET /api/audit/summary} — 聚合：各动作类型 + 各资源类型 计数</li>
  * </ul>
  *
  * @author langchain4j-tutorial

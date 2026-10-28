@@ -186,7 +186,7 @@ public class SkillConfig {
     @Bean
     public Skills appSkills(RagLookupTool ragLookupTool) {
         List<Skill> loaded = ClassPathSkillLoader.loadSkills("skills");
-        log.info("🧠 加载到 {} 个技能: {}", loaded.size(), loaded.stream().map(Skill::name).toList());
+        log.info(" 加载到 {} 个技能: {}", loaded.size(), loaded.stream().map(Skill::name).toList());
 
         // 给 refund-policy 绑定 skill-scoped 工具（编程式重建，javap 核实 Skill.builder()）
         List<Skill> enhanced = loaded.stream().map(s -> {

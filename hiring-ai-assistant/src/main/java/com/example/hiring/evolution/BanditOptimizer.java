@@ -16,17 +16,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Ch24 Bandit 编排器：在 selectArm / update 两侧落地"算法 ↔ DB"。
+ * Bandit 编排器：在 selectArm / update 两侧落地"算法 ↔ DB"。
  *
  * <h2>数据流</h2>
  * <pre>
- *   selectArm (synchronous)         update (async, EvolutionScheduler)
- *     │                                │
- *     ▼                                ▼
- *   BanditStrategy                    bandit_outcome.reward =
- *     → 选 arm_id                      rewardMapping(candidate.status)
- *   bandit_outcome.insert(arm_id)     BanditStrategy.update → bandit_state
- *                                     DpoSampleWriter.write (Bandit 对比样本)
+ * selectArm (synchronous)         update (async, EvolutionScheduler)
+ * │                                │
+ * ▼                                ▼
+ * BanditStrategy                    bandit_outcome.reward =
+ * → 选 arm_id                      rewardMapping(candidate.status)
+ * bandit_outcome.insert(arm_id)     BanditStrategy.update → bandit_state
+ * DpoSampleWriter.write (Bandit 对比样本)
  * </pre>
  *
  * @author langchain4j-tutorial
@@ -51,7 +51,7 @@ public class BanditOptimizer {
                     new BanditStrategy.ArmState(s.getArmId(), s.getAlpha(), s.getBeta(),
                             s.getTotalPulls(), s.getTotalReward()));
         }
-        log.info("🎰 [Bandit] loaded {} arms from DB: {}", armCache.size(), armCache.keySet());
+        log.info("[Bandit] loaded {} arms from DB: {}", armCache.size(), armCache.keySet());
     }
 
     /**
@@ -78,7 +78,7 @@ public class BanditOptimizer {
         o.setArmOutput(output);
         o.setCreatedAt(Instant.now());
         outcomeMapper.insert(o);
-        log.info("🎰 [Bandit] candidateId={} selected arm={}", candidateId, armId);
+        log.info("[Bandit] candidateId={} selected arm={}", candidateId, armId);
         return armId;
     }
 
@@ -104,7 +104,7 @@ public class BanditOptimizer {
         outcome.setProcessedAt(Instant.now());
         outcomeMapper.updateById(outcome);
 
-        log.info("🎰 [Bandit] settled outcome id={} arm={} status={} reward={} α={} β={}",
+        log.info("[Bandit] settled outcome id={} arm={} status={} reward={} α={} β={}",
                 outcome.getId(), outcome.getArmId(), outcome.getOutcomeStatus(),
                 reward, after.alpha(), after.beta());
     }

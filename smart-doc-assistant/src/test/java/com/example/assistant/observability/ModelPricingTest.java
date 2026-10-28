@@ -8,11 +8,11 @@ import dev.langchain4j.model.output.TokenUsage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch22：定价表 + 成本换算实测（2026-10-28 数据的固化版）。
+ * ：定价表 + 成本换算实测（2026-10-28 数据的固化版）。
  *
  * <p>关键语义：listener 读的是响应里的模型名——DeepSeek 服务端把
  * {@code deepseek-v4-flash} 归一化成 {@code deepseek-flash} 回传，别名必须进表，
- * 否则成本恒 0（Ch22 坑点 10）。
+ * 否则成本恒 0（ 踩坑清单 #10）。
  *
  * @author langchain4j-tutorial
  * @since v0.19
@@ -38,7 +38,7 @@ class ModelPricingTest {
     }
 
     @Test
-    @DisplayName("成本公式：51×1.0 + 117×2.0 = 285 微元 = ¥0.000285（Ch22 实测单次）")
+    @DisplayName("成本公式：51×1.0 + 117×2.0 = 285 微元 = ¥0.000285（ 实测单次）")
     void costMath() {
         TokenCostCalculator.CostSnapshot snap = calc.calculate("deepseek-flash",
                 new TokenUsage(51, 117));
@@ -48,7 +48,7 @@ class ModelPricingTest {
     }
 
     @Test
-    @DisplayName("TokenUsage 为 null 时返回零值快照（不抛异常，坑点 4）")
+    @DisplayName("TokenUsage 为 null 时返回零值快照（不抛异常，踩坑清单 #4）")
     void nullUsageReturnsZeroSnapshot() {
         TokenCostCalculator.CostSnapshot snap = calc.calculate("deepseek-flash", null);
         assertThat(snap.totalTokens()).isZero();

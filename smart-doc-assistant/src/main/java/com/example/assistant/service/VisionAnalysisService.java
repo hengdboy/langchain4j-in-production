@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 /**
- * Ch09：图像理解服务。
+ * ：图像理解服务。
  *
  * <p>让模型"看图说话"：把一张图片（URL 或 Base64）连同问题一起交给视觉大模型
  * qwen3.7-flash。核心是 LangChain4j 的多模态消息——{@link UserMessage} 不再只有文本，
@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
  *
  * <p>图片两种打开方式：
  * <ul>
- *   <li>URL：{@code ImageContent.from(url)}，图片必须是公网可访问的 URL</li>
- *   <li>Base64：{@code ImageContent.from(base64Data, "image/png")}，适合用户本地上传</li>
+ * <li>URL：{@code ImageContent.from(url)}，图片必须是公网可访问的 URL</li>
+ * <li>Base64：{@code ImageContent.from(base64Data, "image/png")}，适合用户本地上传</li>
  * </ul>
  */
 @Slf4j

@@ -22,9 +22,9 @@ import java.util.Map;
  *
  * <h2>端点</h2>
  * <ul>
- *   <li>{@code GET /api/observability/agent-calls} — 所有调用（最近 100 条）</li>
- *   <li>{@code GET /api/observability/agent-calls/lead/{candidateId}} — 单个 lead 的调用链</li>
- *   <li>{@code GET /api/observability/summary} — 聚合：总调用数 / 总 token / 各 agent 调用数</li>
+ * <li>{@code GET /api/observability/agent-calls} — 所有调用（最近 100 条）</li>
+ * <li>{@code GET /api/observability/agent-calls/lead/{candidateId}} — 单个 lead 的调用链</li>
+ * <li>{@code GET /api/observability/summary} — 聚合：总调用数 / 总 token / 各 agent 调用数</li>
  * </ul>
  *
  * @author langchain4j-tutorial

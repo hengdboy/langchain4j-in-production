@@ -12,18 +12,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch15 新增：四种工作流模式演示（官方 langchain4j-agentic 实验模块）
+ * 新增：四种工作流模式演示（官方 langchain4j-agentic 实验模块）
  *
  * <p>除顺序 sequence（ContentPipelineService）与自主 Supervisor（CustomerServiceSupervisor）外，
  * 官方还提供四种<b>确定性工作流</b>，这里全部用真实代码落地并逐一讲解：
  * <ul>
- *   <li>{@code parallelBuilder()}  并行：多个独立 Agent 同时跑，结果合并（executor 可选）</li>
- *   <li>{@code loopBuilder()}      循环：评分→修改→再评分，直到退出条件或 maxIterations</li>
- *   <li>{@code conditionalBuilder()} 条件：按谓词从多个子 Agent 里选一个执行</li>
- *   <li>{@code parallelMapperBuilder()} 并行映射：对集合每个元素并行执行同一子 Agent</li>
+ * <li>{@code parallelBuilder()}  并行：多个独立 Agent 同时跑，结果合并（executor 可选）</li>
+ * <li>{@code loopBuilder()}      循环：评分→修改→再评分，直到退出条件或 maxIterations</li>
+ * <li>{@code conditionalBuilder()} 条件：按谓词从多个子 Agent 里选一个执行</li>
+ * <li>{@code parallelMapperBuilder()} 并行映射：对集合每个元素并行执行同一子 Agent</li>
  * </ul>
  *
- * <p>所有 API 均 javap 核实（ParallelAgentService / LoopAgentService /
+ * <p>所有 API 均 源码核实（ParallelAgentService / LoopAgentService /
  * ConditionalAgentService / ParallelMapperService，公共方法见下）。
  */
 @Service
@@ -176,7 +176,7 @@ public class WorkflowDemoService {
     // ===== ④ 并行映射：对一组主题并行生成卖点 =====
 
     private void buildMapper() {
-        // ⚠️ 子 Agent 与顶层都必须用 typed 接口（UntypedAgent 在 beta29 报 argument type mismatch）
+        // 子 Agent 与顶层都必须用 typed 接口（UntypedAgent 在 beta29 报 argument type mismatch）
         TaglineAgent taglineAgent = AgenticServices.agentBuilder(TaglineAgent.class)
                 .chatModel(chatModel)
                 .name("tagline-agent")

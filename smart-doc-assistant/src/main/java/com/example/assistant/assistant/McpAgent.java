@@ -3,7 +3,7 @@ package com.example.assistant.assistant;
 import dev.langchain4j.service.UserMessage;
 
 /**
- * Ch17 新增：MCP Agent 接口
+ * 新增：MCP Agent 接口
  *
  * <p>把 MCP 服务器暴露的工具注册给 Agent——Agent 就能调用"协议外部"的工具
  * （本地子进程 / 远程 HTTP 服务器），而不是只有项目内 {@code @Tool} 方法。

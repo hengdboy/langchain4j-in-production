@@ -6,9 +6,9 @@ import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 /**
- * Ch12：基于检索增强的文档问答助手（v0.10）。
+ * ：基于检索增强的文档问答助手（v0.10）。
  *
- * <p>通过 {@code retrievalAugmentor} 接入 Ch12 的高级 RAG 管线（父子分块 + 混合检索 + 重排序），
+ * <p>通过 {@code retrievalAugmentor} 接入  的高级 RAG 管线（父子分块 + 混合检索 + 重排序），
  * 框架会自动把检索到的 Content 注入到 Prompt，再交给 LLM 作答。业务侧只写一句接口方法。
  */
 @AiService(

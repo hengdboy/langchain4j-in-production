@@ -11,16 +11,16 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Ch24 SDR 销售线索 Mapper（MyBatis-Plus）。
+ * 候选人 Mapper（MyBatis-Plus）。
  *
  * <p>继承 {@link BaseMapper} 自动获得 CRUD（insert / update / delete / selectById / selectList）。
  * 自定义方法用 {@code @Select} 注解（XML 也可，本项目为简洁用注解）。
  *
  * <h2>常用自定义方法</h2>
  * <ul>
- *   <li>{@link #findStep1SentBefore(Instant)} —— 找 STEP1_SENT 且 lastSentAt + 72h 已过的 lead</li>
- *   <li>{@link #findDormantBefore(Instant)} —— 找 DORMANT 且 90 天已过的 lead</li>
- *   <li>{@link #findByStatus(CandidateStatus)} —— 找指定状态的所有 lead</li>
+ * <li>{@link #findStep1SentBefore(Instant)} —— 找 STEP1_SENT 且 lastSentAt + 72h 已过的 lead</li>
+ * <li>{@link #findDormantBefore(Instant)} —— 找 DORMANT 且 90 天已过的 lead</li>
+ * <li>{@link #findByStatus(CandidateStatus)} —— 找指定状态的所有 lead</li>
  * </ul>
  *
  * @author langchain4j-tutorial

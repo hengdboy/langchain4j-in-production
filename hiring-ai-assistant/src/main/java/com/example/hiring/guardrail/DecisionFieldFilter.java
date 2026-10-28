@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Ch25 歧视防护第一步：<b>决策白名单过滤器</b>（确定性组件，不是 LLM 护栏）。
+ * 歧视防护第一步：<b>决策白名单过滤器</b>（确定性组件，不是 LLM 护栏）。
  *
  * <h2>为什么是白名单不是黑名单</h2>
  * <p>黑名单（"把年龄删掉"）永远列不全——简历字段千奇百怪（生日、属相、毕业年份
@@ -64,7 +64,7 @@ public class DecisionFieldFilter {
             // 标点分隔的独立"男/女"（"原文标注：女，"——LLM 会把标签丢掉只留字；
             // 前后都是标点或端点才命中，避免误伤 女士/男方 这类正常词）
             java.util.regex.Pattern.compile(
-                    "(?<=[：:，,；;、（(【\\s]])[男女](?=[，,；;、）)】。\\s]|$)"),
+                    "(?<=[：:，,；;、（(【\\s]])[男女](?=[，,；;）)】。\\s]|$)"),
             // 独立的年龄表述
             java.util.regex.Pattern.compile("\\d{1,2}\\s*岁")
     );
@@ -100,7 +100,7 @@ public class DecisionFieldFilter {
             }
             return objectMapper.writeValueAsString(out);
         } catch (Exception e) {
-            log.warn("🛡 [DecisionFilter] input is not valid JSON, return as-is: {}",
+            log.warn("[DecisionFilter] input is not valid JSON, return as-is: {}",
                     e.getMessage());
             return profileJson;
         }

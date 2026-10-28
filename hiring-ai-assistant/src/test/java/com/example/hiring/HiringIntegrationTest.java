@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch24 招聘 pipeline 集成测试（canned 确定性模式，不依赖 LLM）。
+ * 招聘 pipeline 集成测试（canned 确定性模式，不依赖 LLM）。
  *
  * <p>前置：MySQL（hiringdb，schema.sql 已初始化）+ Redis 已启动。
  * {@code hiring.demo.use-real-agent=false} → 全部 Agent 走 canned 规则，
@@ -41,14 +41,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <h2>覆盖</h2>
  * <ul>
- *   <li>强匹配全链路：APPLIED → SHORTLISTED → INVITE_SENT → INTERVIEW_SCHEDULED
- *       → INTERVIEWED → OFFER_SENT → HIRED（含日历占位/出题/offer 函/审计流水）</li>
- *   <li>弱匹配落点合法（canned 下必为 REJECTED）</li>
- *   <li>注入简历冷处理 REJECTED（确定性，不依赖 LLM）</li>
- *   <li>歧视字段简历：决策画像白名单干净</li>
- *   <li>ON_HOLD 人工复核两分支（approve → 邀请；否决必须带理由）</li>
- *   <li>Guard 拒绝：无 replyDecision 的 INVITE_REPLIED 不改状态</li>
- *   <li>超时链路：追发 → CLOSED_NO_RESPONSE；催办 → EXPIRED</li>
+ * <li>强匹配全链路：APPLIED → SHORTLISTED → INVITE_SENT → INTERVIEW_SCHEDULED
+ * → INTERVIEWED → OFFER_SENT → HIRED（含日历占位/出题/offer 函/审计流水）</li>
+ * <li>弱匹配落点合法（canned 下必为 REJECTED）</li>
+ * <li>注入简历冷处理 REJECTED（确定性，不依赖 LLM）</li>
+ * <li>歧视字段简历：决策画像白名单干净</li>
+ * <li>ON_HOLD 人工复核两分支（approve → 邀请；否决必须带理由）</li>
+ * <li>Guard 拒绝：无 replyDecision 的 INVITE_REPLIED 不改状态</li>
+ * <li>超时链路：追发 → CLOSED_NO_RESPONSE；催办 → EXPIRED</li>
  * </ul>
  *
  * @author langchain4j-tutorial
@@ -152,7 +152,7 @@ class HiringIntegrationTest {
                 new QueryWrapper<com.example.hiring.core.CandidateEvent>()
                         .eq("candidate_id", c.getId()));
         assertThat(events).isGreaterThanOrEqualTo(6);
-        log.info("✅ 全链路通过 candidateId={} events={}", c.getId(), events);
+        log.info("全链路通过 candidateId={} events={}", c.getId(), events);
     }
 
     @Test
@@ -169,7 +169,7 @@ class HiringIntegrationTest {
         assertThat(c.getStatus()).isEqualTo(CandidateStatus.REJECTED);
         assertThat(c.getMatchVerdict()).isEqualTo("REJECT");
         assertThat(c.getMatchReasons()).contains("命中必备技能");
-        log.info("✅ 弱匹配淘汰理由：{}", c.getMatchReasons());
+        log.info("弱匹配淘汰理由：{}", c.getMatchReasons());
     }
 
     @Test
@@ -210,7 +210,7 @@ class HiringIntegrationTest {
         // 简历原文仍在库（不出决策），联系方式在候选人行（沟通用）
         assertThat(c.getResumeText()).contains("28 岁");
         assertThat(c.getEmail()).endsWith("@example.com");
-        log.info("✅ 决策画像：{}", profile);
+        log.info("决策画像：{}", profile);
     }
 
     @Test

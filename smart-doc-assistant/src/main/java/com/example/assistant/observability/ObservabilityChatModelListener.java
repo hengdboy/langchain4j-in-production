@@ -13,11 +13,11 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Ch22 可观测性：<strong>核心</strong>——{@link ChatModelListener} 实现，
+ * 可观测性：<strong>核心</strong>——{@link ChatModelListener} 实现，
  * 把 LangChain4j 每次模型调用的 request/response/error 全量数据
  * + TokenUsage 成本核算 串联起来。
  *
- * <p>这是 Ch22 全部逻辑的"心脏"——其他类（{@link CostTracker}、{@link TokenCostCalculator}、
+ * <p>这是  全部逻辑的"心脏"——其他类（{@link CostTracker}、{@link TokenCostCalculator}、
  * {@link MetricsController}）都是它的下游。
  *
  * <h2>attributes 跨方法传数据</h2>
@@ -27,9 +27,9 @@ import java.util.Map;
  *
  * <h2>与官方文档的呼应</h2>
  * <ul>
- *   <li>onRequest 一次请求一次（重试不重复触发）——官方原文</li>
- *   <li>多个 ChatModelListener 按 List 迭代顺序执行——同顺序</li>
- *   <li>异常从 listener 方法抛出只 WARN，不中断后续 listener——同</li>
+ * <li>onRequest 一次请求一次（重试不重复触发）——官方原文</li>
+ * <li>多个 ChatModelListener 按 List 迭代顺序执行——同顺序</li>
+ * <li>异常从 listener 方法抛出只 WARN，不中断后续 listener——同</li>
  * </ul>
  *
  * @author langchain4j-tutorial
@@ -61,7 +61,7 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         // 记录开始时间——通过 attributes 传到 onResponse/onError（streaming 跨线程安全）
         ctx.attributes().put(ATTR_START_NANOS, System.nanoTime());
         ChatRequest req = ctx.chatRequest();
-        log.info("📤 [ChatModel] → onRequest model={} messages={} tools={}",
+        log.info("[ChatModel] → onRequest model={} messages={} tools={}",
                 ctx.modelProvider(),
                 req.messages() != null ? req.messages().size() : 0,
                 req.parameters() != null && req.parameters().toolSpecifications() != null
@@ -87,7 +87,7 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         costTracker.record(cost, userId, toolName);
 
         // 3. 结构化日志
-        log.info("📥 [ChatModel] ← onResponse model={} elapsedMs={} in={} out={} cost={}{}",
+        log.info("[ChatModel] ← onResponse model={} elapsedMs={} in={} out={} cost={}{}",
                 modelName, elapsedMs,
                 cost.inputTokens(), cost.outputTokens(),
                 String.format("%.6f", cost.totalCost()), cost.currency());
@@ -98,7 +98,7 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         Long startNanos = (Long) ctx.attributes().get(ATTR_START_NANOS);
         long elapsedMs = startNanos != null ? (System.nanoTime() - startNanos) / 1_000_000 : -1;
         Map<Object, Object> attrs = ctx.attributes();
-        log.warn("❌ [ChatModel] onError model={} elapsedMs={} error={} attributes={}",
+        log.warn("[ChatModel] onError model={} elapsedMs={} error={} attributes={}",
                 ctx.modelProvider(), elapsedMs,
                 ctx.error().getClass().getSimpleName() + ": " + ctx.error().getMessage(),
                 attrs);

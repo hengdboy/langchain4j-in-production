@@ -15,9 +15,9 @@ import java.util.List;
  *
  * <p>用法：
  * <pre>
- *   mvn compile exec:java -Dexec.mainClass=com.example.lab.ContractQaApp -Dexec.args="eval"
- *   mvn compile exec:java -Dexec.mainClass=com.example.lab.ContractQaApp \
- *       -Dexec.args="ask 房东提前收房赔多少"   # 需要 DEEPSEEK_API_KEY 或 OPENAI_API_KEY 环境变量
+ * mvn compile exec:java -Dexec.mainClass=com.example.lab.ContractQaApp -Dexec.args="eval"
+ * mvn compile exec:java -Dexec.mainClass=com.example.lab.ContractQaApp \
+ * -Dexec.args="ask 房东提前收房赔多少"   # 需要 DEEPSEEK_API_KEY 或 OPENAI_API_KEY 环境变量
  * </pre>
  */
 public final class ContractQaApp {

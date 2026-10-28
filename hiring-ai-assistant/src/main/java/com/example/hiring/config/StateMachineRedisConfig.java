@@ -9,7 +9,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.statemachine.data.redis.RedisStateMachineContextRepository;
 
 /**
- * Ch24 FSM Redis 上下文仓库配置。
+ * FSM Redis 上下文仓库配置。
  *
  * <h2>为什么只用 ContextRepository，不用 Persister</h2>
  * <p>Spring StateMachine 4.x 的 {@code RedisStateMachinePersister} 依赖
@@ -20,10 +20,10 @@ import org.springframework.statemachine.data.redis.RedisStateMachineContextRepos
  * <p>教学版简化：<strong>直接用 {@link RedisStateMachineContextRepository}
  * 读写 Context</strong>，不绕 Persister。
  *
- * <h2>ARCHITECTURE.md §5 对应</h2>
+ * <h2>ARCHITECTURE.md  对应</h2>
  * <pre>
- *   sm:{candidateId} → JSON 序列化的 StateMachineContext
- *   TTL: 1 小时（spring-statemachine-data-redis 内置）
+ * sm:{candidateId} → JSON 序列化的 StateMachineContext
+ * TTL: 1 小时（spring-statemachine-data-redis 内置）
  * </pre>
  *
  * @author langchain4j-tutorial

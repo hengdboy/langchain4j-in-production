@@ -26,14 +26,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch17 新增：MCP 客户端装配
+ * 新增：MCP 客户端装配
  *
- * <p>链路（全部 javap 核实 1.19.0-beta29 真实 API）：
+ * <p>链路（全部 源码核实 1.19.0-beta29 真实 API）：
  * <pre>
- *   StdioMcpTransport（子进程通道）
- *     → DefaultMcpClient（协议客户端：握手/发现工具/执行工具）
- *       → McpToolProvider（把 MCP 工具转成 AiServices 能用的 ToolProvider）
- *         → @AiService(toolProvider = "mcpToolProvider")
+ * StdioMcpTransport（子进程通道）
+ * → DefaultMcpClient（协议客户端：握手/发现工具/执行工具）
+ * → McpToolProvider（把 MCP 工具转成 AiServices 能用的 ToolProvider）
+ * → @AiService(toolProvider = "mcpToolProvider")
  * </pre>
  *
  * <p>默认走 <b>stdio 传输</b>（本地子进程）连接配套的零依赖 demo-server.mjs；
@@ -70,7 +70,7 @@ public class McpConfig {
             @Value("${chat.mcp.demo-server-script:mcp-server/demo-server.mjs}") String script) {
         // 启动本地子进程：node <脚本绝对路径>，通过 stdin/stdout 走 JSON-RPC
         String scriptPath = resolveScriptPath(script);
-        log.info("🔌 启动 MCP stdio 传输: {} {}", nodeCommand, scriptPath);
+        log.info("启动 MCP stdio 传输: {} {}", nodeCommand, scriptPath);
         return StdioMcpTransport.builder()
                 .command(List.of(nodeCommand, scriptPath))
                 .logEvents(false)               // 置 true 可看协议流量（教学建议打开）
@@ -105,7 +105,7 @@ public class McpConfig {
             if (Files.isRegularFile(candidate)) {
                 if (!candidate.equals(workingDir.resolve(configured).normalize())) {
                     // 命中回退目录：说明启动目录不是模块根，提示一下但不阻断
-                    log.warn("⚠️  MCP 脚本未在当前工作目录找到，已回退定位到: {}（当前工作目录: {}）",
+                    log.warn("  MCP 脚本未在当前工作目录找到，已回退定位到: {}（当前工作目录: {}）",
                             candidate, workingDir);
                 }
                 return candidate.toString();
@@ -132,7 +132,7 @@ public class McpConfig {
     }
 
     /**
-     * 远程 MCP 服务器用 Streamable HTTP 传输（javap 核实：StreamableHttpMcpTransport.builder().url(...)）。
+     * 远程 MCP 服务器用 Streamable HTTP 传输（源码核实：StreamableHttpMcpTransport.builder().url(...)）。
      * 生产场景示例（接一个远程 MCP 服务器）；本项目配套的是本地 stdio demo，故默认不启用。
      */
     // @Bean
@@ -146,17 +146,17 @@ public class McpConfig {
 
     @Bean
     public McpClientListener mcpClientListener() {
-        // Ch19：MCP 生命周期可观测——每次工具调用前后打审计日志（javap 核实：McpClientListener 全 default 方法）
+        // MCP 生命周期可观测——每次工具调用前后打审计日志（源码核实：McpClientListener 全 default 方法）
         return new McpClientListener() {
             @Override
             public void beforeExecuteTool(McpCallContext ctx) {
-                log.info("🔌 [MCP 审计] 即将执行: {}", ctx.message());
+                log.info("[MCP 审计] 即将执行: {}", ctx.message());
             }
 
             @Override
             public void afterExecuteTool(McpCallContext ctx, ToolExecutionResult result,
                                          Map<String, Object> extra) {
-                log.info("🔌 [MCP 审计] 执行完成: {} → {}", ctx.message(),
+                log.info("[MCP 审计] 执行完成: {} → {}", ctx.message(),
                         result == null ? "null"
                                 : result.resultText() != null
                                         ? result.resultText().length() > 60
@@ -171,7 +171,7 @@ public class McpConfig {
      * MCP 协议客户端。
      *
      * <p>超时全部外部化：默认握手 5s（原默认 ~30s，本地 stdio 起不来时要干等半分钟才报错）。
-     * javap 核实 Builder 支持 initializationTimeout / protocolDetectionTimeout /
+     * 源码核实 Builder 支持 initializationTimeout / protocolDetectionTimeout /
      * toolExecutionTimeout / resourcesTimeout / promptsTimeout。
      */
     @Bean
@@ -184,7 +184,7 @@ public class McpConfig {
         return DefaultMcpClient.builder()
                 .key("demo-server")               // 多客户端时靠 key 区分（toolNameMapper 用）
                 .transport(stdioMcpTransport)
-                .listener(mcpClientListener)      // Ch19：生命周期监听（审计/监控）
+                .listener(mcpClientListener)      // 生命周期监听（审计/监控）
                 .cacheToolList(true)              // 默认缓存工具列表；生产按需 evictToolListCache()
                 .initializationTimeout(initializationTimeout)  // 握手超时：快速失败
                 .toolExecutionTimeout(toolExecutionTimeout)

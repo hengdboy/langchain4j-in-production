@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * Ch21/Ch25 Prompt 注入检测输入护栏（招聘版增强）。
+ * / Prompt 注入检测输入护栏（招聘版增强）。
  *
  * <h2>为什么招聘场景是注入重灾区</h2>
  * <p>简历是<b>不受信任的第三方文本</b>，却会被直接拼进 prompt。攻击者（或"聪明"的
@@ -20,10 +20,10 @@ import java.util.regex.Pattern;
  *
  * <h2>检测面</h2>
  * <ul>
- *   <li>英文短语：ignore previous/above instructions、disregard、you are now、
- *       system: 伪前缀、&lt;|im_start|&gt;、jailbreak、developer mode</li>
- *   <li>中文短语族（lab3 踩坑后升级为正则族）：无视/忽略 + 之前的/以上的/所有 +
- *       指令/规则/规定/要求/提示词；你现在是；忘记之前</li>
+ * <li>英文短语：ignore previous/above instructions、disregard、you are now、
+ * system: 伪前缀、&lt;|im_start|&gt;、jailbreak、developer mode</li>
+ * <li>中文短语族（lab3 踩坑后升级为正则族）：无视/忽略 + 之前的/以上的/所有 +
+ * 指令/规则/规定/要求/提示词；你现在是；忘记之前</li>
  * </ul>
  *
  * <p><b>策略</b>：命中 {@code fatal(...)}。pipeline 在评估前还会用本护栏对决策画像
@@ -68,12 +68,12 @@ public class PromptInjectionGuardrail implements InputGuardrail {
         String lower = text.toLowerCase(Locale.ROOT);
         for (String phrase : RISKY_PHRASES) {
             if (lower.contains(phrase)) {
-                log.warn("🚨 [Injection Guardrail] blocked risky phrase: '{}'", phrase);
+                log.warn("[Injection Guardrail] blocked risky phrase: '{}'", phrase);
                 return fatal("potential prompt injection: '" + phrase + "'");
             }
         }
         if (CN_INJECTION.matcher(text).find()) {
-            log.warn("🚨 [Injection Guardrail] blocked CN injection pattern");
+            log.warn("[Injection Guardrail] blocked CN injection pattern");
             return fatal("potential prompt injection: 中文注入短语");
         }
         return success();

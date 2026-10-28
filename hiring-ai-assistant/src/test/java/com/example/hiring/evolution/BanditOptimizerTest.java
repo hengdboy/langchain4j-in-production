@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch24 Bandit reward 映射单元测试（纯静态方法，无 Spring）。
+ * Bandit reward 映射单元测试（纯静态方法，无 Spring）。
  *
  * @author langchain4j-tutorial
  * @since v0.30

@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Ch19 MCP 深度开发：MCP 工具调用审计服务（呼应 Ch16）。
+ * MCP 深度开发：MCP 工具调用审计服务（呼应 ）。
  *
  * <p>每次 MCP 客户端通过 {@code tools/call} 调用本服务时，记录：
  * 工具名 / 调用参数（已 redact）/ 耗时 / 是否失败。
  *
- * <p>为什么单独写一个而不复用 {@code AgentAuditService}（Ch16）？
+ * <p>为什么单独写一个而不复用 {@code AgentAuditService}？
  * <ul>
- *   <li>MCP 工具没有会话（{@code memoryId}）概念——MCP 调用天然无状态，
- *       与 Ch16 的 Agent 会话模型不同</li>
- *   <li>MCP 鉴权身份是 MCP 客户端身份（API Key / OAuth），不是用户 ID；
- *       审计粒度也不同</li>
- *   <li>但模式可借鉴：都按"工具 + 时间 + 结果"留痕，方便排查与成本核算</li>
+ * <li>MCP 工具没有会话（{@code memoryId}）概念——MCP 调用天然无状态，
+ * 与 Agent 会话模型不同</li>
+ * <li>MCP 鉴权身份是 MCP 客户端身份（API Key / OAuth），不是用户 ID；
+ * 审计粒度也不同</li>
+ * <li>但模式可借鉴：都按"工具 + 时间 + 结果"留痕，方便排查与成本核算</li>
  * </ul>
  *
  * <h2>容量上限（P0-6 修复）</h2>
@@ -58,9 +58,9 @@ public class McpAuditService {
         writeIndex = (writeIndex + 1) % MAX_ENTRIES;
         if (size < MAX_ENTRIES) size++;
         if (failed) {
-            log.warn("⚠️ [MCP Audit] tool={} failed duration={}ms args={}", toolName, durationMs, safeArgs);
+            log.warn(" [MCP Audit] tool={} failed duration={}ms args={}", toolName, durationMs, safeArgs);
         } else {
-            log.info("📝 [MCP Audit] tool={} duration={}ms", toolName, durationMs);
+            log.info("[MCP Audit] tool={} duration={}ms", toolName, durationMs);
         }
     }
 

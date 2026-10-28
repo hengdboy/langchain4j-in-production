@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * Ch24 API 层：端到端 demo 接口。
+ * API 层：端到端 demo 接口。
  *
  * <h2>用法</h2>
  * <pre>
@@ -18,7 +18,7 @@ import java.util.Map;
  * curl -X POST http://localhost:8091/api/demo/run -H "Content-Type: application/json" -d '{}'
  * # 无 key 环境：canned 确定性规则跑全流程
  * curl -X POST http://localhost:8091/api/demo/run -H "Content-Type: application/json" \
- *      -d '{"useRealAgent": false}'
+ * -d '{"useRealAgent": false}'
  * </pre>
  *
  * @author langchain4j-tutorial

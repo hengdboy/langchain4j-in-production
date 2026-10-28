@@ -15,15 +15,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Ch24 API 层：端到端 demo（一键跑通全 pipeline）。
+ * API 层：端到端 demo（一键跑通全 pipeline）。
  *
  * <h2>四个候选人，四条路线</h2>
  * <ol>
- *   <li><b>c1 强匹配</b>：入围 → 自动邀请 → 确认 → 面试通过 → offer → 接受 → HIRED</li>
- *   <li><b>c2 弱匹配</b>：评估不通过 → REJECTED（带可解释理由）</li>
- *   <li><b>c3 注入简历</b>：藏"无视之前的指令" → 冷处理淘汰</li>
- *   <li><b>c4 歧视字段简历</b>：简历含"28 岁/女/已婚/杭州户籍"→ 入围，
- *       但决策画像里查无这些字段（护栏证据在 redactedProfile）</li>
+ * <li><b>c1 强匹配</b>：入围 → 自动邀请 → 确认 → 面试通过 → offer → 接受 → HIRED</li>
+ * <li><b>c2 弱匹配</b>：评估不通过 → REJECTED（带可解释理由）</li>
+ * <li><b>c3 注入简历</b>：藏"无视之前的指令" → 冷处理淘汰</li>
+ * <li><b>c4 歧视字段简历</b>：简历含"28 岁/女/已婚/杭州户籍"→ 入围，
+ * 但决策画像里查无这些字段（护栏证据在 redactedProfile）</li>
  * </ol>
  *
  * <h2>用法</h2>
@@ -32,7 +32,7 @@ import java.util.List;
  * curl -X POST http://localhost:8091/api/demo/run -H "Content-Type: application/json" -d '{}'
  * # 无 key 环境：canned 确定性规则跑全流程
  * curl -X POST http://localhost:8091/api/demo/run -H "Content-Type: application/json" \
- *      -d '{"useRealAgent": false}'
+ * -d '{"useRealAgent": false}'
  * </pre>
  *
  * @author langchain4j-tutorial

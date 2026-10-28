@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Ch24 API 层：职位管理。
+ * API 层：职位管理。
  *
  * @author langchain4j-tutorial
  * @since v0.30

@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Ch24 约面邀请模板单元测试（6 臂空间）。
+ * 约面邀请模板单元测试（6 臂空间）。
  *
  * @author langchain4j-tutorial
  * @since v0.30
@@ -26,7 +26,7 @@ class CannedInviteTemplatesTest {
             assertThat(t.subject()).doesNotContain("{{").doesNotContain("}}");
             assertThat(t.body()).doesNotContain("{{").doesNotContain("}}");
             assertThat(t.body()).contains("张伟").contains("Java 后端").contains("星航科技");
-            log.info("✅ arm={} subject=[{}]", armId, t.subject());
+            log.info("arm={} subject=[{}]", armId, t.subject());
         }
     }
 

@@ -18,8 +18,8 @@ import java.util.Map;
  *
  * <h2>两种构造</h2>
  * <ul>
- *   <li>{@link #success(Object, Map)}：正常响应（{@code result} 字段）</li>
- *   <li>{@link #error(Object, int, String)}：错误响应（{@code error.code} + {@code error.message}）</li>
+ * <li>{@link #success(Object, Map)}：正常响应（{@code result} 字段）</li>
+ * <li>{@link #error(Object, int, String)}：错误响应（{@code error.code} + {@code error.message}）</li>
  * </ul>
  *
  * @author langchain4j-tutorial

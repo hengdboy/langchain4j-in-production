@@ -18,14 +18,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch16 新增：工程化 Agent 接口
+ * 新增：工程化 Agent 接口
  *
  * <p>用法：
  * <pre>
  * # ① 工程化 Agent（动态工具 + 审计 + 并发 + 可观测）
  * curl -X POST http://localhost:8090/api/agent/engineering/chat \
- *   -H "Content-Type: application/json" \
- *   -d '{"sessionId":"1","question":"退款政策里运费谁出？再帮我算一下 500 的 8 折是多少"}'
+ * -H "Content-Type: application/json" \
+ * -d '{"sessionId":"1","question":"退款政策里运费谁出？再帮我算一下 500 的 8 折是多少"}'
  *
  * # ② 查看该会话的工具调用审计
  * curl "http://localhost:8090/api/agent/audit?sessionId=1"
@@ -49,7 +49,7 @@ public class EngineeringAgentController {
     public Map<String, Object> chat(@RequestBody Map<String, String> body) {
         Long sessionId = parseSession(body.get("sessionId"));
         // ① 从请求体取租户/用户/角色（生产从 JWT/网关头取），写入请求级上下文
-        //    → DynamicToolProvider 在 provideTools 时据此做租户/角色隔离
+        // → DynamicToolProvider 在 provideTools 时据此做租户/角色隔离
         RequestContext.set(
                 body.getOrDefault("tenantId", "default"),
                 body.getOrDefault("userId", "anonymous"),
@@ -72,7 +72,7 @@ public class EngineeringAgentController {
     public Map<String, Object> audit(@RequestParam(defaultValue = "1") String sessionId,
                                      @RequestParam(required = false) String tenantId,
                                      @RequestParam(required = false) String userId) {
-        // ⚠️ 注意类型一致：审计写入时 key 是 Long（chatMemoryId），查询也必须转 Long
+        // 注意类型一致：审计写入时 key 是 Long（chatMemoryId），查询也必须转 Long
         Long id = parseSession(sessionId);
         // 复合 key 是 tenantId:userId:sessionId；查询 HTTP 请求没有租户上下文（ThreadLocal 已清），
         // 必须显式传参——不传时只能查到 default:anonymous 写入的记录

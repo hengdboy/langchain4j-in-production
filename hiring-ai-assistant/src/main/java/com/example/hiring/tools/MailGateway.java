@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Ch24 阶段四 Mock 邮件网关：模拟 SMTP 发信。
+ * 阶段四 Mock 邮件网关：模拟 SMTP 发信。
  *
  * <h2>v0.26 角色</h2>
  * <p>由 {@link com.example.hiring.service.CandidatePipelineService} 在 READY → EMAIL_SENT
@@ -37,7 +37,7 @@ public class MailGateway {
         String mid = "mock-" + (mailbox.size() + 1);
         SentRecord r = new SentRecord(mid, to, subject, body, language, System.currentTimeMillis());
         mailbox.addFirst(r);
-        log.info("📧 [MailGateway] sent messageId={} to={} subject=[{}] lang={} ({} chars)",
+        log.info("[MailGateway] sent messageId={} to={} subject=[{}] lang={} ({} chars)",
                 mid, to, subject, language, body == null ? 0 : body.length());
         return mid;
     }
@@ -65,7 +65,7 @@ public class MailGateway {
     /** 清空（仅测试） */
     public synchronized void clear() {
         mailbox.clear();
-        log.warn("🧹 [MailGateway] cleared mailbox");
+        log.warn("[MailGateway] cleared mailbox");
     }
 
     /**

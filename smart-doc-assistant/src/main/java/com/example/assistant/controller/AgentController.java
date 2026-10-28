@@ -17,19 +17,19 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Ch14 新增：Agent 接口
+ * 新增：Agent 接口
  *
  * <p>用法：
  * <pre>
  * # 声明式 Agent（@AiService 底层自动跑工具循环，带多轮记忆）
  * curl -X POST http://localhost:8090/api/agent/chat \
- *   -H "Content-Type: application/json" \
- *   -d '{"sessionId":"1","question":"退款一般多久到账？再帮我算一下 3 个工作日等于多少小时"}'
+ * -H "Content-Type: application/json" \
+ * -d '{"sessionId":"1","question":"退款一般多久到账？再帮我算一下 3 个工作日等于多少小时"}'
  *
  * # 手动循环 Agent（同一组工具，自己实现的循环，便于观察每一步）
  * curl -X POST http://localhost:8090/api/agent/manual \
- *   -H "Content-Type: application/json" \
- *   -d '{"sessionId":"1","question":"现在几点了？帮我算 128 乘以 7 是多少"}'
+ * -H "Content-Type: application/json" \
+ * -d '{"sessionId":"1","question":"现在几点了？帮我算 128 乘以 7 是多少"}'
  * </pre>
  */
 @Slf4j

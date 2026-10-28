@@ -26,14 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Ch12：高级 RAG 管线装配（v0.10）。
+ * ：高级 RAG 管线装配（v0.10）。
  *
  * <p>把三件"提升检索质量"的武器组装进一个 {@link RetrievalAugmentor}：
  * <ol>
- *   <li><b>父子分块</b>：{@link ParentChildEmbeddingStoreRetriever} 把向量命中的子块展开为父块，兼顾召回准 + 上下文足。</li>
- *   <li><b>混合检索</b>：{@link QueryRouter} 把查询同时路由到「向量路」与「关键词路」，
- *       两路结果由 {@link ReRankingContentAggregator} 内部的 {@code ReciprocalRankFuser}（RRF, k=60）融合。</li>
- *   <li><b>重排序</b>：融合后用 {@link ScoringModel}（本章用 {@link EmbeddingScoringModel} 双编码器）精排，只留 topN。</li>
+ * <li><b>父子分块</b>：{@link ParentChildEmbeddingStoreRetriever} 把向量命中的子块展开为父块，兼顾召回准 + 上下文足。</li>
+ * <li><b>混合检索</b>：{@link QueryRouter} 把查询同时路由到「向量路」与「关键词路」，
+ * 两路结果由 {@link ReRankingContentAggregator} 内部的 {@code ReciprocalRankFuser}（RRF, k=60）融合。</li>
+ * <li><b>重排序</b>：融合后用 {@link ScoringModel}（本项目用 {@link EmbeddingScoringModel} 双编码器）精排，只留 topN。</li>
  * </ol>
  *
  * <p>所有组件离线可跑、零新依赖：向量与重排共用现有 EmbeddingModel，关键词路用进程内 {@link LexicalSegmentIndex}。

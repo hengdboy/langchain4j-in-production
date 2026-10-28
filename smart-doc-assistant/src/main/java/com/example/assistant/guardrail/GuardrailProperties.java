@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Ch21 Guardrails：三层配置（input / output / tool），每层独立开关。
+ * Guardrails：三层配置（input / output / tool），每层独立开关。
  *
  * <p>Spring Boot {@code @ConfigurationProperties} 绑定 {@code chat.guardrail.*} 配置项；
  * 任何字段都可独立关闭，便于灰度与排错。
@@ -13,26 +13,26 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <h2>配置示例（application.yml）</h2>
  * <pre>
  * chat:
- *   guardrail:
- *     enabled: true
- *     input:
- *       enabled: true
- *       strip-html: true
- *       strip-control-chars: true
- *       compress-blank: true
- *       max-length: 4000
- *     output:
- *       enabled: true
- *       redact-phone: true
- *       redact-email: true
- *       redact-id-card: true
- *       redact-bank-card: true
- *       block-api-key: true
- *     tool:
- *       enabled: true
- *       default-role: user
- *       rate-limit-per-minute: 60
- *       blocked-tools: [executeShell, formatDisk]
+ * guardrail:
+ * enabled: true
+ * input:
+ * enabled: true
+ * strip-html: true
+ * strip-control-chars: true
+ * compress-blank: true
+ * max-length: 4000
+ * output:
+ * enabled: true
+ * redact-phone: true
+ * redact-email: true
+ * redact-id-card: true
+ * redact-bank-card: true
+ * block-api-key: true
+ * tool:
+ * enabled: true
+ * default-role: user
+ * rate-limit-per-minute: 60
+ * blocked-tools: [executeShell, formatDisk]
  * </pre>
  *
  * @author langchain4j-tutorial

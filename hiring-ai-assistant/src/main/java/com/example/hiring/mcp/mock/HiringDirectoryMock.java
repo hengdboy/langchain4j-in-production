@@ -8,11 +8,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Ch24 v0.30 MCP 内存目录（独立于 MySQL 的确定性演示数据）。
+ * v0.30 MCP 内存目录（独立于 MySQL 的确定性演示数据）。
  *
  * <h2>为什么不用数据库</h2>
  * <p>stdio MCP Server 是轻量子进程（每次 IDE/客户端启动拉起一次），
- * 不该也不需要连 MySQL——它暴露的是<b>只读查询</b>工具。SDR 版同款设计：
+ * 不该也不需要连 MySQL——它暴露的是<b>只读查询</b>工具。与主应用共享数据要走 HTTP MCP，
  * mock 数据让子进程零依赖启动。
  *
  * <p>生产接法：MCP Server 与主应用共享数据要走 HTTP MCP + 鉴权，

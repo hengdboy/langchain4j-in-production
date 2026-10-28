@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Ch07 新增：文档/合同关键信息提取助手
+ * 新增：文档/合同关键信息提取助手
  *
  * 演示：
  * - 嵌套 POJO 结构化输出

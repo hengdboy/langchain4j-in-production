@@ -11,17 +11,17 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 共享状态：候选人（ARCHITECTURE.md §4.2 candidate 表 + §3 状态机）。
+ * 共享状态：候选人（ARCHITECTURE.md  candidate 表 +  状态机）。
  *
  * <h2>设计</h2>
  * <ul>
- *   <li><b>实体即业务</b>：MyBatis-Plus 注解映射到 {@code candidate} 表</li>
- *   <li><b>状态机 + 业务</b>：{@link #status} 是 FSM 当前状态；
- *       {@link #inviteRounds} / {@link #offerReminderSent} 支撑延迟事件前置判断</li>
- *   <li><b>双画像</b>：{@link #resumeText} 是含 PII 的简历原文（只进库不出决策）；
- *       {@link #redactedProfile} 是经 {@code DecisionFieldFilter} 剔除受保护特征后的
- *       决策画像——评估 Agent 只看得见后者（Ch25 歧视防护核心）</li>
- *   <li><b>Agent 共享</b>：{@link #extras}（JSON 字段）跨 Agent 传临时数据</li>
+ * <li><b>实体即业务</b>：MyBatis-Plus 注解映射到 {@code candidate} 表</li>
+ * <li><b>状态机 + 业务</b>：{@link #status} 是 FSM 当前状态；
+ * {@link #inviteRounds} / {@link #offerReminderSent} 支撑延迟事件前置判断</li>
+ * <li><b>双画像</b>：{@link #resumeText} 是含 PII 的简历原文（只进库不出决策）；
+ * {@link #redactedProfile} 是经 {@code DecisionFieldFilter} 剔除受保护特征后的
+ * 决策画像——评估 Agent 只看得见后者（ 歧视防护核心）</li>
+ * <li><b>Agent 共享</b>：{@link #extras}（JSON 字段）跨 Agent 传临时数据</li>
  * </ul>
  *
  * @author langchain4j-tutorial
@@ -82,7 +82,7 @@ public class CandidateContext {
 
     // ============== 业务辅助方法（不映射到数据库） ==============
 
-    /** offer 是否已催办。用 {@code offerReminded()} 判断，别新写 isOfferReminderSent()（JavaBeans 歧义坑见 Ch24 §24.6）。 */
+    /** offer 是否已催办。用 {@code offerReminded()} 判断，别新写 isOfferReminderSent()（JavaBeans 歧义坑）。 */
     public boolean offerReminded() {
         return Boolean.TRUE.equals(offerReminderSent);
     }

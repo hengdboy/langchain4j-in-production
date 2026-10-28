@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 Agent 调用埋点（agent_call 表，接 Ch22 CostChatModelListener）。
+ * Agent 调用埋点（agent_call 表，接  CostChatModelListener）。
  *
  * @author langchain4j-tutorial
  * @since v0.30

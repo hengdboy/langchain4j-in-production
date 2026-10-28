@@ -50,37 +50,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Ch24 事件驱动编排：招聘业务流水线（核心）。
+ * 事件驱动编排：招聘业务流水线（核心）。
  *
- * <h2>设计：确定性 FSM + LLM 叶子</h2>
- * <p><b>编排不是 LLM 自主决定</b>，而是由 FSM 状态迁移驱动：
- * <ol>
- *   <li>外部事件（投递 / 候选人回复 / 面试官反馈 / HR 复核 / 超时）进入本服务或
- *       {@link CandidateService#processEvent}</li>
- *   <li>accepted 转换后发布 {@link CandidateTransitionedEvent}</li>
- *   <li>本服务监听迁移事件，按<b>新状态</b>确定性触发对应 Agent：
- *       SHORTLISTED → 邀请 Agent；INTERVIEW_SCHEDULED → 排期+出题；
- *       OFFER_SENT → offer 函（确定性模板）；其他 → 等待</li>
- *   <li>Agent 输出结构化结果，作为下一 FSM 事件的 overrides 回喂</li>
- * </ol>
+ * <p>设计原则：确定性 FSM + LLM 叶子。编排不由 LLM 自主决定，而由状态迁移驱动：
+ * 1. 外部事件（投递 / 候选人回复 / 面试官反馈 / HR 复核 / 超时）进入本服务或
+ * {@link CandidateService#processEvent}；
+ * 2. accepted 转换后发布 {@link CandidateTransitionedEvent}；
+ * 3. 本服务监听迁移事件，按新状态确定性触发对应 Agent：
+ * SHORTLISTED → 邀请 Agent；INTERVIEW_SCHEDULED → 排期+出题；
+ * OFFER_SENT → offer 函（确定性模板）；其他 → 等待；
+ * 4. Agent 输出结构化结果，作为下一 FSM 事件的 overrides 回喂。
  *
  * <pre>
- *   submit()                            reply()
- *     │                                   │
- *     ▼                                   ▼
- *   ResumeParser → DecisionFieldFilter   ReplyClassifier → INVITE_REPLIED
- *   → MatchEvaluator → SCREEN_PASS          ├─ confirmed → INTERVIEW_SCHEDULED（排期+出题）
- *     ├─ SHORTLISTED → 邀请 Agent → INVITE_SENT └─ declined → WITHDRAWN
- *     ├─ REVIEW → ON_HOLD（等 HR 复核）
- *     └─ REJECT → REJECTED（带理由）
+ * submit()                            reply()
+ * |                                   |
+ * v                                   v
+ * ResumeParser -> DecisionFieldFilter  ReplyClassifier -> INVITE_REPLIED
+ * -> MatchEvaluator -> SCREEN_PASS         |- confirmed -> INTERVIEW_SCHEDULED（排期+出题）
+ * |- SHORTLISTED -> 邀请 Agent -> INVITE_SENT
+ * |- REVIEW -> ON_HOLD（等 HR 复核）     |- declined -> WITHDRAWN
+ * |- REJECT -> REJECTED（带理由）
  * </pre>
  *
- * <h2>真实 vs canned</h2>
  * <p>每个 Agent 调用先看 {@code hiring.demo.use-real-agent}（或请求级覆盖）：
- * true → 调真实 LLM Agent，失败兜底 canned；false → 直接走确定性规则（无 key 可跑）。
- *
- * @author langchain4j-tutorial
- * @since v0.30
+ * true 调真实 LLM、失败兜底 canned；false 直接走确定性规则（无 key 可跑）。
  */
 @Slf4j
 @Service
@@ -165,16 +158,16 @@ public class CandidatePipelineService {
         candidate.setCreatedAt(Instant.now());
         candidate.setUpdatedAt(Instant.now());
         candidateMapper.insert(candidate);
-        log.info("🚀 [Pipeline] submit candidateId={} email={} jobId={} realAgent={}",
+        log.info("[Pipeline] submit candidateId={} email={} jobId={} realAgent={}",
                 candidate.getId(), candidate.getEmail(), req.jobId(), realAgentEnabled());
 
         // 2. 注入检测（确定性预检，对象是简历原文——不可信第三方文本，不依赖 LLM 在场）
-        // ⚠️ 直接调 validate() 只会返回 FATAL 结果、不抛异常（抛异常是 AiServices 接线后的行为），
-        //    所以这里必须检查返回值——这是"护栏裸用"与"挂 Agent 上"的行为差异，见 Ch25 §25.3。
+        // 直接调 validate() 只会返回 FATAL 结果、不抛异常（抛异常是 AiServices 接线后的行为），
+        // 所以这里必须检查返回值——这是"护栏裸用"与"挂 Agent 上"的行为差异，见 。
         var injectionResult = injectionGuardrail.validate(
                 UserMessage.from(candidate.getResumeText()));
         if (!injectionResult.result().name().startsWith("SUCCESS")) {
-            log.warn("🚨 [Pipeline] candidateId={} injection detected in resume, cold-reject: {}",
+            log.warn("[Pipeline] candidateId={} injection detected in resume, cold-reject: {}",
                     candidate.getId(), injectionResult.result());
             candidateService.processEvent(candidate.getId(), FsmEvent.SCREEN_FAIL, Map.of(
                     "verdict", "REJECT", "matchScore", 0,
@@ -193,7 +186,7 @@ public class CandidatePipelineService {
         String redactedJson = decisionFieldFilter.redact(fullProfileJson);
         candidate.setRedactedProfile(redactedJson);
         candidateMapper.updateById(candidate);
-        log.info("🛡 [Pipeline] candidateId={} decision profile redacted: {} chars → {} chars",
+        log.info("[Pipeline] candidateId={} decision profile redacted: {} chars → {} chars",
                 candidate.getId(), fullProfileJson.length(), redactedJson.length());
 
         // 5. 匹配评估
@@ -235,7 +228,7 @@ public class CandidatePipelineService {
         }
         if (candidate.getStatus() != CandidateStatus.INVITE_SENT
                 && candidate.getStatus() != CandidateStatus.OFFER_SENT) {
-            log.info("💬 [Pipeline] candidateId={} status={} not awaiting reply, ignore",
+            log.info("[Pipeline] candidateId={} status={} not awaiting reply, ignore",
                     candidateId, candidate.getStatus());
             return candidate;
         }
@@ -253,7 +246,7 @@ public class CandidatePipelineService {
         received.setDecision(decision);
         receivedEmailMapper.insert(received);
 
-        log.info("💬 [Pipeline] candidateId={} status={} reply decision={} reasoning={}",
+        log.info("[Pipeline] candidateId={} status={} reply decision={} reasoning={}",
                 candidateId, candidate.getStatus(), decision, assessment.reasoning());
 
         if (candidate.getStatus() == CandidateStatus.INVITE_SENT) {
@@ -346,7 +339,7 @@ public class CandidatePipelineService {
     private void generateInviteAndSend(Long candidateId) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.SHORTLISTED) return;
-        log.info("✍️ [Pipeline] candidateId={} SHORTLISTED → generating invite", candidateId);
+        log.info(" [Pipeline] candidateId={} SHORTLISTED → generating invite", candidateId);
 
         JobPosition job = jobPositionMapper.selectById(candidate.getJobId());
         String jobTitle = job == null ? "本职位" : job.getTitle();
@@ -382,14 +375,14 @@ public class CandidatePipelineService {
     private void bookSlotAndPrepare(Long candidateId) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.INTERVIEW_SCHEDULED) return;
-        log.info("📅 [Pipeline] candidateId={} INTERVIEW_SCHEDULED → booking slot", candidateId);
+        log.info("[Pipeline] candidateId={} INTERVIEW_SCHEDULED → booking slot", candidateId);
 
         JobPosition job = jobPositionMapper.selectById(candidate.getJobId());
         String jobTitle = job == null ? "本职位" : job.getTitle();
 
         List<LocalDateTime> slots = calendarTool.availableSlots();
         if (slots.isEmpty()) {
-            log.warn("⚠️ [Pipeline] candidateId={} no available slots, interview NOT booked", candidateId);
+            log.warn(" [Pipeline] candidateId={} no available slots, interview NOT booked", candidateId);
             return;
         }
         CalendarTool.Booking booking = calendarTool.book(slots.get(0), 90, candidateId);
@@ -417,7 +410,7 @@ public class CandidatePipelineService {
         String messageId = mailGateway.send(candidate.getEmail(),
                 "【" + COMPANY + "】面试安排确认：" + jobTitle, body, "zh");
         insertSent(candidate, 0, "【" + COMPANY + "】面试安排确认：" + jobTitle, body, messageId);
-        log.info("📅 [Pipeline] candidateId={} booked {} + {} questions", candidateId,
+        log.info("[Pipeline] candidateId={} booked {} + {} questions", candidateId,
                 booking.bookingId(), qs == null ? 0 : qs.questions().size());
     }
 
@@ -436,7 +429,7 @@ public class CandidatePipelineService {
         String messageId = mailGateway.send(candidate.getEmail(),
                 "【" + COMPANY + "】offer：欢迎加入 " + jobTitle, body, "zh");
         insertSent(candidate, 0, "【" + COMPANY + "】offer：欢迎加入 " + jobTitle, body, messageId);
-        log.info("🎉 [Pipeline] candidateId={} offer letter sent", candidateId);
+        log.info("[Pipeline] candidateId={} offer letter sent", candidateId);
 
         // 背调在 offer 发出后自动发起（候选人已表露入职意向=授权语境；教学 mock，生产换学信网/第三方并须书面授权）
         BackgroundCheckTool.CheckResult check =
@@ -456,11 +449,11 @@ public class CandidatePipelineService {
             try {
                 AgentCallContext.set(candidate.getId(), "ResumeParserAgent");
                 ResumeParserAgent.ParsedProfile p = resumeParserAgent.parse(candidate.getResumeText());
-                log.info("📄 [Pipeline] parse (real): name={} years={} skills={}",
+                log.info("[Pipeline] parse (real): name={} years={} skills={}",
                         p.name(), p.yearsOfExperience(), p.skills());
                 return p;
             } catch (Exception e) {
-                log.warn("⚠️ [Pipeline] parse agent failed, fallback to canned: {}", e.getMessage());
+                log.warn(" [Pipeline] parse agent failed, fallback to canned: {}", e.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -474,10 +467,10 @@ public class CandidatePipelineService {
                 AgentCallContext.set(candidate.getId(), "MatchEvaluatorAgent");
                 MatchEvaluatorAgent.MatchVerdict v = matchEvaluatorAgent.evaluate(
                         job.getTitle(), job.getJdText(), candidate.getRedactedProfile());
-                log.info("⚖️ [Pipeline] evaluate (real): score={} verdict={}", v.score(), v.verdict());
+                log.info(" [Pipeline] evaluate (real): score={} verdict={}", v.score(), v.verdict());
                 return v;
             } catch (Exception e) {
-                log.warn("⚠️ [Pipeline] evaluate agent failed, fallback to canned: {}", e.getMessage());
+                log.warn(" [Pipeline] evaluate agent failed, fallback to canned: {}", e.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -492,10 +485,10 @@ public class CandidatePipelineService {
                 AgentCallContext.set(candidate.getId(), "InviteContentAgent");
                 InviteContentAgent.InviteEmail e = inviteContentAgent.generate(
                         orDefault(candidate.getName(), "候选人"), jobTitle, tone, cta);
-                log.info("✍️ [Pipeline] invite (real): arm={} subject=[{}]", tone + ":" + cta, e.subject());
+                log.info(" [Pipeline] invite (real): arm={} subject=[{}]", tone + ":" + cta, e.subject());
                 return e;
             } catch (Exception ex) {
-                log.warn("⚠️ [Pipeline] invite agent failed, fallback to canned: {}", ex.getMessage());
+                log.warn(" [Pipeline] invite agent failed, fallback to canned: {}", ex.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -509,10 +502,10 @@ public class CandidatePipelineService {
                 AgentCallContext.set(candidate.getId(), "ReplyClassifierAgent");
                 ReplyClassifierAgent.ReplyAssessment a =
                         replyClassifierAgent.classify(orDefault(candidate.getName(), "候选人"), replyText);
-                log.info("💡 [Pipeline] classify (real): {}", a);
+                log.info("[Pipeline] classify (real): {}", a);
                 return a;
             } catch (Exception e) {
-                log.warn("⚠️ [Pipeline] classify agent failed, fallback to canned: {}", e.getMessage());
+                log.warn(" [Pipeline] classify agent failed, fallback to canned: {}", e.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -527,10 +520,10 @@ public class CandidatePipelineService {
                 JobPosition job = jobPositionMapper.selectById(candidate.getJobId());
                 InterviewQuestionAgent.QuestionSet q = interviewQuestionAgent.generate(jobTitle,
                         job == null ? "" : job.getJdText(), orDefault(candidate.getRedactedProfile(), "{}"));
-                log.info("❓ [Pipeline] questions (real): {} 题", q.questions().size());
+                log.info("[Pipeline] questions (real): {} 题", q.questions().size());
                 return q;
             } catch (Exception e) {
-                log.warn("⚠️ [Pipeline] question agent failed, fallback to canned: {}", e.getMessage());
+                log.warn(" [Pipeline] question agent failed, fallback to canned: {}", e.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -545,11 +538,11 @@ public class CandidatePipelineService {
                 AgentCallContext.set(candidate.getId(), "EvaluationAgent");
                 EvaluationAgent.EvaluationSummary s = evaluationAgent.summarize(
                         jobTitle, orDefault(candidate.getRedactedProfile(), "{}"), feedback);
-                log.info("🗣 [Pipeline] evaluation (real): overall={} rating={}", s.overall(), s.rating());
+                log.info("[Pipeline] evaluation (real): overall={} rating={}", s.overall(), s.rating());
                 return s;
             } catch (Exception e) {
                 // 合规护栏（歧视特征）触发会走到这里：不自动决策，停下来等人工
-                log.warn("🚨 [Pipeline] evaluation blocked by guardrail, waiting for human revision: {}",
+                log.warn("[Pipeline] evaluation blocked by guardrail, waiting for human revision: {}",
                         e.getMessage());
                 throw new IllegalStateException("评价触发合规护栏，请修订反馈后重新提交: " + e.getMessage(), e);
             } finally {

@@ -7,7 +7,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
 /**
- * Ch24 Agent 4/6：候选人回复分类。
+ * Agent 4/6：候选人回复分类。
  *
  * <h2>两阶段复用</h2>
  * <p>同一个分类器服务两个 FSM 事件：约面阶段的 {@code INVITE_REPLIED}

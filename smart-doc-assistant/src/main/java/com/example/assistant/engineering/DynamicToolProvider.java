@@ -21,21 +21,21 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Ch16 动态工具注入
+ * 动态工具注入
  *
  * <p>原版用 {@code contains} 关键词硬匹配，存在"同义词漏召回 / 多词并集误召回 / 无租户隔离"三个问题。
  * 本版按生产最佳实践重构为三段式流水线：
  *
  * <pre>
- *   provideTools(request)
- *        │
- *        ├─① 意图路由 IntentRouter  ：用户问题 → 候选业务域（refund/logistics/calc）
- *        │                              （轻量 LLM 分类，关键词兜底，解决漏召回）
- *        │
- *        ├─② 域→工具映射 ToolCatalog ：业务域 → 该域下全部工具 Entry
- *        │
- *        └─③ 租户/角色闸门 TenantToolFilter：按 RequestContext 的 tenantId/role 过滤
- *                                               （安全红线，防越权）
+ * provideTools(request)
+ * │
+ * ├─① 意图路由 IntentRouter  ：用户问题 → 候选业务域（refund/logistics/calc）
+ * │                              （轻量 LLM 分类，关键词兜底，解决漏召回）
+ * │
+ * ├─② 域→工具映射 ToolCatalog ：业务域 → 该域下全部工具 Entry
+ * │
+ * └─③ 租户/角色闸门 TenantToolFilter：按 RequestContext 的 tenantId/role 过滤
+ * （安全红线，防越权）
  * </pre>
  *
  * <p>构造期仍扫描每个工具对象的 {@code @Tool} 方法，但额外按其所属业务域登记到 {@link ToolCatalog}，
@@ -53,7 +53,7 @@ public class DynamicToolProvider implements ToolProvider {
     /**
      * chatMemoryId → [tenantId, userId, role]。
      *
-     * <p>修复记录（Ch16 16.9）：{@code executeToolsConcurrently()} 把工具执行与回调调度到虚拟线程，
+     * <p>修复记录（ 16.9）：{@code executeToolsConcurrently()} 把工具执行与回调调度到虚拟线程，
      * {@link RequestContext} 的 ThreadLocal 在那些线程上是默认值——护栏读到默认角色、审计落到
      * default:anonymous。{@code provideTools} 跑在请求线程上、上下文是准的，所以在那一刻把上下文
      * 捕获进本表；工具执行与审计回调按 chatMemoryId 取捕获值。表随会话数增长（教学版可接受，
@@ -86,7 +86,7 @@ public class DynamicToolProvider implements ToolProvider {
                 // propagate=true：工具异常上抛给 AiServices 的 toolExecutionErrorHandler 兜底
                 // （与框架 ToolService 自建执行器的选择一致）。裸构造默认 propagate=false，
                 // 异常就地转成 isError=true 文本——配在 AiServices 上的错误处理器
-                // 对 provider 供给的工具就收不到异常了（Ch16 修复实录）。
+                // 对 provider 供给的工具就收不到异常了（ 修复实录）。
                 ToolExecutor executor = DefaultToolExecutor.builder()
                         .object(tool)
                         .originalMethod(m)
@@ -97,7 +97,7 @@ public class DynamicToolProvider implements ToolProvider {
                 DomainMeta meta = DOMAIN_META.getOrDefault(name, new DomainMeta("calc", Set.of(), Set.of()));
                 catalog.register(name, new ToolCatalog.Entry(spec, executor,
                         meta.domain, meta.requiredRoles, meta.enabledTenants));
-                log.info("🔧 注册动态工具 [{}] 域={} 角色={} 租户={}", name, meta.domain,
+                log.info("注册动态工具 [{}] 域={} 角色={} 租户={}", name, meta.domain,
                         meta.requiredRoles, meta.enabledTenants);
             }
         }
@@ -141,17 +141,17 @@ public class DynamicToolProvider implements ToolProvider {
                 try {
                     toolGuard.authorize(toolName, execRole, execUser);
                 } catch (GuardrailViolation ex) {
-                    log.warn("🚫 工具执行被护栏拦截 [{}] 角色={}：{}", toolName,
+                    log.warn("工具执行被护栏拦截 [{}] 角色={}：{}", toolName,
                             execRole, ex.getMessage());
                     // 拦截后不执行真实工具，返回提示文本交由模型向用户解释
-                    return "⛔ 操作被安全策略拦截：" + ex.getMessage();
+                    return "操作被安全策略拦截：" + ex.getMessage();
                 }
                 return e.executor().execute(toolExecutionRequest, memoryId);
             };
             selected.put(e.spec(), guarded);
         }
 
-        log.info("🎯 动态工具注入：消息[{}] 租户={} 角色={} 域={} → 暴露 {} 个工具：{}",
+        log.info("动态工具注入：消息[{}] 租户={} 角色={} 域={} → 暴露 {} 个工具：{}",
                 text.length() > 20 ? text.substring(0, 20) + "…" : text,
                 tenantId, role, domains,
                 selected.size(), selected.keySet().stream().map(ToolSpecification::name).toList());
@@ -161,9 +161,9 @@ public class DynamicToolProvider implements ToolProvider {
     /**
      * 工具 → 元数据 注册表。生产应外置到配置/DB，这里用静态 Map 演示。
      * <ul>
-     *   <li>searchKnowledgeBase：refund 域，全租户/全角色可用；</li>
-     *   <li>currentTime / daysBetween：logistics 域；</li>
-     *   <li>calculate / percentage：calc 域；</li>
+     * <li>searchKnowledgeBase：refund 域，全租户/全角色可用；</li>
+     * <li>currentTime / daysBetween：logistics 域；</li>
+     * <li>calculate / percentage：calc 域；</li>
      * </ul>
      * 若某工具需高权限（如 admin 域的发短信/删数据），在此标 requiredRoles=Set.of("ADMIN")，
      * 非 ADMIN 租户用户即使意图命中也会被 TenantToolFilter 拦掉。

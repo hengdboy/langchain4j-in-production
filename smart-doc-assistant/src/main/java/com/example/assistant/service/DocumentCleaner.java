@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Ch10：文档清洗器（DocumentTransformer 实现）。
+ * ：文档清洗器（DocumentTransformer 实现）。
  *
  * <p>文档解析出来是"原始文本"，往往带各种噪声：BOM、零宽字符、\r\n、
  * 制表符、多余空白、分隔线等。清洗器在分块之前做规范化，让切出来的块更干净。

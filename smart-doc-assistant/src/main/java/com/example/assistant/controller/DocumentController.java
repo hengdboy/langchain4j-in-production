@@ -14,15 +14,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 /**
- * Ch10：文档处理流水线端点。
+ * ：文档处理流水线端点。
  *
  * <ul>
- *   <li>GET  /api/docs/stats            —— 流水线统计（文档数/分块数/维度/分块参数）</li>
- *   <li>POST /api/docs/ingest           —— 手动触发目录入库，rebuild=true 时先清库重建</li>
- *   <li>POST /api/docs/upload           —— 上传单个文件，流式解析直接入库（不落盘）</li>
+ * <li>GET  /api/docs/stats            —— 流水线统计（文档数/分块数/维度/分块参数）</li>
+ * <li>POST /api/docs/ingest           —— 手动触发目录入库，rebuild=true 时先清库重建</li>
+ * <li>POST /api/docs/upload           —— 上传单个文件，流式解析直接入库（不落盘）</li>
  * </ul>
  *
- * <p>配合 Ch08 的 POST /api/search/semantic 使用：先入库，再检索。
+ * <p>配合 POST /api/search/semantic 使用：先入库，再检索。
  * 示例：
  * <pre>
  * curl -X POST 'http://localhost:8090/api/docs/ingest?dir=/tmp/docs&amp;rebuild=false'

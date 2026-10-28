@@ -13,9 +13,9 @@ import java.util.Set;
  *
  * <p>替代原来扁平的 {@code Map<name, (spec,executor)>}，每个工具登记元数据：
  * <ul>
- *   <li>{@code domain}：业务域（refund/logistics/calc/admin），用于意图路由后的"域→工具"映射；</li>
- *   <li>{@code requiredRoles}：调用所需角色，例如 admin 域工具需 ADMIN；</li>
- *   <li>{@code enabledTenants}：开通该工具的租户白名单，空集合表示"全租户可用"。</li>
+ * <li>{@code domain}：业务域（refund/logistics/calc/admin），用于意图路由后的"域→工具"映射；</li>
+ * <li>{@code requiredRoles}：调用所需角色，例如 admin 域工具需 ADMIN；</li>
+ * <li>{@code enabledTenants}：开通该工具的租户白名单，空集合表示"全租户可用"。</li>
  * </ul>
  *
  * <p>构建方式：在构造器里扫描工具对象的 {@code @Tool} 方法（同原 DynamicToolProvider），

@@ -4,7 +4,7 @@ import dev.langchain4j.agentic.supervisor.SupervisorAgent;
 import org.springframework.stereotype.Service;
 
 /**
- * Ch15 新增：Supervisor 模式（纯 Agentic 自主编排）——客服主管（薄封装）。
+ * 新增：Supervisor 模式（纯 Agentic 自主编排）——客服主管（薄封装）。
  *
  * <p>三个子 Agent 与主管 Agent 的装配见 {@link SupervisorAgentConfig}（{@code @Configuration @Bean}），
  * 这里只负责把 {@link SupervisorAgent} 注入进来并暴露一个提问入口，不再在构造器里手写 new。

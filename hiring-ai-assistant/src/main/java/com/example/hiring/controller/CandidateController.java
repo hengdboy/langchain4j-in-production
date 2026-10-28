@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch24 API 层：候选人全生命周期入口。
+ * API 层：候选人全生命周期入口。
  *
  * <pre>
  * POST /api/candidates                       投递（触发解析→脱敏→评估→FSM）

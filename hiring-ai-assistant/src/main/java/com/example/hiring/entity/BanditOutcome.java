@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 Bandit 待结算队列（bandit_outcome 表）。
+ * Bandit 待结算队列（bandit_outcome 表）。
  *
  * <p>每次选臂插一条；候选人流到终态（或阶段性状态）后由 EvolutionScheduler
  * 按 reward 映射结算，回填 {@link #reward} 与 {@link #processedAt}。

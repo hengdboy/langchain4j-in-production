@@ -7,12 +7,12 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
 /**
- * Ch24 Agent 3/6：约面邀请生成（Bandit 实验的载体）。
+ * Agent 3/6：约面邀请生成（Bandit 实验的载体）。
  *
  * <h2>tone × cta 臂空间</h2>
  * <p>语气（tone ∈ formal/warm/concise）× 行动号召（cta ∈ calendar-link/reply-slot）
  * 组成 6 个臂，由 {@code BanditOptimizer} 按历史回复率做 Thompson Sampling 选择。
- * 哪种话术让更多候选人回复——不靠拍脑袋，靠数据（见 Ch25 §25.4）。
+ * 哪种话术让更多候选人回复——不靠拍脑袋，靠数据。
  *
  * <p>输出挂 PII 脱敏 guardrail：LLM 有小概率把画像里的联系方式抄进正文。
  *

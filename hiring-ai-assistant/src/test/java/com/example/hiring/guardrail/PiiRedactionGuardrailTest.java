@@ -26,7 +26,7 @@ class PiiRedactionGuardrailTest {
         OutputGuardrailResult result = guardrail.validate(msg);
         assertThat(result.result().name()).startsWith("SUCCESS");
         assertThat(result.successfulText()).contains("[EMAIL]").doesNotContain("alice@example.com");
-        log.info("✅ 邮箱脱敏通过：{}", result.successfulText());
+        log.info("邮箱脱敏通过：{}", result.successfulText());
     }
 
     @Test
@@ -36,7 +36,7 @@ class PiiRedactionGuardrailTest {
         OutputGuardrailResult result = guardrail.validate(msg);
         assertThat(result.successfulText()).contains("[PHONE]").contains("[CC]")
                 .doesNotContain("13800138000").doesNotContain("4111111111111111");
-        log.info("✅ 手机+卡脱敏通过");
+        log.info("手机+卡脱敏通过");
     }
 
     @Test
@@ -45,6 +45,6 @@ class PiiRedactionGuardrailTest {
         AiMessage msg = AiMessage.from("Hello, this is a normal business inquiry about smart home devices.");
         OutputGuardrailResult result = guardrail.validate(msg);
         assertThat(result.result().name()).startsWith("SUCCESS");
-        log.info("✅ 无 PII → 原样通过");
+        log.info("无 PII → 原样通过");
     }
 }

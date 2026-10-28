@@ -8,7 +8,7 @@ package com.example.assistant.engineering;
  * 用 ThreadLocal 在 Controller 入口写入、在 Provider 里读取，是 Spring 生态（类似 SecurityContextHolder）
  * 传递请求级上下文的标准做法，与 langchain4j 框架内部机制完全解耦。
  *
- * <p>⚠️ 必须在请求结束时 {@link #clear()}（当前在 EngineeringAgentController 的 finally 块里；
+ * <p> 必须在请求结束时 {@link #clear()}（当前在 EngineeringAgentController 的 finally 块里；
  * 生产建议收口到 HandlerInterceptor 的 afterCompletion），否则线程复用会串租户。
  */
 public final class RequestContext {

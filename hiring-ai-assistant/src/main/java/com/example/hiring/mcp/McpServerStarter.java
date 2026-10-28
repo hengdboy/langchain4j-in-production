@@ -15,33 +15,33 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
- * Ch24 v0.30 MCP：stdio 启动器（独立子进程入口）。
+ * v0.30 MCP：stdio 启动器（独立子进程入口）。
  *
  * <p>由 MCP 客户端（Claude Desktop / Cursor / Continue 等）以子进程方式拉起，
  * 通过 stdin/stdout 与客户端 JSON-RPC 通信。
  *
  * <h2>为什么不直接用 {@code SpringApplication.run()}</h2>
  * <ul>
- *   <li>stdio Server 需要独占 stdin/stdout；Spring Boot 启动器会拉起 Tomcat 等额外组件</li>
- *   <li>MCP 子进程生命周期短（用户每次启动 IDE 时启动一次），启动越快越好</li>
+ * <li>stdio Server 需要独占 stdin/stdout；Spring Boot 启动器会拉起 Tomcat 等额外组件</li>
+ * <li>MCP 子进程生命周期短（用户每次启动 IDE 时启动一次），启动越快越好</li>
  * </ul>
  *
  * <h2>设计要点</h2>
  * <ul>
- *   <li>用 {@link AnnotationConfigApplicationContext} 精准加载需要的配置类，跳过 Spring Boot 自动装配</li>
- *   <li>只注入 MCP 工具链所需的依赖（内存目录 mock + mock 网关），<b>不连 MySQL/Redis</b></li>
- *   <li><strong>日志必须走 {@code System.err}</strong>，否则污染 stdout 上的 JSON-RPC 协议流</li>
+ * <li>用 {@link AnnotationConfigApplicationContext} 精准加载需要的配置类，跳过 Spring Boot 自动装配</li>
+ * <li>只注入 MCP 工具链所需的依赖（内存目录 mock + mock 网关），<b>不连 MySQL/Redis</b></li>
+ * <li><strong>日志必须走 {@code System.err}</strong>，否则污染 stdout 上的 JSON-RPC 协议流</li>
  * </ul>
  *
  * <h2>客户端配置示例（Claude Desktop）</h2>
  * <pre>{@code
  * {
- *   "mcpServers": {
- *     "hiring-ai-assistant": {
- *       "command": "java",
- *       "args": ["-jar", "/path/to/hiring-ai-assistant-0.30.0-SNAPSHOT-mcp.jar"]
- *     }
- *   }
+ * "mcpServers": {
+ * "hiring-ai-assistant": {
+ * "command": "java",
+ * "args": ["-jar", "/path/to/hiring-ai-assistant-0.30.0-SNAPSHOT-mcp.jar"]
+ * }
+ * }
  * }
  * }</pre>
  *
@@ -59,7 +59,7 @@ public final class McpServerStarter {
         System.setProperty("org.springframework.boot.logging.LoggingSystem", "none");
         redirectLogbackToStderr();
 
-        System.err.println("🚀 [hiring-ai-assistant MCP Server] starting stdio transport...");
+        System.err.println("[hiring-ai-assistant MCP Server] starting stdio transport...");
 
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
         StdioMcpServerTransport transport = null;
@@ -75,16 +75,16 @@ public final class McpServerStarter {
             McpServer server = McpServerFactory.create(directory, mail);
             transport = new StdioMcpServerTransport(server);
 
-            System.err.println("✅ MCP Server ready on stdio: " + McpServerFactory.SERVER_NAME
+            System.err.println("MCP Server ready on stdio: " + McpServerFactory.SERVER_NAME
                     + " v" + McpServerFactory.SERVER_VERSION + " (tools=" + McpServerFactory.TOOL_NAMES + ")");
 
             transport.awaitClose();
-            System.err.println("👋 MCP Server shutdown complete.");
+            System.err.println("MCP Server shutdown complete.");
         } finally {
             try { if (transport != null) transport.close(); }
-            catch (Exception e) { System.err.println("⚠️ Transport close failed: " + e.getMessage()); }
+            catch (Exception e) { System.err.println(" Transport close failed: " + e.getMessage()); }
             try { ctx.close(); }
-            catch (Exception e) { System.err.println("⚠️ Context close failed: " + e.getMessage()); }
+            catch (Exception e) { System.err.println(" Context close failed: " + e.getMessage()); }
         }
     }
 
@@ -107,7 +107,7 @@ public final class McpServerStarter {
             rootLogger.setLevel(Level.WARN);
             rootLogger.addAppender(appender);
         } catch (Throwable t) {
-            System.err.println("⚠️ Logback redirect failed: " + t.getMessage());
+            System.err.println(" Logback redirect failed: " + t.getMessage());
         }
     }
 

@@ -14,7 +14,7 @@ import java.util.List;
  * - 嵌套 enum、List<String>
  * - @UserMessage 从外部资源文件加载
  */
-@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "jsonModel")   // ← Ch07：结构化输出用 jsonModel（低温度+JSON Mode），多模型 Bean 需 EXPLICIT
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "jsonModel")   // ← ：结构化输出用 jsonModel（低温度+JSON Mode），多模型 Bean 需 EXPLICIT
 public interface ReviewAnalysisAssistant {
 
     /**

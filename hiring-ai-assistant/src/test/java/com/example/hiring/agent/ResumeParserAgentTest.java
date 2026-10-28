@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Ch24 ResumeParserAgent 单元测试（mock ChatModel）。
+ * ResumeParserAgent 单元测试（mock ChatModel）。
  *
  * @author langchain4j-tutorial
  * @since v0.30

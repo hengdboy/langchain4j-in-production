@@ -10,17 +10,17 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Ch09：多模态（跨模态）语义检索服务。
+ * ：多模态（跨模态）语义检索服务。
  *
  * <p>核心思路：图片和文本被多模态 Embedding 模型映射到<b>同一个语义空间</b>，
  * 于是可以直接比较——用文本向量去撞图片向量（文本搜图），或用一张图的向量
  * 去撞库里的图片向量（图搜图），本质都是余弦相似度。
  *
- * <p>实现与 Ch08 的 DocumentSearchService 对齐：
+ * <p>实现与 DocumentSearchService 对齐：
  * <ul>
- *   <li>启动时把预置图片库全部嵌入，得到图片向量列表</li>
- *   <li>运行时把查询（文本 or 图片）嵌入，与图片向量逐个算余弦相似度，取 Top-K</li>
- *   <li>小规模用内存暴力扫描即可（与 InMemoryEmbeddingStore 同思路）</li>
+ * <li>启动时把预置图片库全部嵌入，得到图片向量列表</li>
+ * <li>运行时把查询（文本 or 图片）嵌入，与图片向量逐个算余弦相似度，取 Top-K</li>
+ * <li>小规模用内存暴力扫描即可（与 InMemoryEmbeddingStore 同思路）</li>
  * </ul>
  */
 @Slf4j
@@ -55,7 +55,7 @@ public class MultimodalSearchService implements ApplicationRunner {
         this.embeddingClient = embeddingClient;
     }
 
-    /** 启动时：把预置图片库全部嵌入（一次性建库）——建库失败不阻断启动（Ch10 最佳实践） */
+    /** 启动时：把预置图片库全部嵌入（一次性建库）——建库失败不阻断启动（ 最佳实践） */
     @Override
     public void run(ApplicationArguments args) {
         try {
@@ -63,10 +63,10 @@ public class MultimodalSearchService implements ApplicationRunner {
                 float[] vector = embeddingClient.embedImage(doc.imageUrl());
                 imageVectors.add(vector);
             }
-            log.info("✅ 已索引 {} 张图片到多模态向量库（embedding 维度={}）",
+            log.info("已索引 {} 张图片到多模态向量库（embedding 维度={}）",
                     IMAGE_LIBRARY.size(), embeddingClient.dimension());
         } catch (Exception e) {
-            log.error("❌ 多模态建库失败（检查 DASHSCOPE_API_KEY 与网络后重试），本次跳过，应用继续启动", e);
+            log.error("多模态建库失败（检查 DASHSCOPE_API_KEY 与网络后重试），本次跳过，应用继续启动", e);
         }
     }
 

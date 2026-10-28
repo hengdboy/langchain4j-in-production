@@ -22,11 +22,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Ch24 MatchEvaluatorAgent 单元测试（mock ChatModel + 双输出护栏接线验证）。
+ * MatchEvaluatorAgent 单元测试（mock ChatModel + 双输出护栏接线验证）。
  *
  * <h2>重点</h2>
  * <p>验证 AgentBuilder 挂载的 discriminationGuardrail 真的会拦截
- * "理由里引用受保护特征"的产出——这是 Ch25 §25.3 的核心机制。
+ * "理由里引用受保护特征"的产出——这是  的核心机制。
  *
  * @author langchain4j-tutorial
  * @since v0.30

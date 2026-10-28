@@ -17,13 +17,13 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * v0.29 Ch22 Observability：Cost / Latency / Error 计量 listener。
+ * v0.29  Observability：Cost / Latency / Error 计量 listener。
  *
  * <h2>职责</h2>
  * <ul>
- *   <li>在每次 ChatModel 请求前写入 {@code AgentCallContext}（ThreadLocal，存开始时间 + agent 名）</li>
- *   <li>响应后计算耗时 + 拿 TokenUsage → 落 {@code agent_call} 表</li>
- *   <li>出错也落表（status=failed），便于事后归因</li>
+ * <li>在每次 ChatModel 请求前写入 {@code AgentCallContext}（ThreadLocal，存开始时间 + agent 名）</li>
+ * <li>响应后计算耗时 + 拿 TokenUsage → 落 {@code agent_call} 表</li>
+ * <li>出错也落表（status=failed），便于事后归因</li>
  * </ul>
  *
  * <h2>Agent 名称来源</h2>
@@ -40,14 +40,14 @@ import java.util.UUID;
 public class CostChatModelListener implements ChatModelListener {
 
     /** 属性 key：Agent 名（AgentBuilder 注入） */
-    public static final String ATTR_AGENT_NAME = "sdr.agent.name";
+    public static final String ATTR_AGENT_NAME = "hiring.agent.name";
 
     private final AgentCallMapper agentCallMapper;
 
     @Override
     public void onRequest(ChatModelRequestContext ctx) {
         // 记录开始时间（跨 onResponse 计算 latency）
-        ctx.attributes().put("sdr.startTime", Instant.now());
+        ctx.attributes().put("hiring.startTime", Instant.now());
     }
 
     @Override
@@ -69,11 +69,11 @@ public class CostChatModelListener implements ChatModelListener {
         call.setCreatedAt(Instant.now());
         try {
             agentCallMapper.insert(call);
-            log.info("📊 [Cost] agent={} candidateId={} tokens={} duration_ms={}",
+            log.info("[Cost] agent={} candidateId={} tokens={} duration_ms={}",
                     agentName, candidateId, usage != null ? usage.totalTokenCount() : 0, call.getDurationMs());
         } catch (Exception e) {
             // 埋点失败不能阻塞主流程
-            log.warn("⚠️ [Cost] persist agent_call failed: {}", e.getMessage());
+            log.warn(" [Cost] persist agent_call failed: {}", e.getMessage());
         }
     }
 
@@ -92,9 +92,9 @@ public class CostChatModelListener implements ChatModelListener {
         try {
             agentCallMapper.insert(call);
         } catch (Exception e) {
-            log.warn("⚠️ [Cost] persist error agent_call failed: {}", e.getMessage());
+            log.warn(" [Cost] persist error agent_call failed: {}", e.getMessage());
         }
-        log.warn("⚠️ [Cost] agent={} candidateId={} error={}", agentName, candidateId, ctx.error().getMessage());
+        log.warn(" [Cost] agent={} candidateId={} error={}", agentName, candidateId, ctx.error().getMessage());
     }
 
     /** Agent 名从 attributes（高优） / ThreadLocal（兜底）取 */
@@ -113,7 +113,7 @@ public class CostChatModelListener implements ChatModelListener {
     }
 
     private static Integer elapsedMsFromAttributes(Map<Object, Object> attributes) {
-        Object start = attributes.get("sdr.startTime");
+        Object start = attributes.get("hiring.startTime");
         if (start instanceof Instant s) {
             return (int) Duration.between(s, Instant.now()).toMillis();
         }

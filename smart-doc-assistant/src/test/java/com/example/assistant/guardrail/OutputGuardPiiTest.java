@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch21：OutputGuard PII 脱敏 + 误杀率实测（2026-10-28 数据的固化版，数字随实现走）。
+ * ：OutputGuard PII 脱敏 + 误杀率实测（2026-10-28 数据的固化版，数字随实现走）。
  *
  * @author langchain4j-tutorial
  * @since v0.19
@@ -45,7 +45,7 @@ class OutputGuardPiiTest {
     }
 
     @Test
-    @DisplayName("13-15 位数字被 <16 放行闸放过（漏杀代价，Ch21 21.6.1）")
+    @DisplayName("13-15 位数字被 <16 放行闸放过（漏杀代价， 21.6.1）")
     void shortDigitsPassThrough() {
         OutputGuard g = newGuard();
         String text = "编号 1234567812345 结束";

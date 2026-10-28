@@ -10,14 +10,14 @@ import dev.langchain4j.store.embedding.EmbeddingStore;
 import java.util.List;
 
 /**
- * Ch19 MCP 深度开发：{@link McpServer} 构造的单一工厂方法（P2-4 修复）。
+ * MCP 深度开发：{@link McpServer} 构造的单一工厂方法（P2-4 修复）。
  *
  * <p>消除 {@code McpServerConfig} 与 {@code McpServerStarter} 两处重复的 McpServer 装配代码——
  * 加新工具或换 serverInfo 时只改一处。
  *
  * <h2>服务器元信息</h2>
  * <p>{@code name} 用 {@code "smart-doc-assistant"}、{@code version} 用 {@code "0.17.0"}，
- * 与 pom.xml 的 {@code <version>} 标签同步（v0.17 在 Ch19 引入）。
+ * 与 pom.xml 的 {@code <version>} 标签同步（v0.17 在  引入）。
  *
  * @author langchain4j-tutorial
  * @since v0.17

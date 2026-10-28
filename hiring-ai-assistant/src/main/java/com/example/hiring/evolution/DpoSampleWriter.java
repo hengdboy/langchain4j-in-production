@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 
 /**
- * Ch24 v0.28 DPO 样本写入器。
+ * v0.28 DPO 样本写入器。
  *
  * <h2>source 常量</h2>
  * <ul>
- *   <li>{@link #SOURCE_HUMAN}：销售二元标注（高质量、慢）</li>
- *   <li>{@link #SOURCE_BANDIT}：Bandit 对比样本（中质量、自动）</li>
- *   <li>{@link #SOURCE_FEEDBACK}：人工纠偏（高质量、手动）</li>
+ * <li>{@link #SOURCE_HUMAN}：销售二元标注（高质量、慢）</li>
+ * <li>{@link #SOURCE_BANDIT}：Bandit 对比样本（中质量、自动）</li>
+ * <li>{@link #SOURCE_FEEDBACK}：人工纠偏（高质量、手动）</li>
  * </ul>
  *
  * <p>v0.28 教学版只启用 {@code SOURCE_BANDIT}：Bandit 对比同一 prompt 不同臂产出，
@@ -53,7 +53,7 @@ public class DpoSampleWriter {
         s.setUsedInTraining(false);
         s.setCreatedAt(Instant.now());
         mapper.insert(s);
-        log.info("📚 [DPO] wrote sample id={} source={} chosenChars={} rejectedChars={}",
+        log.info("[DPO] wrote sample id={} source={} chosenChars={} rejectedChars={}",
                 s.getId(), source,
                 chosen == null ? 0 : chosen.length(),
                 rejected == null ? 0 : rejected.length());

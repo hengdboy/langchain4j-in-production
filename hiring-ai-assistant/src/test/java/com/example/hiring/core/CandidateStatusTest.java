@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch24 候选人状态枚举语义单元测试。
+ * 候选人状态枚举语义单元测试。
  *
  * @author langchain4j-tutorial
  * @since v0.30

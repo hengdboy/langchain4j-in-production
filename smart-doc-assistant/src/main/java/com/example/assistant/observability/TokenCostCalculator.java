@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * Ch22 可观测性：基于 TokenUsage 计算单次调用费用（LangChain4j 原生）。
+ * 可观测性：基于 TokenUsage 计算单次调用费用（LangChain4j 原生）。
  *
  * <p>公式：{@code cost = (inputTokens × inputPerMTokens + outputTokens × outputPerMTokens) / 1_000_000}
  *
@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
  * <p>Listener 关心"事件触发"，cost 关心"业务计算"——职责分离。
  * 单独抽出 Calculator 便于：
  * <ol>
- *   <li>单元测试（不依赖 Spring 容器）</li>
- *   <li>复用（同 TokenUsage 可被多个 Listener / Tracker 调用）</li>
- *   <li>未来切换定价模型（按月费、按 token 包）不影响调用方</li>
+ * <li>单元测试（不依赖 Spring 容器）</li>
+ * <li>复用（同 TokenUsage 可被多个 Listener / Tracker 调用）</li>
+ * <li>未来切换定价模型（按月费、按 token 包）不影响调用方</li>
  * </ol>
  *
  * @author langchain4j-tutorial

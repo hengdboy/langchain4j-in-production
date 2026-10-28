@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Ch24 v0.28 Thompson Sampling 实现（默认 Bandit 策略）。
+ * v0.28 Thompson Sampling 实现（默认 Bandit 策略）。
  *
  * <h2>算法</h2>
  * <ul>
- *   <li>每个臂一个 Beta(alpha, beta) 分布；新臂 alpha=beta=1（均匀先验）</li>
- *   <li>{@link #selectArm}：从每个臂的分布采样一个值，选最大的</li>
- *   <li>{@link #update}：reward=1 → alpha++; reward=0 → beta++；连续 reward 用 totalReward 累加</li>
+ * <li>每个臂一个 Beta(alpha, beta) 分布；新臂 alpha=beta=1（均匀先验）</li>
+ * <li>{@link #selectArm}：从每个臂的分布采样一个值，选最大的</li>
+ * <li>{@link #update}：reward=1 → alpha++; reward=0 → beta++；连续 reward 用 totalReward 累加</li>
  * </ul>
  *
  * <h2>冷启动保护</h2>

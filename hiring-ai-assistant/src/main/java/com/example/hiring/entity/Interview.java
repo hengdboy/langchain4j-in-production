@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 /**
- * Ch24 面试安排（interview 表）。
+ * 面试安排（interview 表）。
  *
  * <p>候选人确认（INTERVIEW_SCHEDULED）时由 pipeline 自动占位 + 出题；
  * 面试完成后回填 {@link #feedback}（原始反馈）与评价结论。

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * Ch09：图像理解端点。
+ * ：图像理解端点。
  *
  * <p>POST /api/vision/analyze —— 图片问答 / OCR
  * 请求（二选一传图）：

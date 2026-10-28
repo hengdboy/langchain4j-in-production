@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Ch24 API 层：候选人投递请求体。
+ * API 层：候选人投递请求体。
  *
  * <p>投递后 status=APPLIED，pipeline 自动推进：解析 → 决策脱敏 → 评估 →
  * SCREEN_PASS / SCREEN_REVIEW / SCREEN_FAIL。

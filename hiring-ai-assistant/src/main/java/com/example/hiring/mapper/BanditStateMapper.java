@@ -5,7 +5,7 @@ import com.example.hiring.entity.BanditState;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * Ch24 v0.28 Bandit 状态 Mapper。
+ * v0.28 Bandit 状态 Mapper。
  *
  * @author langchain4j-tutorial
  * @since v0.28

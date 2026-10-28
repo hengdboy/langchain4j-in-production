@@ -39,7 +39,7 @@ import java.util.Map;
  * - POST /api/math/solve              数学题（CoT 触发）
  * - POST /api/tools/chat              工具调用对话（TimeTools+Calculator+OrderTools）
  * <p>
- * Ch06 重点：/api/tools/chat 演示 ToolAssistant 如何自动调用 3 类工具
+ * 重点：/api/tools/chat 演示 ToolAssistant 如何自动调用 3 类工具
  */
 @RestController
 @RequiredArgsConstructor
@@ -58,7 +58,7 @@ public class AssistantController {
 
 
     // ============================================================
-    // Ch01 / Ch02 接口（保持兼容）
+    // /  接口（保持兼容）
     // ============================================================
 
     @PostMapping("/api/chat")
@@ -126,7 +126,7 @@ public class AssistantController {
     }
 
     // ============================================================
-    // Ch03 新增接口：演示 ChatRequestParameters 动态参数覆盖
+    // 新增接口：演示 ChatRequestParameters 动态参数覆盖
     // ============================================================
 
     /**
@@ -220,7 +220,7 @@ public class AssistantController {
     }
 
     // ============================================================
-    // Ch06 新增接口：工具调用对话
+    // 新增接口：工具调用对话
     // ============================================================
 
     /**
@@ -261,7 +261,7 @@ public class AssistantController {
     }
 
     // ============================================================
-    // Ch07 新增：文档关键信息提取（结构化输出）
+    // 新增：文档关键信息提取（结构化输出）
     // ============================================================
 
     /**

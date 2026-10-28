@@ -19,26 +19,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Ch12 升级：基于阿里百炼 {@code qwen3-rerank} 的 cross-encoder 重排序器。
+ * 升级：基于阿里百炼 {@code qwen3-rerank} 的 cross-encoder 重排序器。
  *
  * <p>替换原有的 {@link EmbeddingScoringModel}（bi-encoder 余弦相似度），改用真正的
  * 交叉编码器模型对 (query, document) 联合打分，效果显著优于"再算一遍余弦"。
  *
  * <h3>API 规格（百炼兼容 OpenAI rerank 格式）</h3>
  * <ul>
- *   <li>端点：{@code POST {workspaceId}.cn-beijing.maas.aliyuncs.com/compatible-api/v1/reranks}</li>
- *   <li>认证：{@code Authorization: Bearer {apiKey}}</li>
- *   <li>请求体：扁平结构 {@code {model, query, documents[], top_n?, instruct?}}</li>
- *   <li>返回体：{@code {results: [{index, relevance_score}]}}</li>
+ * <li>端点：{@code POST {workspaceId}.cn-beijing.maas.aliyuncs.com/compatible-api/v1/reranks}</li>
+ * <li>认证：{@code Authorization: Bearer {apiKey}}</li>
+ * <li>请求体：扁平结构 {@code {model, query, documents[], top_n?, instruct?}}</li>
+ * <li>返回体：{@code {results: [{index, relevance_score}]}}</li>
  * </ul>
  *
  * <h3>与 EmbeddingScoringModel 的对比</h3>
  * <table>
- *   <tr><th></th><th>EmbeddingScoringModel</th><th>DashScopeRerankScoringModel</th></tr>
- *   <tr><td>类型</td><td>bi-encoder（双编码器）</td><td>cross-encoder（交叉编码器）</td></tr>
- *   <tr><td>原理</td><td>query/doc 分别 embed → 余弦</td><td>query+doc 拼接过一次模型</td></tr>
- *   <tr><td>精度</td><td>一般（≈召回重复计算）</td><td>高（捕捉细粒度交互）</td></tr>
- *   <tr><td>成本</td><td>零（复用本地 embedding）</td><td>0.5 元/百万 token</td></tr>
+ * <tr><th></th><th>EmbeddingScoringModel</th><th>DashScopeRerankScoringModel</th></tr>
+ * <tr><td>类型</td><td>bi-encoder（双编码器）</td><td>cross-encoder（交叉编码器）</td></tr>
+ * <tr><td>原理</td><td>query/doc 分别 embed → 余弦</td><td>query+doc 拼接过一次模型</td></tr>
+ * <tr><td>精度</td><td>一般（≈召回重复计算）</td><td>高（捕捉细粒度交互）</td></tr>
+ * <tr><td>成本</td><td>零（复用本地 embedding）</td><td>0.5 元/百万 token</td></tr>
  * </table>
  *
  * @see <a href="https://help.aliyun.com/zh/model-studio/text-rerank-api">通用文本排序模型 API 文档</a>
@@ -58,7 +58,7 @@ public class DashScopeRerankScoringModel implements ScoringModel {
     /**
      * @param apiKey   百炼 API Key
      * @param baseUrl  完整端点 URL（含 workspaceId），例如：
-     *                 {@code https://{workspaceId}.cn-beijing.maas.aliyuncs.com/compatible-api/v1/reranks}
+     * {@code https://{workspaceId}.cn-beijing.maas.aliyuncs.com/compatible-api/v1/reranks}
      * @param topN     返回前 N 个结果（≤ 候选文档数）
      */
     public DashScopeRerankScoringModel(String apiKey, String baseUrl, int topN) {

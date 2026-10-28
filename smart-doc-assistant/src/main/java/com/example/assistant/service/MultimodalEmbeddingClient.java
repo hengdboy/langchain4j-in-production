@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch09：DashScope 原生多模态 Embedding 客户端。
+ * ：DashScope 原生多模态 Embedding 客户端。
  *
  * <p>为什么不用 OpenAI 兼容接口？官方文档明确：多模态向量化（tongyi-embedding-vision 系列）
  * 只支持 DashScope 原生 API，OpenAI 兼容接口与控制台均不可用。所以这里用 Java 21 自带的
@@ -30,9 +30,9 @@ import java.util.Map;
  *
  * <p>核心概念：
  * <ul>
- *   <li>独立向量：一个 content（text 或 image）各出一个向量，type 区分 text/image</li>
- *   <li>融合向量：text 与 image 放在同一个 content 对象里，融合为一个向量（type=fused）</li>
- *   <li>所有向量处于同一个语义空间，因此可以直接做跨模态检索（文本搜图 / 图搜图）</li>
+ * <li>独立向量：一个 content（text 或 image）各出一个向量，type 区分 text/image</li>
+ * <li>融合向量：text 与 image 放在同一个 content 对象里，融合为一个向量（type=fused）</li>
+ * <li>所有向量处于同一个语义空间，因此可以直接做跨模态检索（文本搜图 / 图搜图）</li>
  * </ul>
  */
 @Slf4j

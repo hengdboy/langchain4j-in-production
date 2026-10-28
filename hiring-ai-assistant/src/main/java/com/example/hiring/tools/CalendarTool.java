@@ -15,14 +15,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Ch24 阶段三 Mock 日历工具：面试排期占位。
+ * 阶段三 Mock 日历工具：面试排期占位。
  *
  * <h2>规则（与 lab4 会议预订同源的坑位清单）</h2>
  * <ul>
- *   <li>可约时段：未来 5 个工作日的 10:00 / 14:00 / 16:00</li>
- *   <li>已被占用的时段不能重复占位（冲突检查）</li>
- *   <li>过去时间 / 非工作日拒绝（业务校验前置于一切）</li>
- *   <li>最短 1 小时、最长 2 小时（面试时长边界）</li>
+ * <li>可约时段：未来 5 个工作日的 10:00 / 14:00 / 16:00</li>
+ * <li>已被占用的时段不能重复占位（冲突检查）</li>
+ * <li>过去时间 / 非工作日拒绝（业务校验前置于一切）</li>
+ * <li>最短 1 小时、最长 2 小时（面试时长边界）</li>
  * </ul>
  *
  * <p>生产应替换为 Google Calendar / 飞书日历 API（教学版内存实现，重启即失）。
@@ -91,7 +91,7 @@ public class CalendarTool {
                 "") + "-" + String.format("%03d", ++seq);
         Booking b = new Booking(bookingId, start, durationMinutes, candidateId);
         bookings.put(bookingId, b);
-        log.info("📅 [CalendarTool] booked {} ({}min) → {} candidateId={}",
+        log.info("[CalendarTool] booked {} ({}min) → {} candidateId={}",
                 start, durationMinutes, bookingId, candidateId);
         return b;
     }
@@ -103,7 +103,7 @@ public class CalendarTool {
             return false;
         }
         booked.remove(b.start());
-        log.info("🗑 [CalendarTool] cancelled booking {}", bookingId);
+        log.info("[CalendarTool] cancelled booking {}", bookingId);
         return true;
     }
 

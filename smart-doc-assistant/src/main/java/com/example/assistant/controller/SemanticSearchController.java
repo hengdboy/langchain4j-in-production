@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch08：语义搜索端点。
+ * ：语义搜索端点。
  *
  * <p>POST /api/search/semantic  —— 文档语义检索
  * 请求：{"query":"...", "topK":3, "minScore":0.5}

@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 候选人回信（received_email 表）。
+ * 候选人回信（received_email 表）。
  *
- * <p>教学版通过 API 模拟回信注入（Webhook/IMAP 拉取的生产接法见 ARCHITECTURE.md §6）。
+ * <p>教学版通过 API 模拟回信注入（Webhook/IMAP 拉取的生产接法见 ARCHITECTURE.md ）。
  *
  * @author langchain4j-tutorial
  * @since v0.30

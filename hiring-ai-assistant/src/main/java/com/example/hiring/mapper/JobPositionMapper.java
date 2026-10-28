@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.hiring.entity.JobPosition;
 import org.apache.ibatis.annotations.Mapper;
 
-/** Ch24 职位表 Mapper。 */
+/**  职位表 Mapper。 */
 @Mapper
 public interface JobPositionMapper extends BaseMapper<JobPosition> {
 }

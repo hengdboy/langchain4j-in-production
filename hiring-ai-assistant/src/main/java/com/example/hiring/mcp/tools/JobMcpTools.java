@@ -6,7 +6,7 @@ import dev.langchain4j.agent.tool.Tool;
 import java.util.List;
 
 /**
- * Ch24 v0.30 MCP 工具：职位查询。
+ * v0.30 MCP 工具：职位查询。
  *
  * @author langchain4j-tutorial
  * @since v0.30

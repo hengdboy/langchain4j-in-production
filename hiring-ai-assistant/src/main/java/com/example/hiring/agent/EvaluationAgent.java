@@ -9,12 +9,12 @@ import dev.langchain4j.service.V;
 import java.util.List;
 
 /**
- * Ch24 Agent 6/6：面试评价汇总。
+ * Agent 6/6：面试评价汇总。
  *
  * <h2>输入是面试官的原始反馈，输出是结构化评价</h2>
  * <p>overall（PASS/FAIL）驱动 {@code EVAL_PASS / EVAL_FAIL} 两个 FSM 事件；
  * strengths/concerns 进评价存档；汇总文本挂 PII 脱敏 + 歧义特征双输出护栏
- * ——面试官手打的反馈里什么都有，落库前必须过筛（见 Ch25 §25.3）。
+ * ——面试官手打的反馈里什么都有，落库前必须过筛。
  *
  * @author langchain4j-tutorial
  * @since v0.30

@@ -251,8 +251,8 @@ Document document = parserFor(fileName).parse(file.getInputStream());
 实测（2026-10-28，`/api/docs/upload` 上传这份文件，日志原文）：
 
 ```
-📄 上传文档 report.pdf 解析成功（801 字符）
-✂️  分块完成：1 个文档 → 2 个块（parent-child=false）
+上传文档 report.pdf 解析成功（801 字符）
+ 分块完成：1 个文档 → 2 个块（parent-child=false）
 ```
 
 5.2 KB 的 PDF 提取出 801 字符的中文正文，切成 2 个干净块——这是"带文本层的 PDF"该有的样子。
@@ -365,7 +365,7 @@ public class DocumentCleaner implements DocumentTransformer {
         text = text.replace("\r\n", "\n").replace('\r', '\n');
 
         // 3. 压缩多余空白（保留单个空格与换行）
-        text = MULTI_BLANK.matcher(text).replaceAll(" ");
+        text = MULTI_BLANK.matcher(text).replaceAll("");
 
         // 4. 过滤纯分隔线行
         StringBuilder sb = new StringBuilder();
@@ -481,9 +481,9 @@ List<TextSegment> segments = splitter.splitAll(cleaned);
 实测对照（2026-10-28 启动日志原文，4 个示例文档）：
 
 ```
-📂 从 classpath:docs 加载到 4 个文档
-🧼 清洗完成（4 → 4 文档）
-✂️  分块完成：4 个文档 → 20 个块（parent-child=false）
+ 从 classpath:docs 加载到 4 个文档
+清洗完成（4 → 4 文档）
+ 分块完成：4 个文档 → 20 个块（parent-child=false）
 ```
 
 20 个块里有 13 块是 10.4.4 说的垃圾——同样 4 个文件从目录入口重建只剩 7 块。同一个数字，换个角度读就是体检报告。
@@ -603,13 +603,13 @@ flowchart TB
 private void ingest(List<Document> documents) {
     // 1. 清洗：去 BOM/零宽/多余空白/分隔线，统一换行
     List<Document> cleaned = documentCleaner.transformAll(documents);
-    log.info("🧼 清洗完成（{} → {} 文档）", documents.size(), cleaned.size());
+    log.info(" 清洗完成（{} → {} 文档）", documents.size(), cleaned.size());
 
     // 2. 分块：父子分块（Ch12，默认开）或扁平分块（Ch10 旧行为）
     List<TextSegment> segments = parentChild
             ? splitIntoParentChild(cleaned)
             : DocumentSplitters.recursive(chunkSize, chunkOverlap).splitAll(cleaned);
-    log.info("✂️  分块完成：{} 个文档 → {} 个块（parent-child={}）",
+ log.info("️ 分块完成：{} 个文档 → {} 个块（parent-child={}）",
             cleaned.size(), segments.size(), parentChild);
 
     // 2.5 填充关键词检索索引（混合检索的"全文"一路，Ch12）
@@ -623,7 +623,7 @@ private void ingest(List<Document> documents) {
 
     documentCount.addAndGet(cleaned.size());
     segmentCount.addAndGet(segments.size());
-    log.info("✅ 入库完成：累计 {} 文档 / {} 块（embedding 维度={}）",
+ log.info("入库完成：累计 {} 文档 / {} 块（embedding 维度={}）",
             documentCount.get(), segmentCount.get(), embeddingModel.dimension());
 }
 ```
@@ -646,7 +646,7 @@ public void run(ApplicationArguments args) {
     try {
         ingestClasspathDocs();
     } catch (Exception e) {
-        log.error("❌ 启动建库失败", e);
+ log.error("启动建库失败", e);
     }
 }
 
@@ -654,10 +654,10 @@ public void run(ApplicationArguments args) {
 public synchronized void ingestClasspathDocs() {
     List<Document> documents = ClassPathDocumentLoader.loadDocuments(docsClasspath, new TextDocumentParser());
     if (documents.isEmpty()) {
-        log.warn("⚠️ classpath:{} 下没有发现文档", docsClasspath);
+ log.warn("️ classpath:{} 下没有发现文档", docsClasspath);
         return;
     }
-    log.info("📂 从 classpath:{} 加载到 {} 个文档", docsClasspath, documents.size());
+ log.info("从 classpath:{} 加载到 {} 个文档", docsClasspath, documents.size());
     ingest(documents);
 }
 ```
@@ -684,10 +684,10 @@ public synchronized void ingestFromDirectory(String directoryPath) {
         throw new RuntimeException("读取目录失败: " + directoryPath, e);
     }
     if (documents.isEmpty()) {
-        log.warn("⚠️ 目录 {} 下没有发现文档", directoryPath);
+ log.warn("️ 目录 {} 下没有发现文档", directoryPath);
         return;
     }
-    log.info("📂 从目录 {} 加载到 {} 个文档", directoryPath, documents.size());
+    log.info("从目录 {} 加载到 {} 个文档", directoryPath, documents.size());
     ingest(documents);
 }
 ```
@@ -702,7 +702,7 @@ public synchronized void ingestUpload(MultipartFile file) {
     String fileName = file.getOriginalFilename();
     try {
         Document document = parserFor(fileName).parse(file.getInputStream());
-        log.info("📄 上传文档 {} 解析成功（{} 字符）", fileName, document.text().length());
+        log.info(" 上传文档 {} 解析成功（{} 字符）", fileName, document.text().length());
         ingest(List.of(document));
     } catch (IOException e) {
         throw new RuntimeException("上传文件解析失败: " + fileName, e);
@@ -722,7 +722,7 @@ public synchronized void clearStore() {
     lexicalSegmentIndex.clear();
     documentCount.set(0);
     segmentCount.set(0);
-    log.info("🧹 向量库已清空");
+ log.info("向量库已清空");
 }
 ```
 
@@ -803,10 +803,10 @@ java -jar target/smart-doc-assistant-0.16.0-SNAPSHOT.jar --chat.rag.parent-child
 
 ```
 Started AssistantApplication in 6.871 seconds (process running for 7.138)
-📂 从 classpath:docs 加载到 4 个文档
-🧼 清洗完成（4 → 4 文档）
-✂️  分块完成：4 个文档 → 7 个块（parent-child=false）
-✅ 入库完成：累计 4 文档 / 7 块（embedding 维度=384）
+ 从 classpath:docs 加载到 4 个文档
+清洗完成（4 → 4 文档）
+ 分块完成：4 个文档 → 7 个块（parent-child=false）
+ 入库完成：累计 4 文档 / 7 块（embedding 维度=384）
 ```
 
 **① 看统计**：

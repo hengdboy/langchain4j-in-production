@@ -9,7 +9,7 @@ import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 /**
- * Ch03 新增：FlexibleAssistant —— 演示 ChatRequestParameters 单次覆盖参数
+ * 新增：FlexibleAssistant —— 演示 ChatRequestParameters 单次覆盖参数
  *
  * 对比 ChatAssistant（基础）和 FlexibleAssistant（参数动态）：
  * - ChatAssistant：固定全局参数，适合简单对话
@@ -23,12 +23,12 @@ public interface FlexibleAssistant {
     /**
      * 创意写作：高 temperature + frequency_penalty 抗重复
      * 典型调用：
-     *   params = ChatRequestParameters.builder()
-     *       .temperature(1.0)
-     *       .topP(0.95)
-     *       .frequencyPenalty(0.5)
-     *       .maxTokens(2000)
-     *       .build();
+     * params = ChatRequestParameters.builder()
+     * .temperature(1.0)
+     * .topP(0.95)
+     * .frequencyPenalty(0.5)
+     * .maxTokens(2000)
+     * .build();
      */
     @SystemMessage("你是一位资深品牌文案，擅长写有温度、有故事感的内容。" +
                    "文风：优雅但不矫情，简洁但有信息密度。")

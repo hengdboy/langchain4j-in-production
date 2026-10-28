@@ -9,12 +9,12 @@ import dev.langchain4j.service.V;
 import java.util.List;
 
 /**
- * Ch24 Agent 2/6：岗位匹配评估（全套 pipeline 里被护栏看得最紧的一个）。
+ * Agent 2/6：岗位匹配评估（全套 pipeline 里被护栏看得最紧的一个）。
  *
  * <h2>输入侧</h2>
  * <p>只喂<b>决策画像</b>（{@code DecisionFieldFilter} 白名单过滤后）——
  * 姓名、联系方式、年龄、性别、婚育、籍贯在 prompt 里根本不存在，
- * 而不是"告诉模型别用"（提示词约束是君子协定，字段不存在才是硬约束，见 Ch25 §25.3）。
+ * 而不是"告诉模型别用"（提示词约束是君子协定，字段不存在才是硬约束）。
  *
  * <h2>输出侧</h2>
  * <p>挂 {@code DiscriminationGuardrail}：理由里出现受保护特征词直接拦截。

@@ -8,15 +8,15 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Ch19 MCP 深度开发：MCP Server 端安全检查。
+ * MCP 深度开发：MCP Server 端安全检查。
  *
  * <p>提供两层防护：
  * <ol>
- *   <li><strong>API Key 鉴权</strong>：HTTP 传输下，客户端必须在
- *       {@code Authorization: Bearer <key>} 或 {@code X-MCP-API-Key} 头携带密钥；
- *       stdio 传输下由 OS 进程隔离（不暴露给远端）</li>
- *   <li><strong>工具白名单</strong>：白名单从 {@link KnowledgeBaseMcpTools#TOOL_NAMES} 单一真相源读取，
- *       加新工具时只需改 {@link KnowledgeBaseMcpTools} 一处</li>
+ * <li><strong>API Key 鉴权</strong>：HTTP 传输下，客户端必须在
+ * {@code Authorization: Bearer <key>} 或 {@code X-MCP-API-Key} 头携带密钥；
+ * stdio 传输下由 OS 进程隔离（不暴露给远端）</li>
+ * <li><strong>工具白名单</strong>：白名单从 {@link KnowledgeBaseMcpTools#TOOL_NAMES} 单一真相源读取，
+ * 加新工具时只需改 {@link KnowledgeBaseMcpTools} 一处</li>
  * </ol>
  *
  * <h2>启动时校验</h2>
@@ -25,10 +25,10 @@ import java.util.List;
  *
  * <h2>生产化建议</h2>
  * <ul>
- *   <li>API Key 应存到 Vault / KMS，配置里只放引用</li>
- *   <li>OAuth 2.0 鉴权（与标准 MCP 服务器对齐）</li>
- *   <li>工具白名单按租户隔离（多租户 SaaS）</li>
- *   <li>限流（每秒最大调用数）+ 熔断（连续失败自动禁用工具）</li>
+ * <li>API Key 应存到 Vault / KMS，配置里只放引用</li>
+ * <li>OAuth 2.0 鉴权（与标准 MCP 服务器对齐）</li>
+ * <li>工具白名单按租户隔离（多租户 SaaS）</li>
+ * <li>限流（每秒最大调用数）+ 熔断（连续失败自动禁用工具）</li>
  * </ul>
  *
  * @author langchain4j-tutorial
@@ -62,9 +62,9 @@ public class McpSecurityService {
                             + "). Set 'chat.mcp.api-key' in application.yml to a strong secret.");
         }
         if ("dev-mcp-key-replace-in-production".equals(apiKey)) {
-            log.warn("⚠️ [MCP Security] Using default API key — change chat.mcp.api-key for production!");
+            log.warn(" [MCP Security] Using default API key — change chat.mcp.api-key for production!");
         }
-        log.info("🔒 [MCP Security] API key validated (length={}), {} tools whitelisted",
+        log.info("[MCP Security] API key validated (length={}), {} tools whitelisted",
                 apiKey.length(), allowedTools.size());
     }
 

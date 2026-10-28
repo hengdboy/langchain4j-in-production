@@ -51,6 +51,6 @@ class E2EScriptTest {
                 .contains("INVITE_SENT").contains("INTERVIEW_SCHEDULED")
                 .contains("OFFER_SENT").contains("HIRED").contains("REJECTED")
                 .contains("redactedProfile");
-        log.info("✅ E2E 脚本契约完整");
+        log.info("E2E 脚本契约完整");
     }
 }

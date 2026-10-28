@@ -157,7 +157,7 @@ public void record(Object memoryId, String toolName, String arguments, String re
             result != null && result.length() > 200 ? result.substring(0, 200) + "…" : result,
             failed, startTime, LocalDateTime.now());
     auditLog.computeIfAbsent(key, k -> new ArrayList<>()).add(entry);   // key 已含租户/用户
-    log.info("📝 [审计] 租户={} 用户={} 会话={} 工具[{}] failed={} 耗时{}ms",
+ log.info("[审计] 租户={} 用户={} 会话={} 工具[{}] failed={} 耗时{}ms",
             RequestContext.tenantId(), RequestContext.userId(), memoryId, toolName, failed, ...);
 }
 ```
@@ -199,10 +199,10 @@ private AiServiceListener<AiServiceCompletedEvent> completedListener() {
             String tokenInfo = "";
             if (result instanceof Result<?> r && r.tokenUsage() != null) {   // javap 核实：Result.tokenUsage()
                 TokenUsage tu = r.tokenUsage();
-                tokenInfo = String.format(" tokens: in=%s out=%s total=%s",
+                tokenInfo = String.format("tokens: in=%s out=%s total=%s",
                         tu.inputTokenCount(), tu.outputTokenCount(), tu.totalTokenCount());
             }
-            log.info("📊 [可观测] AiService 调用完成{} result={}", tokenInfo, result);
+ log.info("[可观测] AiService 调用完成{} result={}", tokenInfo, result);
         }
     };
 }
@@ -210,9 +210,9 @@ private AiServiceListener<AiServiceCompletedEvent> completedListener() {
 
 **真实效果**（2026-10-28 实测，一轮"退款政策 + 计算"的完整请求）：
 ```
-🎯 动态工具注入：消息[帮我算一下 128 乘以 7 等于多少，…] 租户=tenantA 角色=user 域=[refund, calc] → 暴露 3 个工具：[calculate, percentage, searchKnowledgeBase]
-📝 [审计] 租户=tenantA 用户=u1001 会话=17 工具[searchKnowledgeBase] failed=false 耗时107ms（virtual-76）
-📊 [可观测] AiService 调用完成 tokens: in=1350 out=628 total=1978 result=dev.langchain4j.service.Result@…
+ 动态工具注入：消息[帮我算一下 128 乘以 7 等于多少，…] 租户=tenantA 角色=user 域=[refund, calc] → 暴露 3 个工具：[calculate, percentage, searchKnowledgeBase]
+ [审计] 租户=tenantA 用户=u1001 会话=17 工具[searchKnowledgeBase] failed=false 耗时107ms（virtual-76）
+ [可观测] AiService 调用完成 tokens: in=1350 out=628 total=1978 result=dev.langchain4j.service.Result@…
 ```
 
 三条日志三种价值：注入日志回答"模型这轮**被允许**用什么"（暴露≠执行，见 ②），审计日志回答"实际用了什么、结果如何"，观测日志回答"这条请求花了多少"。三行日志拼在一起，一次 Agent 调用就完全可解释了。
@@ -237,13 +237,13 @@ Agent 跑在生产，**工具不可能永远成功**：参数格式错、服务�
 // ⑤ 错误处理三件套：工具异常 / 参数解析失败 / 幻觉工具名，都兜底成友好文本引导模型纠正
 .toolExecutionErrorHandler((throwable, context) -> {
     String tool = context.toolExecutionRequest().name();
-    log.warn("⚠️ [错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
+ log.warn("️ [错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
     return ToolErrorHandlerResult.text(
             "工具 [" + tool + "] 执行失败：" + throwable.getMessage()
                     + "。请修正参数后重试，或换一种方式回答。");
 })
 .toolArgumentsErrorHandler((throwable, context) -> {
-    log.warn("⚠️ [错误处理] 工具参数解析失败: {}", throwable.getMessage());
+ log.warn("️ [错误处理] 工具参数解析失败: {}", throwable.getMessage());
     return ToolErrorHandlerResult.text(
             "工具参数格式不正确：" + throwable.getMessage() + "。请重新生成参数。");
 })
@@ -255,9 +255,9 @@ Agent 跑在生产，**工具不可能永远成功**：参数格式错、服务�
 **实测"工具抛异常"场景**（2026-10-28，问"帮我算一下 5 除以 0 等于多少"）：
 
 ```
-⚠️ [错误处理] 工具[calculate]执行异常: 除数不能为零，请换个非零的第二个数字   ← handler 接管，日志留痕
-📝 [审计] 租户=tenantA 用户=u1001 会话=19 工具[calculate] failed=true 耗时3ms  ← 审计标记失败
-📊 [可观测] AiService 调用完成 tokens: in=1166 out=370 total=1536 …            ← 一次失败调用的完整成本
+ [错误处理] 工具[calculate]执行异常: 除数不能为零，请换个非零的第二个数字 ← handler 接管，日志留痕
+ [审计] 租户=tenantA 用户=u1001 会话=19 工具[calculate] failed=true 耗时3ms ← 审计标记失败
+ [可观测] AiService 调用完成 tokens: in=1166 out=370 total=1536 … ← 一次失败调用的完整成本
 → 模型拿到友好文本后体面收场：
 "计算器返回了错误，这个结果是符合数学定义的：5 ÷ 0 没有意义，即结果不存在……"   ← HTTP 200
 ```
@@ -377,9 +377,9 @@ try {
 **证据**（一次请求的三行日志，线程名说明一切）：
 
 ```
-[nio-8090-exec-2] 🎯 动态工具注入：… 租户=tenantA 角色=user   ← provideTools 在请求线程，上下文正确
-[virtual-88]      🚫 [ToolGuard] role 'USER' has no allowed-tools entry  ← 执行线程读到默认值
-[virtual-88]      📝 [审计] 租户=default 用户=anonymous 会话=17 …          ← 审计归属错乱
+[nio-8090-exec-2] 动态工具注入：… 租户=tenantA 角色=user   ← provideTools 在请求线程，上下文正确
+[virtual-88] [ToolGuard] role 'USER' has no allowed-tools entry ← 执行线程读到默认值
+[virtual-88] [审计] 租户=default 用户=anonymous 会话=17 … ← 审计归属错乱
 ```
 
 **根因**：`executeToolsConcurrently()` 把工具执行（和 `afterToolExecution` 回调）调度到虚拟线程。`RequestContext` 是 `ThreadLocal`——**它的作用域是"设值的那条线程"，不是"那次 HTTP 请求"**。请求线程上的 set，虚拟线程上看不见，`withInitial` 的默认值（default/anonymous/USER）全数接管。16.4 说过"单工具不派发"——所以这个 bug 的表现是**间歇**的：一轮只调一个工具时一切正常，模型哪轮并行要了两个工具，上下文就丢了。间歇性 + 无报错，是生产上最难缠的一类。
@@ -430,8 +430,8 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
        "tenantId":"tenantA","userId":"u1001","role":"user"}'
 # → 运费规则完整作答（searchKnowledgeBase 正常执行）
 # 日志：🎯 … 租户=tenantA 角色=user 域=[refund, calc] → 暴露 3 个工具
-#       📝 [审计] … 工具[searchKnowledgeBase] failed=false 耗时107ms（virtual-76）
-#       📊 tokens: in=1350 out=628 total=1978
+# [审计] … 工具[searchKnowledgeBase] failed=false 耗时107ms（virtual-76）
+#        tokens: in=1350 out=628 total=1978
 
 # ② 角色边界（执行期护栏）：user 角色算计算器
 #    同样的问题换个问法，让意图路由选中 calc 域：
@@ -440,7 +440,7 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
   -d '{"sessionId":"18","question":"帮我算一下 128 乘以 7 等于多少","tenantId":"tenantA","userId":"u1001","role":"user"}'
 # → calculate 被 ToolGuard 拦截："⛔ 操作被安全策略拦截：角色 [user] 无权调用工具 [calculate]"
 #    模型拿到拦截文本后向用户解释"没有计算权限"，而不是 500
-# 审计：⛔ 文本如实入库（failed=false——拦截是正常返回，不是异常）
+# 审计： 文本如实入库（failed=false——拦截是正常返回，不是异常）
 
 # ③ 审计查询：必须带显式租户/用户（16.3 修复实录）
 curl "http://localhost:8090/api/agent/audit?sessionId=17&tenantId=tenantA&userId=u1001"
@@ -453,8 +453,8 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
   -H "Content-Type: application/json" \
   -d '{"sessionId":"19","question":"帮我算一下 5 除以 0 等于多少","tenantId":"tenantA","userId":"u1001","role":"admin"}'
 # → HTTP 200，模型引着工具报错原文给出"5 ÷ 0 没有定义"的完整解释
-# 日志：⚠️ [错误处理] 工具[calculate]执行异常: 除数不能为零…
-#       📝 [审计] … failed=true 耗时3ms      📊 tokens: in=1166 out=370 total=1536
+# 日志：️ [错误处理] 工具[calculate]执行异常: 除数不能为零…
+# [审计] … failed=true 耗时3ms tokens: in=1166 out=370 total=1536
 
 # ⑤ 上下文传播（16.9.1 修复验证）：多工具轮的审计归属
 #    ① 的日志里审计已带 tenantA/u1001（修复前是 default/anonymous）

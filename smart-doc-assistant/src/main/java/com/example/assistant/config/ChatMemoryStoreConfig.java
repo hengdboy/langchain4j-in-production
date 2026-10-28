@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import java.time.Duration;
 
 /**
- * Ch05 新增：ChatMemoryStore 的 Redis 持久化配置
+ * 新增：ChatMemoryStore 的 Redis 持久化配置
  *
  * 关键设计：
  * - 单一 ChatMemoryStore Bean 被 ChatMemoryProvider 引用

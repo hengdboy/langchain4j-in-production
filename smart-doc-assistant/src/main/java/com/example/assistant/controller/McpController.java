@@ -19,13 +19,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch17 新增：MCP Agent 接口（工具 + 资源两种原语）
+ * 新增：MCP Agent 接口（工具 + 资源两种原语）
  *
  * <p>用法：
  * <pre>
  * # ① 工具原语：问 Agent，让它调用 MCP 服务器暴露的工具
  * curl -X POST http://localhost:8090/api/mcp/ask \
- *   -H "Content-Type: application/json" -d '{"question":"3 加 4 等于多少？"}'
+ * -H "Content-Type: application/json" -d '{"question":"3 加 4 等于多少？"}'
  *
  * # ② 资源原语：列出 MCP 服务器上的资源
  * curl http://localhost:8090/api/mcp/resources
@@ -53,7 +53,7 @@ public class McpController {
         return Map.of("success", true, "answer", answer);
     }
 
-    /** 资源发现：McpClient.listResources()（javap 核实） */
+    /** 资源发现：McpClient.listResources()（源码核实） */
     @GetMapping("/resources")
     public Map<String, Object> resources() {
         List<McpResource> resources = mcpClient.listResources();
@@ -65,7 +65,7 @@ public class McpController {
                         .toList());
     }
 
-    /** 资源读取：McpClient.readResource(uri)（javap 核实） */
+    /** 资源读取：McpClient.readResource(uri)（源码核实） */
     @GetMapping("/resource")
     public Map<String, Object> resource(@RequestParam String uri) {
         McpReadResourceResult result = mcpClient.readResource(uri);
@@ -77,7 +77,7 @@ public class McpController {
                 .toList());
     }
 
-    /** 提示发现：McpClient.listPrompts()（javap 核实，Ch19） */
+    /** 提示发现：McpClient.listPrompts()（源码核实） */
     @GetMapping("/prompts")
     public Map<String, Object> prompts() {
         // 手动取字段：McpPrompt 无 Bean getter，直接序列化会报 No serializer found
@@ -92,7 +92,7 @@ public class McpController {
                 .toList());
     }
 
-    /** 提示获取：McpClient.getPrompt(name, args)（javap 核实，Ch19） */
+    /** 提示获取：McpClient.getPrompt(name, args)（源码核实） */
     @GetMapping("/prompt")
     public Map<String, Object> prompt(@RequestParam String name,
                                       @RequestParam(defaultValue = "general") String issue) {

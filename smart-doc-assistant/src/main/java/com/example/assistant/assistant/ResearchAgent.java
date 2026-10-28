@@ -5,7 +5,7 @@ import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 
 /**
- * Ch14 新增：研究助手 Agent 接口
+ * 新增：研究助手 Agent 接口
  *
  * <p>注意：这里<b>没有</b>用 {@code @AiService} 注解，而是用 {@code AiServices.builder()}
  * 手动装配（见 AgentConfig）——因为要注册多个工具 + 设置 maxToolCallingRoundTrips（防循环）。

@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Ch15 新增：Supervisor 模式（纯 Agentic 自主编排）的装配类。
+ * 新增：Supervisor 模式（纯 Agentic 自主编排）的装配类。
  *
  * <p>把三个子 Agent 与主管 Agent 都声明为 Spring Bean，与 {@code AdvancedRagConfig} 风格统一：
  * 组件在 {@code @Configuration} 里 new 并装配依赖，使用方（{@code CustomerServiceSupervisor}）只做薄封装，
@@ -25,9 +25,9 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>三个子 Agent 各自带工具：
  * <ul>
- *   <li>退款专家：配 Ch12 的 RagLookupTool（查本地知识库）</li>
- *   <li>物流专家：配 TimeTools（算发货时效相关日期）</li>
- *   <li>技术专家：配 CalculatorTools（运费/折扣计算）</li>
+ * <li>退款专家：配 RagLookupTool（查本地知识库）</li>
+ * <li>物流专家：配 TimeTools（算发货时效相关日期）</li>
+ * <li>技术专家：配 CalculatorTools（运费/折扣计算）</li>
  * </ul>
  *
  * <p>{@code SupervisorResponseStrategy.SUMMARY}：由主管汇总各子 Agent 的结果返回给用户。

@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 
 /**
- * v0.29 Ch16 Audit：GDPR 合规审计 service。
+ * v0.29  Audit：GDPR 合规审计 service。
  *
  * <h2>职责</h2>
  * <ul>
- *   <li>监听 {@link CandidateTransitionedEvent}：把每次 FSM 转换写入 {@code audit_log}</li>
- *   <li>提供 {@link #record} 方法供业务侧手动触发（如 lead 创建 / 数据导出）</li>
+ * <li>监听 {@link CandidateTransitionedEvent}：把每次 FSM 转换写入 {@code audit_log}</li>
+ * <li>提供 {@link #record} 方法供业务侧手动触发（如 lead 创建 / 数据导出）</li>
  * </ul>
  *
  * <h2>GDPR Article 30</h2>
@@ -72,7 +72,7 @@ public class AuditService {
             auditLogMapper.insert(log);
         } catch (Exception e) {
             // 审计失败不阻塞主流程，但必须记录到日志（合规要求）
-            AuditService.log.error("⚠️ [Audit] persist audit_log failed: {}", e.getMessage());
+            AuditService.log.error(" [Audit] persist audit_log failed: {}", e.getMessage());
         }
     }
 }

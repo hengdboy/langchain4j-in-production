@@ -9,14 +9,14 @@ import dev.langchain4j.service.V;
 import java.util.List;
 
 /**
- * Ch24 Agent 1/6：简历解析。
+ * Agent 1/6：简历解析。
  *
  * <h2>职责</h2>
  * <p>把非结构化简历原文转成结构化 {@link ParsedProfile}。原则：<b>只提取，不评估</b>——
  * 好坏判断是 {@link MatchEvaluatorAgent} 的事，解析器多说一个字都是引入偏见的机会。
  *
  * <p>产出的画像仍含姓名/邮箱/电话（后续约面要用），但进入评估前会被
- * {@code DecisionFieldFilter} 过一遍决策白名单（见 Ch25 §25.3）。
+ * {@code DecisionFieldFilter} 过一遍决策白名单。
  *
  * @author langchain4j-tutorial
  * @since v0.30

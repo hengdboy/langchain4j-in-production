@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch24 v0.30 MCP 工具单元测试（内存目录 mock，无 DB）。
+ * v0.30 MCP 工具单元测试（内存目录 mock，无 DB）。
  *
  * @author langchain4j-tutorial
  * @since v0.30
@@ -26,7 +26,7 @@ class HiringMcpToolsTest {
         String out = tools.getCandidateStatus(1L);
         assertThat(out).contains("张伟").contains("OFFER_SENT").contains("85")
                 .doesNotContain("@").doesNotContain("138");
-        log.info("✅ {}", out);
+        log.info("{}", out);
     }
 
     @Test

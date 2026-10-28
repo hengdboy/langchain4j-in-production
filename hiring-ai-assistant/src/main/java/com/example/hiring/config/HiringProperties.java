@@ -6,18 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.Duration;
 
 /**
- * Ch24 招聘项目可配置参数（中央配置类）。
+ * 招聘项目可配置参数（中央配置类）。
  *
- * <h2>为什么需要这个类</h2>
- * <p>招聘 pipeline 里有<strong>大量"魔法时间"</strong>（48h 约面超时、5 天 offer 超时、
- * 1 轮追发、定时器扫描频率……），散落各处用 {@code @Value} 注入会导致测试写大量
- * {@code @TestPropertySource}、生产/教学/测试无法差异化。
- *
- * <h2>配置位置</h2>
- * <p>对应 {@code application.yml} 的 {@code hiring.*} 段（见 ARCHITECTURE.md §2）。
- *
- * @author langchain4j-tutorial
- * @since v0.30
+ * <p>约面超时、offer 超时、追发轮次、扫描频率这类魔法数字统一收口在这里，
+ * 对应 application.yml 的 hiring.* 段；测试 / 教学 / 生产用不同 profile 覆盖。
  */
 @Data
 @ConfigurationProperties(prefix = "hiring")
@@ -33,30 +25,13 @@ public class HiringProperties {
     // ============== FSM 状态机相关时间 ==============
     @Data
     public static class Fsm {
-        /**
-         * 约面邀请"48 小时无回复"超时（毫秒）。
-         * <ul>
-         *   <li>教学版：7200000（2 小时，方便观察）</li>
-         *   <li>生产：172800000（48 小时）</li>
-         * </ul>
-         */
+        /** 约面邀请无回复超时（毫秒）。默认 2 小时，生产 48 小时。 */
         private long replyTimeoutMs = 7_200_000L;  // 2h 默认
 
-        /**
-         * offer"5 天无答复"超时（毫秒）。
-         * <ul>
-         *   <li>教学版：300000（5 分钟）</li>
-         *   <li>生产：432000000（5 天）</li>
-         * </ul>
-         */
+        /** offer 无答复超时（毫秒）。默认 5 分钟，生产 5 天。 */
         private long offerTimeoutMs = 300_000L;  // 5min 默认
 
-        /**
-         * 邀请最大轮次（1 首发 + N-1 追发）。
-         * <ul>
-         *   <li>招聘业务惯例：2（追发一次即止——招聘岗位不像销售，骚扰候选人伤雇主品牌）</li>
-         * </ul>
-         */
+        /** 邀请最大轮次（1 首发 + N-1 追发）。招聘业务惯例 2：追发一次即止，骚扰候选人伤雇主品牌。 */
         private int maxInviteRounds = 2;
     }
 

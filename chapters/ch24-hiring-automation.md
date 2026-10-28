@@ -99,12 +99,14 @@
 
 ```java
 /**
- * 设计：确定性 FSM + LLM 叶子
- * 编排不是 LLM 自主决定，而是由 FSM 状态迁移驱动：
- * 1. 外部事件（投递 / 候选人回复 / 面试官反馈 / HR 复核 / 超时）进入本服务
- * 2. accepted 转换后发布 CandidateTransitionedEvent
- * 3. 本服务监听迁移事件，按「新状态」确定性触发对应 Agent
- * 4. Agent 输出结构化结果，作为下一 FSM 事件的 overrides 回喂
+ * 事件驱动编排：招聘业务流水线（核心）。
+ *
+ * <p>设计原则：确定性 FSM + LLM 叶子。编排不由 LLM 自主决定，而由状态迁移驱动：
+ * 1. 外部事件（投递 / 候选人回复 / 面试官反馈 / HR 复核 / 超时）进入本服务或
+ *    CandidateService#processEvent；
+ * 2. accepted 转换后发布 CandidateTransitionedEvent；
+ * 3. 本服务监听迁移事件，按新状态确定性触发对应 Agent；
+ * 4. Agent 输出结构化结果，作为下一 FSM 事件的 overrides 回喂。
  */
 ```
 

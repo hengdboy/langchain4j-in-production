@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 /**
- * Ch24 API 层：创建职位请求体。
+ * API 层：创建职位请求体。
  *
  * @param title          职位名
  * @param department     部门

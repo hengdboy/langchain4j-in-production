@@ -8,7 +8,7 @@ import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 /**
- * Ch04 新增：StreamingChatAssistant —— 演示 AiService 返回 TokenStream
+ * 新增：StreamingChatAssistant —— 演示 AiService 返回 TokenStream
  * <p>
  * 关键：方法返回 TokenStream，框架自动处理：
  * - ChatMemory 加载与追加（仅在 onCompleteResponse 时追加）
@@ -17,7 +17,7 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
  * <p>
  * 我们只需要在 Controller 里订阅回调。
  * <p>
- * 注意：这里用 @MemoryId 而不是 String，是因为 Ch02 的 AiServiceConfig 里的
+ * 注意：这里用 @MemoryId 而不是 String，是因为 AiServiceConfig 里的
  * ChatMemoryProvider 是按 Object 类型作为 key 的。生产环境建议用 Long/UUID。
  */
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT,

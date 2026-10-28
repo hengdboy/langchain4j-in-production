@@ -1,13 +1,13 @@
 package com.example.hiring.core;
 
 /**
- * Ch24 事件驱动编排：FSM 状态迁移事件（Spring ApplicationEvent）。
+ * 事件驱动编排：FSM 状态迁移事件（Spring ApplicationEvent）。
  *
  * <p>{@link CandidateService} 每次 accepted 转换后发布，由
  * {@link com.example.hiring.service.CandidatePipelineService} 监听，触发下一个 Agent：
  * <ul>
- *   <li>→ QUALIFIED：触发 {@code OutreachContentAgent} 生成开发信（CONTENT_READY）</li>
- *   <li>→ READY：触发 {@link com.example.hiring.tools.MailGateway} 发送首发邮件（EMAIL_SENT）</li>
+ * <li>→ QUALIFIED：触发 {@code OutreachContentAgent} 生成开发信（CONTENT_READY）</li>
+ * <li>→ READY：触发 {@link com.example.hiring.tools.MailGateway} 发送首发邮件（EMAIL_SENT）</li>
  * </ul>
  *
  * <p>这样 Agent 不是被脚本"拉着走"，而是被 FSM 状态迁移"推着走"（事件驱动）。

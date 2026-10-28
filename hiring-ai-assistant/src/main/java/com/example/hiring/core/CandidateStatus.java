@@ -1,15 +1,15 @@
 package com.example.hiring.core;
 
 /**
- * Ch24 FSM 状态机：候选人状态枚举（ARCHITECTURE.md §3.1）。
+ * FSM 状态机：候选人状态枚举（ARCHITECTURE.md ）。
  *
  * <h2>12 状态分类</h2>
  * <ul>
- *   <li><b>流程中（6 个）</b>：APPLIED → SHORTLISTED → INVITE_SENT → INTERVIEW_SCHEDULED
- *       → INTERVIEWED → OFFER_SENT</li>
- *   <li><b>待定（1 个）</b>：ON_HOLD（匹配分中间带，等 HR 人工复核）</li>
- *   <li><b>完成（2 个）</b>：HIRED / REJECTED（终态）</li>
- *   <li><b>流失（3 个）</b>：WITHDRAWN / CLOSED_NO_RESPONSE / EXPIRED（终态）</li>
+ * <li><b>流程中（6 个）</b>：APPLIED → SHORTLISTED → INVITE_SENT → INTERVIEW_SCHEDULED
+ * → INTERVIEWED → OFFER_SENT</li>
+ * <li><b>待定（1 个）</b>：ON_HOLD（匹配分中间带，等 HR 人工复核）</li>
+ * <li><b>完成（2 个）</b>：HIRED / REJECTED（终态）</li>
+ * <li><b>流失（3 个）</b>：WITHDRAWN / CLOSED_NO_RESPONSE / EXPIRED（终态）</li>
  * </ul>
  *
  * @author langchain4j-tutorial

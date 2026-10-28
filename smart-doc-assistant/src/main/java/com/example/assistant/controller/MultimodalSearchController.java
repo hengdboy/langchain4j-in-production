@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch09：多模态（跨模态）语义检索端点。
+ * ：多模态（跨模态）语义检索端点。
  *
  * <p>POST /api/search/multimodal —— 文本搜图 / 图搜图
  * 请求：

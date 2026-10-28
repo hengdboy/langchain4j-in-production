@@ -20,7 +20,7 @@ import java.util.function.Function;
  * 逼到边界上测——真模型的输出你控制不了。
  *
  * <p>只重写 {@code chat(ChatRequest)} 一个方法：AiServices 内部经
- * ChatExecutor 最终调的就是它（源码 DirectChatExecutor L29，javap/源码双核实）。
+ * ChatExecutor 最终调的就是它（源码 DirectChatExecutor L29，源码核实）。
  * 脚本条目支持两种形态：纯文本、或 @@TOOL@@id|name|json 形态的工具调用。
  */
 public final class StubChatModel implements ChatModel {

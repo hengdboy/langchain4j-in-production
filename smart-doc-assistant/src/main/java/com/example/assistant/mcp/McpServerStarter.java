@@ -25,39 +25,39 @@ import org.springframework.core.io.ClassPathResource;
 import java.util.List;
 
 /**
- * Ch19 MCP 深度开发：stdio MCP Server 启动器。
+ * MCP 深度开发：stdio MCP Server 启动器。
  *
  * <p>独立可执行入口（{@code java -cp ... com.example.assistant.mcp.McpServerStarter}），
  * 由 MCP 客户端（如 Claude Desktop）以子进程方式拉起，通过 stdin/stdout 与客户端进行 JSON-RPC 通信。
  *
  * <h2>为什么不直接用 {@code SpringApplication.run()}</h2>
  * <ul>
- *   <li>stdio Server 需要独占 stdin/stdout；Spring Boot 启动器会拉起 Tomcat、HTTP 客户端等额外组件，
- *       占用资源且无意义</li>
- *   <li>MCP 子进程生命周期很短（用户每次启动 Claude Desktop 时启动一次），启动越快越好</li>
+ * <li>stdio Server 需要独占 stdin/stdout；Spring Boot 启动器会拉起 Tomcat、HTTP 客户端等额外组件，
+ * 占用资源且无意义</li>
+ * <li>MCP 子进程生命周期很短（用户每次启动 Claude Desktop 时启动一次），启动越快越好</li>
  * </ul>
  *
  * <h2>设计要点</h2>
  * <ul>
- *   <li>用 {@link AnnotationConfigApplicationContext} 精准加载需要的配置类，
- *       跳过 Spring Boot 自动装配（无 Tomcat、无 web、无 actuator）</li>
- *   <li>只注入 {@code EmbeddingModel} / {@code EmbeddingStore} / {@code RetrievalAugmentor} 三个 Bean，
- *       其他依赖（ChatModel / Controller / 等）一律不加载</li>
- *   <li>把 {@link KnowledgeBaseMcpTools} 实例注册为 MCP Server 的工具 Bean，
- *       框架会扫描其 {@code @Tool} 注解自动生成 JSON Schema</li>
- *   <li><strong>关键：日志必须走 {@code System.err}</strong>，否则会污染
- *       {@code System.out} 上的 JSON-RPC 协议流，导致客户端断开（官方 SDK 文档警告）</li>
+ * <li>用 {@link AnnotationConfigApplicationContext} 精准加载需要的配置类，
+ * 跳过 Spring Boot 自动装配（无 Tomcat、无 web、无 actuator）</li>
+ * <li>只注入 {@code EmbeddingModel} / {@code EmbeddingStore} / {@code RetrievalAugmentor} 三个 Bean，
+ * 其他依赖（ChatModel / Controller / 等）一律不加载</li>
+ * <li>把 {@link KnowledgeBaseMcpTools} 实例注册为 MCP Server 的工具 Bean，
+ * 框架会扫描其 {@code @Tool} 注解自动生成 JSON Schema</li>
+ * <li><strong>关键：日志必须走 {@code System.err}</strong>，否则会污染
+ * {@code System.out} 上的 JSON-RPC 协议流，导致客户端断开（官方 SDK 文档警告）</li>
  * </ul>
  *
  * <h2>客户端配置示例（Claude Desktop）</h2>
  * <pre>{@code
  * {
- *   "mcpServers": {
- *     "smart-doc-assistant": {
- *       "command": "java",
- *       "args": ["-jar", "/path/to/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar"]
- *     }
- *   }
+ * "mcpServers": {
+ * "smart-doc-assistant": {
+ * "command": "java",
+ * "args": ["-jar", "/path/to/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar"]
+ * }
+ * }
  * }
  * }</pre>
  *
@@ -80,7 +80,7 @@ public final class McpServerStarter {
         // 2. 编程式把 Logback root logger 重定向到 System.err（P0-5 修复）
         redirectLogbackToStderr();
 
-        System.err.println("🚀 [smart-doc-assistant MCP Server] starting stdio transport...");
+        System.err.println("[smart-doc-assistant MCP Server] starting stdio transport...");
 
         // 3. 精准加载 Spring 上下文：跳过 Spring Boot 全套自动装配
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
@@ -101,13 +101,13 @@ public final class McpServerStarter {
             McpServer server = McpServerFactory.create(embeddingModel, embeddingStore, retrievalAugmentor);
             transport = new StdioMcpServerTransport(server);
 
-            System.err.println("✅ MCP Server ready on stdio: smart-doc-assistant v0.17.0 (tools="
+            System.err.println("MCP Server ready on stdio: smart-doc-assistant v0.17.0 (tools="
                     + KnowledgeBaseMcpTools.TOOL_NAMES + ")");
 
             // 6. 阻塞主线程直到客户端断开；不再 try-with-resources 包 ctx，
-            //    否则 awaitClose() 抛异常时 ctx.close() 可能不执行（P0-4 修复）
+            // 否则 awaitClose() 抛异常时 ctx.close() 可能不执行（P0-4 修复）
             transport.awaitClose();
-            System.err.println("👋 MCP Server shutdown complete.");
+            System.err.println("MCP Server shutdown complete.");
         } finally {
             // 7. 显式按反顺序释放：先停 transport，再关 Spring ctx
             try {
@@ -115,12 +115,12 @@ public final class McpServerStarter {
                     transport.close();
                 }
             } catch (Exception e) {
-                System.err.println("⚠️ Transport close failed: " + e.getMessage());
+                System.err.println(" Transport close failed: " + e.getMessage());
             }
             try {
                 ctx.close();
             } catch (Exception e) {
-                System.err.println("⚠️ Context close failed: " + e.getMessage());
+                System.err.println(" Context close failed: " + e.getMessage());
             }
         }
     }
@@ -158,7 +158,7 @@ public final class McpServerStarter {
             rootLogger.addAppender(appender);
         } catch (Throwable t) {
             // 日志配置失败不应阻止 MCP Server 启动；降级到 System.err.println
-            System.err.println("⚠️ Logback redirect failed, falling back to stderr println: " + t.getMessage());
+            System.err.println(" Logback redirect failed, falling back to stderr println: " + t.getMessage());
         }
     }
 
@@ -173,14 +173,14 @@ public final class McpServerStarter {
     private static void loadClasspathYaml(AnnotationConfigApplicationContext ctx) {
         ClassPathResource resource = new ClassPathResource("application.yml");
         if (!resource.exists()) {
-            System.err.println("⚠️ application.yml not found on classpath, using @Value defaults");
+            System.err.println(" application.yml not found on classpath, using @Value defaults");
             return;
         }
         try {
             List<PropertySource<?>> sources = new YamlPropertySourceLoader().load("application.yml", resource);
             sources.forEach(source -> ctx.getEnvironment().getPropertySources().addLast(source));
         } catch (Exception e) {
-            System.err.println("⚠️ Failed to load application.yml, using @Value defaults: " + e.getMessage());
+            System.err.println(" Failed to load application.yml, using @Value defaults: " + e.getMessage());
         }
     }
 

@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Ch21 / Ch16：ToolGuard 角色矩阵实测（2026-10-28 数据的固化版）。
+ * / ：ToolGuard 角色矩阵实测（2026-10-28 数据的固化版）。
  *
  * <p>关键语义：整表为空 = 全放行；列了角色 = 白名单逐个匹配，没列的工具一律拒绝；
  * {@code admin: []} 是"零权限"不是"不限制"；角色键大小写敏感。

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch25 决策白名单过滤器单元测试——歧视防护的第一道闸。
+ * 决策白名单过滤器单元测试——歧视防护的第一道闸。
  *
  * @author langchain4j-tutorial
  * @since v0.30
@@ -41,7 +41,7 @@ class DecisionFieldFilterTest {
             assertThat(filter.hasKey(redacted, banned)).as("banned=" + banned).isFalse();
         }
         assertThat(redacted).doesNotContain("陈静").doesNotContain("已婚").doesNotContain("杭州");
-        log.info("✅ 白名单过滤：{}", redacted);
+        log.info("白名单过滤：{}", redacted);
     }
 
     @Test
@@ -61,7 +61,7 @@ class DecisionFieldFilterTest {
         assertThat(redacted).doesNotContain("女").doesNotContain("已婚")
                 .doesNotContain("户籍").doesNotContain("杭州");
         assertThat(filter.hasKey(redacted, "skills")).isTrue();
-        log.info("✅ notes 值清洗后：{}", redacted);
+        log.info("notes 值清洗后：{}", redacted);
     }
 
     @Test

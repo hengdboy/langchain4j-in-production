@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Ch19 MCP 深度开发：Resource 原语提供者，把 classpath:docs/* 暴露为 MCP resources。
+ * MCP 深度开发：Resource 原语提供者，把 classpath:docs/* 暴露为 MCP resources。
  *
- * <p>MCP Resources 原语（Ch17.5 节讲过协议、Ch17.7 端到端用过）让服务器暴露"只读数据"——
+ * <p>MCP Resources 原语（ 节讲过协议、 端到端用过）让服务器暴露"只读数据"——
  * 文档、图片、配置。客户端通过 {@code resources/list} 发现 URI 清单，{@code resources/read}
  * 按 URI 读取内容。
  *
@@ -45,19 +45,19 @@ public class McpResourcesProvider {
 
     /** 扫描 classpath:docs/ 下的所有可读文件，构建资源清单。 */
     private void loadAll() {
-        // 注：教学版硬编码文件名清单——Ch10 的 DocumentIngestionService 也是硬编码；
+        // 注：教学版硬编码文件名清单——DocumentIngestionService 也是硬编码；
         // 生产应改成 ClassGraph 等类扫描工具自动枚举，避免双真相源。
         for (String name : List.of("product-faq.txt", "refund-policy.txt", "technical-guide.md", "report.pdf")) {
             String uri = URI_SCHEME + name;
             try (InputStream in = getClass().getClassLoader().getResourceAsStream(DOCS_PATH + name)) {
                 if (in == null) {
-                    log.warn("⚠️ Resource not found: {}", DOCS_PATH + name);
+                    log.warn(" Resource not found: {}", DOCS_PATH + name);
                     continue;
                 }
                 byte[] bytes = in.readAllBytes();
                 String mime = detectMime(name);
                 resources.put(uri, new ResourceEntry(uri, name, mime, bytes));
-                log.info("📄 Loaded resource: {} ({} bytes, mime={})", uri, bytes.length, mime);
+                log.info("Loaded resource: {} ({} bytes, mime={})", uri, bytes.length, mime);
             } catch (IOException e) {
                 log.error("Failed to load resource {}: {}", name, e.getMessage());
             }
@@ -95,9 +95,9 @@ public class McpResourcesProvider {
      *
      * <p>内容编码遵循 MCP 规范：
      * <ul>
-     *   <li>文本类（text/markdown / text/plain / text/html / text/csv / application/json）：
-     *       返回 {@code text} 字段（UTF-8 解码）</li>
-     *   <li>二进制类（application/pdf / image/* 等）：返回 {@code blob} 字段（base64）</li>
+     * <li>文本类（text/markdown / text/plain / text/html / text/csv / application/json）：
+     * 返回 {@code text} 字段（UTF-8 解码）</li>
+     * <li>二进制类（application/pdf / image/* 等）：返回 {@code blob} 字段（base64）</li>
      * </ul>
      *
      * @param uri 客户端请求的 URI（如 {@code docs://refund-policy.txt}）

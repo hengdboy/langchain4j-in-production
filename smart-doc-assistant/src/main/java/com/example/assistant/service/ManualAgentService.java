@@ -22,17 +22,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Ch14 新增：手动 Agent 循环（教学用，揭开框架黑盒）
+ * 新增：手动 Agent 循环（教学用，揭开框架黑盒）
  *
  * <p>{@code AiServices} 在底层就是跑下面这个循环。这里用最基础的 API 把它写出来，
  * 让你看清"Agent = 大模型 + 工具执行 + 记忆"到底发生了什么：
  * <pre>
- *   1. 把用户问题作为 UserMessage 加入消息列表；
- *   2. 调 chatModel.chat(request) 得到 AiMessage——注意 request 里必须带 toolSpecifications，
- *      否则模型根本不知道有哪些工具可用，永远不会发出工具调用请求（2026-10-28 修复的 bug）；
- *   3. 若 AiMessage 含 toolExecutionRequests → 用 DefaultToolExecutor 逐个执行工具，
- *      把结果包成 ToolExecutionResultMessage 放回消息列表，回到第 2 步；
- *   4. 若没有工具请求 → 这就是最终答案。
+ * 1. 把用户问题作为 UserMessage 加入消息列表；
+ * 2. 调 chatModel.chat(request) 得到 AiMessage——注意 request 里必须带 toolSpecifications，
+ * 否则模型根本不知道有哪些工具可用，永远不会发出工具调用请求（2026-10-28 修复的 bug）；
+ * 3. 若 AiMessage 含 toolExecutionRequests → 用 DefaultToolExecutor 逐个执行工具，
+ * 把结果包成 ToolExecutionResultMessage 放回消息列表，回到第 2 步；
+ * 4. 若没有工具请求 → 这就是最终答案。
  * </pre>
  *
  * <p>工具名 → 执行器 的映射在构造时扫描每个工具对象的 {@code @Tool} 方法建立。
@@ -89,7 +89,7 @@ public class ManualAgentService {
                         ? "未知工具：" + req.name()
                         : ex.execute(req, sessionId);
                 messages.add(ToolExecutionResultMessage.from(req, result));
-                log.info("🔧 手动循环第{}轮执行工具[{}] → {}", round + 1, req.name(), result);
+                log.info("手动循环第{}轮执行工具[{}] → {}", round + 1, req.name(), result);
             }
         }
         return "（已达到最大工具轮次 " + MAX_ROUNDS + "，未产出最终答案）";

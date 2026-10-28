@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Primary;
 import java.util.List;
 
 /**
- * Ch24 Agent Bean 装配（护栏分工在这里一眼看全）。
+ * Agent Bean 装配（护栏分工在这里一眼看全）。
  *
  * <p>{@code @Agent} 接口必须用 {@code AgenticServices.agentBuilder(Class)} 构造
  * （接口内恰好一个 {@code @Agent} 方法）。
@@ -32,15 +32,15 @@ import java.util.List;
  * <p>Agent 是"叶子"，不做全局自主编排——由
  * {@link com.example.hiring.service.CandidatePipelineService} 按 FSM 状态确定性触发。
  *
- * <h2>护栏分工（Ch25 §25.3 主题）</h2>
+ * <h2>护栏分工（ 主题）</h2>
  * <table border="1">
- *   <tr><th>Agent</th><th>输入护栏</th><th>输出护栏</th></tr>
- *   <tr><td>ResumeParser</td><td>注入</td><td>—</td></tr>
- *   <tr><td>MatchEvaluator</td><td>注入</td><td>歧义特征 + PII</td></tr>
- *   <tr><td>InviteContent</td><td>—</td><td>PII</td></tr>
- *   <tr><td>ReplyClassifier</td><td>—</td><td>PII</td></tr>
- *   <tr><td>InterviewQuestion</td><td>注入</td><td>歧义特征 + PII</td></tr>
- *   <tr><td>Evaluation</td><td>注入</td><td>歧义特征 + PII</td></tr>
+ * <tr><th>Agent</th><th>输入护栏</th><th>输出护栏</th></tr>
+ * <tr><td>ResumeParser</td><td>注入</td><td>—</td></tr>
+ * <tr><td>MatchEvaluator</td><td>注入</td><td>歧义特征 + PII</td></tr>
+ * <tr><td>InviteContent</td><td>—</td><td>PII</td></tr>
+ * <tr><td>ReplyClassifier</td><td>—</td><td>PII</td></tr>
+ * <tr><td>InterviewQuestion</td><td>注入</td><td>歧义特征 + PII</td></tr>
+ * <tr><td>Evaluation</td><td>注入</td><td>歧义特征 + PII</td></tr>
  * </table>
  *
  * <p><b>Observability</b>：{@link CostChatModelListener} 挂在包装后的 ChatModel 上，

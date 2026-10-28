@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
- * Ch24 v0.30 MCP Server 工厂单元测试（工具白名单装配）。
+ * v0.30 MCP Server 工厂单元测试（工具白名单装配）。
  *
  * @author langchain4j-tutorial
  * @since v0.27 → v0.30

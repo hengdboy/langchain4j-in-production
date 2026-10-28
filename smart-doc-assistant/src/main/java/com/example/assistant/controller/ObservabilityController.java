@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ch22 可观测性：自定义 metrics Controller——LangChain4j 原生方式暴露成本数据。
+ * 可观测性：自定义 metrics Controller——LangChain4j 原生方式暴露成本数据。
  *
  * <p>三个端点：
  * <ul>
- *   <li>{@code GET /api/metrics/tokens}：当前累计 token 与费用</li>
- *   <li>{@code GET /api/metrics/tokens/top?dim=user&n=10}：某维度 top-N</li>
- *   <li>{@code GET /api/metrics/pricing}：当前定价表（参考用）</li>
+ * <li>{@code GET /api/metrics/tokens}：当前累计 token 与费用</li>
+ * <li>{@code GET /api/metrics/tokens/top?dim=user&n=10}：某维度 top-N</li>
+ * <li>{@code GET /api/metrics/pricing}：当前定价表（参考用）</li>
  * </ul>
  *
  * <h2>为什么不依赖 Spring Boot Actuator / Prometheus</h2>

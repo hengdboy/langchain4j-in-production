@@ -7,10 +7,10 @@ import dev.langchain4j.agent.tool.Tool;
 import java.util.List;
 
 /**
- * Ch24 v0.30 MCP 工具：候选人查询（给外部 HR 助手/IM 机器人用）。
+ * v0.30 MCP 工具：候选人查询（给外部 HR 助手/IM 机器人用）。
  *
  * <p>暴露面刻意收窄：只有<b>只读查询</b>，且只吐概要字段（姓名/状态/匹配分）——
- * 简历原文与联系方式不出 MCP 边界（最小披露原则，Ch25 §25.5）。
+ * 简历原文与联系方式不出 MCP 边界（最小披露原则）。
  *
  * @author langchain4j-tutorial
  * @since v0.30
@@ -30,7 +30,7 @@ public class CandidateMcpTools {
         if (c == null) {
             return "未找到候选人 id=" + candidateId;
         }
-        // 最小披露：姓名/状态/匹配分可以出去，邮箱/电话/简历原文绝不出去（Ch25 §25.6）
+        // 最小披露：姓名/状态/匹配分可以出去，邮箱/电话/简历原文绝不出去
         return "候选人 %d：%s 状态=%s 匹配分=%s 职位=%s".formatted(
                 c.id(), c.name(), c.status(), c.matchScore(), c.jobTitle());
     }

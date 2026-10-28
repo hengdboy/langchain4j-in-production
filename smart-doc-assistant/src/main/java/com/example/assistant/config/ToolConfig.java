@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Ch06 新增：工具类 Bean + ToolAssistant AiService 配置
+ * 新增：工具类 Bean + ToolAssistant AiService 配置
  *
  * 关键设计：
  * - 工具类是普通 POJO（不需要 @Component）

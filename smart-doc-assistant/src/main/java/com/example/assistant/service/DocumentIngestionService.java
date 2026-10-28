@@ -30,15 +30,15 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Ch10：文档处理流水线核心（Ingestion Pipeline）。
+ * ：文档处理流水线核心（Ingestion Pipeline）。
  *
  * <p>完整流水线：加载(Load) → 解析(Parse) → 清洗(Transform) → 分块(Split) → 嵌入(Embed) → 入库(Store)。
  *
  * <p>三种数据源：
  * <ul>
- *   <li>classpath 目录（启动自动入库，随 jar 打包）</li>
- *   <li>文件系统目录（手动触发，生产环境常用）</li>
- *   <li>上传文件（MultipartFile 流式解析，不落盘）</li>
+ * <li>classpath 目录（启动自动入库，随 jar 打包）</li>
+ * <li>文件系统目录（手动触发，生产环境常用）</li>
+ * <li>上传文件（MultipartFile 流式解析，不落盘）</li>
  * </ul>
  *
  * <p>解析器按扩展名自动选择：pdf → PDFBox，txt/md/html → 纯文本。
@@ -100,14 +100,14 @@ public class DocumentIngestionService implements ApplicationRunner {
         try {
             ingestClasspathDocs();
         } catch (Exception e) {
-            log.error("❌ 启动建库失败", e);
+            log.error("启动建库失败", e);
         }
     }
 
     /**
      * 数据源一：classpath 目录（示例文档，随 jar 打包）。
      *
-     * <p>按扩展名分拨选解析器：PDF 二进制绝不能进 TextDocumentParser（Ch10 10.4.4 事故——
+     * <p>按扩展名分拨选解析器：PDF 二进制绝不能进 TextDocumentParser（ 10.4.4 事故——
      * UTF-8 硬转会把它转成乱码块静默入库，检索相似度还能到 0.5+）。
      */
     public synchronized void ingestClasspathDocs() {
@@ -122,10 +122,10 @@ public class DocumentIngestionService implements ApplicationRunner {
                 docsClasspath, fs.getPathMatcher("glob:**.{txt,md}"),
                 new TextDocumentParser()));
         if (documents.isEmpty()) {
-            log.warn("⚠️ classpath:{} 下没有发现文档", docsClasspath);
+            log.warn(" classpath:{} 下没有发现文档", docsClasspath);
             return;
         }
-        log.info("📂 从 classpath:{} 加载到 {} 个文档", docsClasspath, documents.size());
+        log.info("从 classpath:{} 加载到 {} 个文档", docsClasspath, documents.size());
         ingest(documents);
     }
 
@@ -143,10 +143,10 @@ public class DocumentIngestionService implements ApplicationRunner {
             throw new RuntimeException("读取目录失败: " + directoryPath, e);
         }
         if (documents.isEmpty()) {
-            log.warn("⚠️ 目录 {} 下没有发现文档", directoryPath);
+            log.warn(" 目录 {} 下没有发现文档", directoryPath);
             return;
         }
-        log.info("📂 从目录 {} 加载到 {} 个文档", directoryPath, documents.size());
+        log.info("从目录 {} 加载到 {} 个文档", directoryPath, documents.size());
         ingest(documents);
     }
 
@@ -155,7 +155,7 @@ public class DocumentIngestionService implements ApplicationRunner {
         String fileName = file.getOriginalFilename();
         try {
             Document document = parserFor(fileName).parse(file.getInputStream());
-            log.info("📄 上传文档 {} 解析成功（{} 字符）", fileName, document.text().length());
+            log.info("上传文档 {} 解析成功（{} 字符）", fileName, document.text().length());
             ingest(List.of(document));
         } catch (IOException e) {
             throw new RuntimeException("上传文件解析失败: " + fileName, e);
@@ -168,7 +168,7 @@ public class DocumentIngestionService implements ApplicationRunner {
         lexicalSegmentIndex.clear();
         documentCount.set(0);
         segmentCount.set(0);
-        log.info("🧹 向量库已清空");
+        log.info("向量库已清空");
     }
 
     public PipelineStats stats() {
@@ -190,16 +190,16 @@ public class DocumentIngestionService implements ApplicationRunner {
 
         // 1. 清洗：去 BOM/零宽/多余空白/分隔线，统一换行
         List<Document> cleaned = documentCleaner.transformAll(documents);
-        log.info("🧼 清洗完成（{} → {} 文档）", documents.size(), cleaned.size());
+        log.info("清洗完成（{} → {} 文档）", documents.size(), cleaned.size());
 
-        // 2. 分块：父子分块（Ch12，默认开）或扁平分块（Ch10 旧行为）
+        // 2. 分块：父子分块（默认开）或扁平分块（ 旧行为）
         List<TextSegment> segments = parentChild
                 ? splitIntoParentChild(cleaned)
                 : DocumentSplitters.recursive(chunkSize, chunkOverlap).splitAll(cleaned);
-        log.info("✂️  分块完成：{} 个文档 → {} 个块（parent-child={}）",
+        log.info("  分块完成：{} 个文档 → {} 个块（parent-child={}）",
                 cleaned.size(), segments.size(), parentChild);
 
-        // 2.5 填充关键词检索索引（混合检索的"全文"一路，Ch12）
+        // 2.5 填充关键词检索索引（混合检索的"全文"一路）
         lexicalSegmentIndex.addAll(segments);
 
         // 3. 嵌入
@@ -210,7 +210,7 @@ public class DocumentIngestionService implements ApplicationRunner {
 
         documentCount.addAndGet(cleaned.size());
         segmentCount.addAndGet(segments.size());
-        log.info("✅ 入库完成：累计 {} 文档 / {} 块（embedding 维度={}）",
+        log.info("入库完成：累计 {} 文档 / {} 块（embedding 维度={}）",
                 documentCount.get(), segmentCount.get(), embeddingModel.dimension());
     }
 
@@ -238,7 +238,7 @@ public class DocumentIngestionService implements ApplicationRunner {
     }
 
     /**
-     * Ch12 父子分块：先把文档切成较大的「父块」，再把每个父块切成较小的「子块」。
+     * 父子分块：先把文档切成较大的「父块」，再把每个父块切成较小的「子块」。
      * 入库的是子块（小、语义聚焦、召回准），但每个子块的 metadata 带上父块文本（parentText）
      * 与 parentId——检索时按 parentId 展开为父块、去重后喂给 LLM（大、上下文足）。
      */

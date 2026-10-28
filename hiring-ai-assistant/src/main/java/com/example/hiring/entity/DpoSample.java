@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 DPO 对齐样本（dpo_sample 表）。
+ * DPO 对齐样本（dpo_sample 表）。
  *
  * <p>两个来源：Bandit 对比样本（自动）、HR 人工修正（手动）。
  * 累积到 {@code hiring.bandit.retrain-threshold} 后供离线重训。

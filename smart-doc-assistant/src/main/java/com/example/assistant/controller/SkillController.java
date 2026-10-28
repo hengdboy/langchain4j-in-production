@@ -10,19 +10,19 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * Ch18 新增：Skills Agent 接口
+ * 新增：Skills Agent 接口
  *
  * <p>用法：
  * <pre>
  * # 触发 refund-policy 技能（模型先 activate_skill，再查知识库按流程回答）
  * curl -X POST http://localhost:8090/api/skills/ask \
- *   -H "Content-Type: application/json" \
- *   -d '{"sessionId":"1","question":"我买的东西坏了想退货，运费谁出？"}'
+ * -H "Content-Type: application/json" \
+ * -d '{"sessionId":"1","question":"我买的东西坏了想退货，运费谁出？"}'
  *
  * # 触发 troubleshooting 技能
  * curl -X POST http://localhost:8090/api/skills/ask \
- *   -H "Content-Type: application/json" \
- *   -d '{"sessionId":"2","question":"付款一直失败，怎么办？"}'
+ * -H "Content-Type: application/json" \
+ * -d '{"sessionId":"2","question":"付款一直失败，怎么办？"}'
  * </pre>
  */
 @RestController

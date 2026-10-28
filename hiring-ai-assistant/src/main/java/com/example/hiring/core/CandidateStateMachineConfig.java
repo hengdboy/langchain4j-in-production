@@ -12,25 +12,21 @@ import org.springframework.statemachine.guard.Guard;
 import java.util.EnumSet;
 
 /**
- * Ch24 FSM 状态机配置（12 状态 + 13 事件 + 15 转换）。
+ * FSM 状态机配置（12 状态 + 13 事件 + 15 转换）。
  *
- * <h2>ARCHITECTURE.md §3 设计契约</h2>
- * <p>本类是招聘 pipeline 流转的<b>单一权威定义</b>——任何状态转换规则变更必须改这里。
- * 章节 Ch24 §24.4 逐条讲每条转换的 why。
+ * <p>本类是招聘 pipeline 流转的单一权威定义——任何状态转换规则变更必须改这里，
+ * 并同步更新 ARCHITECTURE.md 的状态表。
  *
- * <h2>核心设计</h2>
+ * <p>设计要点：
  * <ul>
- *   <li>{@code @EnableStateMachineFactory}——注册 {@code StateMachineFactory} Bean，
- *       供 {@link CandidateStateMachineService} 按 machineId 取实例
- *       （{@code @EnableStateMachine} 只注册单例机器、不提供 Factory Bean）</li>
- *   <li>15 条转换里 8 条带 Guard：评估结论、回复决定、评价结论、offer 答复、
- *       HR 复核这五类"多路分支"全部由 Guard 按业务值路由</li>
- *   <li>REPLY_TIMEOUT_48H / OFFER_TIMEOUT_5D 不进状态机（自循环坑，见类注释），
- *       由 CandidateService 业务前置判断</li>
+ * <li>@EnableStateMachineFactory 注册 StateMachineFactory Bean，供
+ * CandidateStateMachineService 按 machineId 取实例（@EnableStateMachine 只注册
+ * 单例机器，不提供 Factory Bean）</li>
+ * <li>15 条转换里 8 条带 Guard：评估结论、回复决定、评价结论、offer 答复、
+ * HR 复核这五类多路分支全部由 Guard 按业务值路由</li>
+ * <li>REPLY_TIMEOUT_48H / OFFER_TIMEOUT_5D 不进状态机（自循环坑，见类注释），
+ * 由 CandidateService 业务前置判断</li>
  * </ul>
- *
- * @author langchain4j-tutorial
- * @since v0.30
  */
 @Slf4j
 @Configuration
@@ -65,7 +61,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.APPLIED).target(CandidateStatus.SHORTLISTED)
                 .event(FsmEvent.SCREEN_PASS)
                 .guard(verdictGuard("SHORTLIST"))
-                .action(ctx -> log.info("✅ [FSM] APPLIED → SHORTLISTED  candidateId={}",
+                .action(ctx -> log.info("[FSM] APPLIED → SHORTLISTED  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -73,7 +69,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.APPLIED).target(CandidateStatus.ON_HOLD)
                 .event(FsmEvent.SCREEN_REVIEW)
                 .guard(verdictGuard("REVIEW"))
-                .action(ctx -> log.info("⏸ [FSM] APPLIED → ON_HOLD  candidateId={}",
+                .action(ctx -> log.info("[FSM] APPLIED → ON_HOLD  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -81,7 +77,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.APPLIED).target(CandidateStatus.REJECTED)
                 .event(FsmEvent.SCREEN_FAIL)
                 .guard(verdictGuard("REJECT"))
-                .action(ctx -> log.info("❌ [FSM] APPLIED → REJECTED  candidateId={}",
+                .action(ctx -> log.info("[FSM] APPLIED → REJECTED  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -93,7 +89,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.ON_HOLD).target(CandidateStatus.SHORTLISTED)
                 .event(FsmEvent.SCREEN_PASS)
                 .guard(humanApprovedGuard(true))
-                .action(ctx -> log.info("👍 [FSM] ON_HOLD → SHORTLISTED (HR 复核通过)  candidateId={}",
+                .action(ctx -> log.info("[FSM] ON_HOLD → SHORTLISTED (HR 复核通过)  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -101,7 +97,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.ON_HOLD).target(CandidateStatus.REJECTED)
                 .event(FsmEvent.SCREEN_FAIL)
                 .guard(humanApprovedGuard(false))
-                .action(ctx -> log.info("👎 [FSM] ON_HOLD → REJECTED (HR 复核否决)  candidateId={}",
+                .action(ctx -> log.info("[FSM] ON_HOLD → REJECTED (HR 复核否决)  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -112,7 +108,7 @@ public class CandidateStateMachineConfig
                 .withExternal()
                 .source(CandidateStatus.SHORTLISTED).target(CandidateStatus.INVITE_SENT)
                 .event(FsmEvent.INVITE_SENT)
-                .action(ctx -> log.info("📧 [FSM] SHORTLISTED → INVITE_SENT  candidateId={}",
+                .action(ctx -> log.info("[FSM] SHORTLISTED → INVITE_SENT  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -124,7 +120,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.INVITE_SENT).target(CandidateStatus.INTERVIEW_SCHEDULED)
                 .event(FsmEvent.INVITE_REPLIED)
                 .guard(replyDecisionGuard("confirmed"))
-                .action(ctx -> log.info("📅 [FSM] INVITE_SENT → INTERVIEW_SCHEDULED  candidateId={}",
+                .action(ctx -> log.info("[FSM] INVITE_SENT → INTERVIEW_SCHEDULED  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -132,16 +128,16 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.INVITE_SENT).target(CandidateStatus.WITHDRAWN)
                 .event(FsmEvent.INVITE_REPLIED)
                 .guard(replyDecisionGuard("declined"))
-                .action(ctx -> log.info("🚪 [FSM] INVITE_SENT → WITHDRAWN (候选人放弃)  candidateId={}",
+                .action(ctx -> log.info("[FSM] INVITE_SENT → WITHDRAWN (候选人放弃)  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
-                // ⚠️ 与 SDR 版同一坑位：REPLY_TIMEOUT_48H 不做自循环，追发由
-                //    CandidateService.handleReplyTimeout 前置判断，轮次用尽才发本事件
+                // 与上一版项目同一坑位：REPLY_TIMEOUT_48H 不做自循环，追发由
+                // CandidateService.handleReplyTimeout 前置判断，轮次用尽才发本事件
                 .withExternal()
                 .source(CandidateStatus.INVITE_SENT).target(CandidateStatus.CLOSED_NO_RESPONSE)
                 .event(FsmEvent.MAX_ROUNDS_REACHED)
-                .action(ctx -> log.info("🛌 [FSM] INVITE_SENT → CLOSED_NO_RESPONSE  candidateId={}",
+                .action(ctx -> log.info("[FSM] INVITE_SENT → CLOSED_NO_RESPONSE  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -152,7 +148,7 @@ public class CandidateStateMachineConfig
                 .withExternal()
                 .source(CandidateStatus.INTERVIEW_SCHEDULED).target(CandidateStatus.INTERVIEWED)
                 .event(FsmEvent.INTERVIEW_DONE)
-                .action(ctx -> log.info("🗣 [FSM] INTERVIEW_SCHEDULED → INTERVIEWED  candidateId={}",
+                .action(ctx -> log.info("[FSM] INTERVIEW_SCHEDULED → INTERVIEWED  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -160,7 +156,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.INTERVIEWED).target(CandidateStatus.OFFER_SENT)
                 .event(FsmEvent.EVAL_PASS)
                 .guard(evalGuard("PASS"))
-                .action(ctx -> log.info("🎉 [FSM] INTERVIEWED → OFFER_SENT  candidateId={}",
+                .action(ctx -> log.info("[FSM] INTERVIEWED → OFFER_SENT  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -168,7 +164,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.INTERVIEWED).target(CandidateStatus.REJECTED)
                 .event(FsmEvent.EVAL_FAIL)
                 .guard(evalGuard("FAIL"))
-                .action(ctx -> log.info("❌ [FSM] INTERVIEWED → REJECTED (面试未通过)  candidateId={}",
+                .action(ctx -> log.info("[FSM] INTERVIEWED → REJECTED (面试未通过)  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -180,7 +176,7 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.OFFER_SENT).target(CandidateStatus.HIRED)
                 .event(FsmEvent.OFFER_REPLIED)
                 .guard(offerGuard("accepted"))
-                .action(ctx -> log.info("🏆 [FSM] OFFER_SENT → HIRED  candidateId={}",
+                .action(ctx -> log.info("[FSM] OFFER_SENT → HIRED  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
@@ -188,19 +184,19 @@ public class CandidateStateMachineConfig
                 .source(CandidateStatus.OFFER_SENT).target(CandidateStatus.WITHDRAWN)
                 .event(FsmEvent.OFFER_REPLIED)
                 .guard(offerGuard("declined"))
-                .action(ctx -> log.info("🚪 [FSM] OFFER_SENT → WITHDRAWN (婉拒 offer)  candidateId={}",
+                .action(ctx -> log.info("[FSM] OFFER_SENT → WITHDRAWN (婉拒 offer)  candidateId={}",
                         ctx.getStateMachine().getId()))
                 .and()
 
                 .withExternal()
                 .source(CandidateStatus.OFFER_SENT).target(CandidateStatus.EXPIRED)
                 .event(FsmEvent.OFFER_EXPIRED)
-                .action(ctx -> log.info("⌛ [FSM] OFFER_SENT → EXPIRED (催办后仍无答复)  candidateId={}",
+                .action(ctx -> log.info("[FSM] OFFER_SENT → EXPIRED (催办后仍无答复)  candidateId={}",
                         ctx.getStateMachine().getId()));
     }
 
     // ============================================================
-    // Guard 条件（ARCHITECTURE.md §3.3 表格中的 Guard 列）
+    // Guard 条件（ARCHITECTURE.md  表格中的 Guard 列）
     // ============================================================
 
     /** Guard：评估结论等于指定值（SHORTLIST / REVIEW / REJECT） */

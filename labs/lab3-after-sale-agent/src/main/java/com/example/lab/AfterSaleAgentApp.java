@@ -10,7 +10,7 @@ import java.time.Duration;
  *
  * <pre>
  * DEEPSEEK_API_KEY=sk-xxx mvn compile exec:java \
- *   -Dexec.mainClass=com.example.lab.AfterSaleAgentApp
+ * -Dexec.mainClass=com.example.lab.AfterSaleAgentApp
  * </pre>
  */
 public final class AfterSaleAgentApp {

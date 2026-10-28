@@ -10,16 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Ch12：用「现有 EmbeddingModel」实现的双编码器重排序器（bi-encoder reranker）。
+ * ：用「现有 EmbeddingModel」实现的双编码器重排序器（bi-encoder reranker）。
  *
  * <p>{@link ScoringModel} 接口要求对每个 (query, segment) 对打分。最朴素也最稳的实现就是
  * 把 query 与 segment 各自嵌入、算余弦相似度——这正是"向量召回后再精排"的常见思路。
  * 优点：零新依赖、离线可跑（直接复用 local AllMiniLM 或 bailian 嵌入模型）。
  *
- * <p>⚠️ 诚实说明：双编码器重排 <b>弱于</b> 交叉编码器（cross-encoder，如 Cohere / BAAI bge-reranker），
+ * <p> 诚实说明：双编码器重排 <b>弱于</b> 交叉编码器（cross-encoder，如 Cohere / BAAI bge-reranker），
  * 因为后者把 query+doc 拼在一起过一次模型，能捕捉细粒度交互。生产追求极致命中率应换交叉编码器
  * （{@code langchain4j-reranker-cohere} / {@code langchain4j-reranker-score} 提供的 {@link ScoringModel} 实现）。
- * 本章用双编码器把"重排序"这条链路完整跑通、讲透，并在 12.6 给出升级路径。
+ * 本项目用双编码器把"重排序"这条链路完整跑通、讲透，并在 12.6 给出升级路径。
  */
 public class EmbeddingScoringModel implements ScoringModel {
 

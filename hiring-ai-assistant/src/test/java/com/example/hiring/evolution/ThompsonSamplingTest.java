@@ -11,7 +11,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Ch24 ThompsonSampling 单元测试（纯算法，无 DB）。
+ * ThompsonSampling 单元测试（纯算法，无 DB）。
  *
  * @author langchain4j-tutorial
  * @since v0.28
@@ -36,7 +36,7 @@ class ThompsonSamplingTest {
         // 每个臂应至少被选 2 次（minPulls=2 → 每个臂 2 次后退出轮转；6 次调用恰好每臂 2 次）
         assertThat(counts).containsKeys("a", "b", "c");
         assertThat(counts.values().stream().mapToInt(Integer::intValue).sum()).isEqualTo(6);
-        log.info("✅ 冷启动轮转：{}", counts);
+        log.info("冷启动轮转：{}", counts);
     }
 
     @Test
@@ -55,7 +55,7 @@ class ThompsonSamplingTest {
             counts.merge(arm, 1, Integer::sum);
         }
         assertThat(counts.getOrDefault("a", 0)).isGreaterThan(180);
-        log.info("✅ 收敛：a 胜出 {} / 200", counts.getOrDefault("a", 0));
+        log.info("收敛：a 胜出 {} / 200", counts.getOrDefault("a", 0));
     }
 
     @Test
@@ -70,7 +70,7 @@ class ThompsonSamplingTest {
         assertThat(r2.alpha()).isEqualTo(2.0);
         assertThat(r2.beta()).isEqualTo(2.0);
         assertThat(r2.totalPulls()).isEqualTo(2);
-        log.info("✅ update：alpha={} beta={} pulls={}",
+        log.info("update：alpha={} beta={} pulls={}",
                 r2.alpha(), r2.beta(), r2.totalPulls());
     }
 }

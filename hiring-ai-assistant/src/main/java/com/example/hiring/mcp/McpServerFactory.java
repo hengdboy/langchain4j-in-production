@@ -12,9 +12,9 @@ import dev.langchain4j.mcp.protocol.McpImplementation;
 import java.util.List;
 
 /**
- * Ch24 v0.30 MCP：{@link McpServer} 构造的工厂方法。
+ * v0.30 MCP：{@link McpServer} 构造的工厂方法。
  *
- * <p>统一装配 5 个 MCP Tool（分布在 4 个工具类），避免散落多处（与 Ch19 同模式）。
+ * <p>统一装配 5 个 MCP Tool（分布在 4 个工具类），避免散落多处（与  同模式）。
  *
  * <h2>工具白名单单一真相源</h2>
  * <p>{@link #TOOL_NAMES} 是所有暴露给 MCP 的工具名清单——外部客户端能调用什么由这里唯一决定。

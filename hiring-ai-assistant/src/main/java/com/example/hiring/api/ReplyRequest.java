@@ -3,7 +3,7 @@ package com.example.hiring.api;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * Ch24 API 层：候选人回复请求体。
+ * API 层：候选人回复请求体。
  *
  * <p>同一个入口服务两个阶段，pipeline 按候选人当前状态路由：
  * INVITE_SENT → 分类约面答复（confirmed → 约面 / declined → WITHDRAWN）；

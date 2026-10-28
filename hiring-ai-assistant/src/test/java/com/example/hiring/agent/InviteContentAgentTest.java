@@ -17,7 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Ch24 InviteContentAgent / ReplyClassifierAgent / InterviewQuestionAgent /
+ * InviteContentAgent / ReplyClassifierAgent / InterviewQuestionAgent /
  * EvaluationAgent 单元测试（mock ChatModel，合并一个文件省样板）。
  *
  * @author langchain4j-tutorial

@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
  *
  * <p>无论意图路由选出了哪些候选工具，最终暴露给模型前都必须过这道闸：
  * <ol>
- *   <li><b>租户开通</b>：工具 {@code enabledTenants} 为空 = 全租户可用；否则必须包含当前 tenantId；</li>
- *   <li><b>角色授权</b>：用户角色必须命中工具 {@code requiredRoles} 之一（空 = 任意角色可用）。</li>
+ * <li><b>租户开通</b>：工具 {@code enabledTenants} 为空 = 全租户可用；否则必须包含当前 tenantId；</li>
+ * <li><b>角色授权</b>：用户角色必须命中工具 {@code requiredRoles} 之一（空 = 任意角色可用）。</li>
  * </ol>
  *
  * <p>这是多租户 SaaS 防止"租户 A 调到了租户 B/管理员专属工具"的核心手段。

@@ -5,7 +5,7 @@ import dev.langchain4j.service.Result;
 import dev.langchain4j.service.UserMessage;
 
 /**
- * Ch18 新增：技能型 Agent 接口
+ * 新增：技能型 Agent 接口
  *
  * <p>通过 {@code Skills.toolProvider()} 把 SKILL.md 技能挂给 Agent：
  * 模型先看到技能清单（名称+描述），按需调用 {@code activate_skill} 激活，

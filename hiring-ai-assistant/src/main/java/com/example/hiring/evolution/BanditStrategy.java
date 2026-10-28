@@ -3,12 +3,12 @@ package com.example.hiring.evolution;
 import java.util.List;
 
 /**
- * Ch24 v0.28 Bandit 策略接口。
+ * v0.28 Bandit 策略接口。
  *
  * <h2>支持的实现</h2>
  * <ul>
- *   <li>{@link ThompsonSampling}（默认；冷启动友好）</li>
- *   <li>UCB1、epsilon-greedy（预留接口位）</li>
+ * <li>{@link ThompsonSampling}（默认；冷启动友好）</li>
+ * <li>UCB1、epsilon-greedy（预留接口位）</li>
  * </ul>
  *
  * @author langchain4j-tutorial

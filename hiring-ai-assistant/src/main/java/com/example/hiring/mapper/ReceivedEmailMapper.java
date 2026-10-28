@@ -5,7 +5,7 @@ import com.example.hiring.entity.ReceivedEmail;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * Ch24 客户回信 Mapper（MyBatis-Plus）。
+ * 客户回信 Mapper（MyBatis-Plus）。
  *
  * @author langchain4j-tutorial
  * @since v0.26

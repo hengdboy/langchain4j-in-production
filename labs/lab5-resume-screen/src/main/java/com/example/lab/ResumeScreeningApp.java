@@ -15,7 +15,7 @@ import java.util.List;
  *
  * <pre>
  * DEEPSEEK_API_KEY=sk-xxx mvn compile exec:java \
- *   -Dexec.mainClass=com.example.lab.ResumeScreeningApp
+ * -Dexec.mainClass=com.example.lab.ResumeScreeningApp
  * </pre>
  */
 public final class ResumeScreeningApp {
@@ -56,7 +56,7 @@ public final class ResumeScreeningApp {
             hits += ok ? 1 : 0;
             boolean clean = PiiRedactor.isClean(r.getStrengthsSummary() + r.getRisksSummary());
             System.out.printf("%s %-7s 期望=%s 得分=%3d  亮点=%s  风险=%s  PII干净=%s%n",
-                    ok ? "✅" : "❌", file, expect, r.getMatchScore(),
+                    ok ? "" : "", file, expect, r.getMatchScore(),
                     r.getStrengthsSummary(), r.getRisksSummary(), clean ? "是" : "否（应拦截，见服务端兜底）");
         }
         System.out.printf("%n等级一致率：%d/%d；全部输出 PII 干净（服务端兜底在位）%n",

@@ -6,28 +6,28 @@ import org.springframework.stereotype.Component;
 import java.util.regex.Pattern;
 
 /**
- * Ch21 Guardrails：<strong>Application 层</strong>的输入预处理。
+ * Guardrails：<strong>Application 层</strong>的输入预处理。
  *
  * <p>与官方 {@code InputGuardrail}（仅在 {@code AiServices} 层工作）的区别：
  * <ul>
- *   <li>本类在 Controller 接收用户输入后、调用 AiService 之前生效</li>
- *   <li>职责：清理"原始用户输入"——去 HTML / 控制字符 / 截断过长输入</li>
- *   <li>提示注入检测由官方 {@code PatternBasedPromptInjectionGuardrail} 接管（在 AiServices 层）</li>
+ * <li>本类在 Controller 接收用户输入后、调用 AiService 之前生效</li>
+ * <li>职责：清理"原始用户输入"——去 HTML / 控制字符 / 截断过长输入</li>
+ * <li>提示注入检测由官方 {@code PatternBasedPromptInjectionGuardrail} 接管（在 AiServices 层）</li>
  * </ul>
  *
  * <h2>两层 Guardrail 架构</h2>
  * <pre>
- *   Controller 接收用户输入（HTTP/JSON）
- *     ↓
- *   [Application 层] InputGuard.sanitize()          ← 本类（去 HTML / 截断 / 控字符）
- *     ↓  cleaned input
- *   [AiServices 层] PatternBasedPromptInjectionGuardrail   ← 官方（注入检测）
- *     ↓  validated input
- *   ChatModel.chat()
- *     ↓  AiMessage
- *   [AiServices 层] JsonExtractorOutputGuardrail / 自定义 PII redactor
- *     ↓  validated output
- *   Controller 返回响应
+ * Controller 接收用户输入（HTTP/JSON）
+ * ↓
+ * [Application 层] InputGuard.sanitize()          ← 本类（去 HTML / 截断 / 控字符）
+ * ↓  cleaned input
+ * [AiServices 层] PatternBasedPromptInjectionGuardrail   ← 官方（注入检测）
+ * ↓  validated input
+ * ChatModel.chat()
+ * ↓  AiMessage
+ * [AiServices 层] JsonExtractorOutputGuardrail / 自定义 PII redactor
+ * ↓  validated output
+ * Controller 返回响应
  * </pre>
  *
  * @author langchain4j-tutorial
@@ -78,7 +78,7 @@ public class InputGuard {
         int maxLen = properties.getInput().getMaxLength();
         if (s.length() > maxLen) {
             s = s.substring(0, maxLen) + "...[truncated]";
-            log.warn("⚠️ [Guardrail] input truncated to {} chars", maxLen);
+            log.warn(" [Guardrail] input truncated to {} chars", maxLen);
         }
         return s.strip();
     }

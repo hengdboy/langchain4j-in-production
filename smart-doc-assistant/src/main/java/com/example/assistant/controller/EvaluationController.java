@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Ch13 新增：RAG 评估接口
+ * 新增：RAG 评估接口
  *
  * <p>用法：
  * <pre>

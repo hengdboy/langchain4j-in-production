@@ -12,14 +12,14 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Ch24 进化调度器：周期性结算 {@code bandit_outcome} 队列。
+ * 进化调度器：周期性结算 {@code bandit_outcome} 队列。
  *
  * <h2>流程</h2>
  * <ol>
- *   <li>查 {@code bandit_outcome WHERE processed_at IS NULL}</li>
- *   <li>对每条按 {@code candidate_id} 取当前候选人状态 → 算 reward</li>
- *   <li>{@link BanditOptimizer#settleOutcome} → 更新 bandit_state</li>
- *   <li>同时 {@link DpoSampleWriter#writeBanditSample} 写一条 DPO 对比样本</li>
+ * <li>查 {@code bandit_outcome WHERE processed_at IS NULL}</li>
+ * <li>对每条按 {@code candidate_id} 取当前候选人状态 → 算 reward</li>
+ * <li>{@link BanditOptimizer#settleOutcome} → 更新 bandit_state</li>
+ * <li>同时 {@link DpoSampleWriter#writeBanditSample} 写一条 DPO 对比样本</li>
  * </ol>
  *
  * <p>频率见 {@code hiring.scheduler.bandit-eval-interval-ms}（默认 10 分钟）。
@@ -47,13 +47,13 @@ public class EvolutionScheduler {
         if (unsettled.isEmpty()) {
             return;
         }
-        log.info("🎰 [EvolutionScheduler] settling {} outcomes", unsettled.size());
+        log.info("[EvolutionScheduler] settling {} outcomes", unsettled.size());
 
         int settled = 0;
         for (BanditOutcome o : unsettled) {
             CandidateContext candidate = candidateMapper.selectById(o.getCandidateId());
             if (candidate == null) {
-                log.warn("⚠️ [EvolutionScheduler] outcome id={} candidateId={} missing, skip",
+                log.warn(" [EvolutionScheduler] outcome id={} candidateId={} missing, skip",
                         o.getId(), o.getCandidateId());
                 o.setProcessedAt(java.time.Instant.now());
                 o.setReward(0.0);
@@ -69,6 +69,6 @@ public class EvolutionScheduler {
                     "{\"arm_id\":\"" + o.getArmId() + "\",\"reward\":" + o.getReward() + "}");
             settled++;
         }
-        log.info("🎰 [EvolutionScheduler] settled {} outcomes", settled);
+        log.info("[EvolutionScheduler] settled {} outcomes", settled);
     }
 }

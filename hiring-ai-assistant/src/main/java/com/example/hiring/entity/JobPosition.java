@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 职位（job_position 表）。
+ * 职位（job_position 表）。
  *
  * <p>JD 全文与必备技能是评估 Agent 的输入之一；requiredSkills 同时是
  * canned 评估模式的确定性打分依据。

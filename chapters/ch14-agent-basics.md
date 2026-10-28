@@ -432,8 +432,8 @@ curl -X POST http://localhost:8090/api/agent/chat -H "Content-Type: application/
 curl -X POST http://localhost:8090/api/agent/manual -H "Content-Type: application/json" \
   -d '{"sessionId":"t1","question":"现在几点了？再帮我算 128 乘以 7 等于多少"}'
 # → {"success":true,"answer":"现在是 **2026年10月28日 21:06:51**。128 × 7 = **896**"}
-# 日志：🔧 手动循环第1轮执行工具[currentTime] → 2026-10-28T21:06:51
-#       🔧 手动循环第1轮执行工具[calculate] → 896.0     ← 同一轮，两次调用
+# 日志： 手动循环第1轮执行工具[currentTime] → 2026-10-28T21:06:51
+# 手动循环第1轮执行工具[calculate] → 896.0 ← 同一轮，两次调用
 
 # ⑤ 失败路径（声明式）：除零 → 异常消息回喂 → 体面回答（14.4.5 的 ② 层）
 curl -X POST http://localhost:8090/api/agent/chat -H "Content-Type: application/json" \
@@ -443,7 +443,7 @@ curl -X POST http://localhost:8090/api/agent/chat -H "Content-Type: application/
 # ⑥ 失败路径（手动循环）：同一个除零，走的是 ① 层执行器就地转换
 curl -X POST http://localhost:8090/api/agent/manual -H "Content-Type: application/json" \
   -d '{"sessionId":"t4","question":"请调用 calculate 工具计算 5 除以 0，把工具返回告诉我"}'
-# → HTTP 200；日志：🔧 手动循环第1轮执行工具[calculate] → 除数不能为零，请换个非零的第二个数字
+# → HTTP 200；日志： 手动循环第1轮执行工具[calculate] → 除数不能为零，请换个非零的第二个数字
 ```
 
 早期版本这里还记录过一个"模型不调工具"的案例：手动循环里问"现在几点了"，模型声称"无法获取实时时间"、自己心算——修复工具清单 bug 之前，这**不是模型任性，是它真不知道自己有 `currentTime`**。工具清单修上之后同样的问法就正常调用了。但"问题里加'用工具算'"仍然是有效的引导手段（对比 ① 和 ④ 的问法），工具描述写清使用场景也依然是最佳实践。

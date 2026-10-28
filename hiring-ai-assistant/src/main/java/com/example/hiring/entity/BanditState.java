@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 Bandit 状态（bandit_state 表，Thompson Sampling Beta 分布参数）。
+ * Bandit 状态（bandit_state 表，Thompson Sampling Beta 分布参数）。
  *
  * <p>arm_id 格式：{@code tone:cta:channel}，如 {@code warm:calendar-link:email}。
  *

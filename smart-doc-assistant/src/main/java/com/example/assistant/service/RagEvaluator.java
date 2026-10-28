@@ -21,13 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Ch13 新增：RAG 评估器（教学用"轻量评估框架"）
+ * 新增：RAG 评估器（教学用"轻量评估框架"）
  *
  * <p>LangChain4j 1.19.0 核心库<b>没有</b>内置评估模块（已核实：core jar 无 evaluator 包），
- * 所以本章自己用基础原语搭一套最小可跑的评估：
+ * 所以本项目自己用基础原语搭一套最小可跑的评估：
  * <ul>
- *   <li>检索指标（离线、无需 API Key）：Recall@K、MRR、命中率 —— 直接跑 Ch12 的 RetrievalAugmentor；</li>
- *   <li>答案评估（需 LLM Key）：忠实度 Faithfulness、正确性 Correctness —— 用 LLM-as-Judge。</li>
+ * <li>检索指标（离线、无需 API Key）：Recall@K、MRR、命中率 —— 直接跑 RetrievalAugmentor；</li>
+ * <li>答案评估（需 LLM Key）：忠实度 Faithfulness、正确性 Correctness —— 用 LLM-as-Judge。</li>
  * </ul>
  *
  * <p>核心思路：用一份 <b>golden set</b>（问题 + 应出现在上下文里的关键句 + 标准答案）做回归基线，
@@ -83,7 +83,7 @@ public class RagEvaluator {
         int faithfulCount = 0, correctCount = 0;
 
         for (GoldenCase c : goldenSet.cases()) {
-            // ① 检索：直接跑 Ch12 装配好的 RetrievalAugmentor（向量+关键词→RRF 融合→重排）
+            // ① 检索：直接跑  装配好的 RetrievalAugmentor（向量+关键词→RRF 融合→重排）
             UserMessage um = UserMessage.from(c.question());
             AugmentationResult aug = retrievalAugmentor.augment(
                     new AugmentationRequest(um, Metadata.from(um, "eval", List.of())));
@@ -125,7 +125,7 @@ public class RagEvaluator {
             }
 
             results.add(new CaseResult(c.question(), h1, h3, h5, mrr, chunks, answer, faithful, correct));
-            log.info("✅ 评估用例[{}] hit@1={} hit@3={} hit@5={} mrr={}",
+            log.info("评估用例[{}] hit@1={} hit@3={} hit@5={} mrr={}",
                     c.question(), h1, h3, h5, String.format("%.3f", mrr));
         }
 
@@ -191,7 +191,7 @@ public class RagEvaluator {
     /**
      * 极简判断：只认「是/否」打头（或全文就是这一个字）；格式不符返回 null（按未判定处理）。
      *
-     * <p>修复记录（Ch13）：旧实现用 {@code contains("是")}，模型回一句「这是编造」
+     * <p>修复记录：旧实现用 {@code contains("是")}，模型回一句「这是编造」
      * 也会命中「是」被判为忠实——判官明明在说回答有编造，解析器却记了一票通过。
      * 子串匹配对中文否定表达不可靠：「不是」里没有「否」，反而含「是」。
      */
@@ -219,7 +219,7 @@ public class RagEvaluator {
         try {
             return s.get();
         } catch (Exception e) {
-            log.warn("⚠️ 评估调用异常：{}", e.getMessage());
+            log.warn(" 评估调用异常：{}", e.getMessage());
             return "（评估调用异常：" + e.getMessage() + "）";
         }
     }

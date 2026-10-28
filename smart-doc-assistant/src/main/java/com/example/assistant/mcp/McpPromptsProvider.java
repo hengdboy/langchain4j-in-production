@@ -10,30 +10,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Ch19 MCP 深度开发：Prompt 原语提供者，暴露 3 个预定义 Prompt 模板。
+ * MCP 深度开发：Prompt 原语提供者，暴露 3 个预定义 Prompt 模板。
  *
- * <p>MCP Prompt 原语（Ch17.2.1 协议层定义）让服务器预置"标准提问模板"——客户端只填参数，
+ * <p>MCP Prompt 原语（.1 协议层定义）让服务器预置"标准提问模板"——客户端只填参数，
  * 模板由服务端管理。常见用法：标准客服话术、代码审查模板、安全审计清单等。
  *
  * <h2>与 @SystemMessage 模板的区别</h2>
  * <ul>
- *   <li>{@code @SystemMessage(fromResource=...)}：项目内的 AiService 用，绑死到一个接口方法</li>
- *   <li>MCP Prompts：跨项目共享，任何 MCP 客户端都能用，更适合运营 / 合规统一</li>
+ * <li>{@code @SystemMessage(fromResource=...)}：项目内的 AiService 用，绑死到一个接口方法</li>
+ * <li>MCP Prompts：跨项目共享，任何 MCP 客户端都能用，更适合运营 / 合规统一</li>
  * </ul>
  *
- * <h2>本章预定义的 3 个 Prompt</h2>
+ * <h2>本项目预定义的 3 个 Prompt</h2>
  * <ol>
- *   <li>{@code review-code}：代码审查清单（语言 / 重点 / 输出格式）</li>
- *   <li>{@code summarize-doc}：文档摘要（语言 / 最大字数 / 输出风格）</li>
- *   <li>{@code qa-policy-check}：政策问答模板（强制"基于资料回答"）</li>
+ * <li>{@code review-code}：代码审查清单（语言 / 重点 / 输出格式）</li>
+ * <li>{@code summarize-doc}：文档摘要（语言 / 最大字数 / 输出风格）</li>
+ * <li>{@code qa-policy-check}：政策问答模板（强制"基于资料回答"）</li>
  * </ol>
  *
  * <h2>模板渲染（P1-3 修复）</h2>
  * <p>{@link #renderTemplate(String, Map)} 实现极简的 {@code {{var}}} 占位符替换：
  * <ul>
- *   <li>占位符内是变量名（字母/数字/下划线）</li>
- *   <li>有 args 提供值 → 替换为 {@code args.get(var).toString()}</li>
- *   <li>无 args 提供值 → 替换为空字符串（防止 LLM 看到原始 {@code {{var}}}）</li>
+ * <li>占位符内是变量名（字母/数字/下划线）</li>
+ * <li>有 args 提供值 → 替换为 {@code args.get(var).toString()}</li>
+ * <li>无 args 提供值 → 替换为空字符串（防止 LLM 看到原始 {@code {{var}}}）</li>
  * </ul>
  *
  * <p>不支持：Jinja2 的过滤器（{@code {{x | default(...)}}}）、控制结构（{@code if if}）。

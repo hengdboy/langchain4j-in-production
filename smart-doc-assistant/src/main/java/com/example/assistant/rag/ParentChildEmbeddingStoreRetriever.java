@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Ch12：父子分块检索器——包装 {@link EmbeddingStoreContentRetriever}。
+ * ：父子分块检索器——包装 {@link EmbeddingStoreContentRetriever}。
  *
  * <p>向量库里存的是"子块"（小、语义聚焦、召回准），检索命中的也是子块；
  * 但喂给 LLM 的应该是语义完整的"父块"（大、上下文足）。本检索器把命中的子块按

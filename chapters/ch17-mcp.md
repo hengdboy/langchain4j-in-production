@@ -457,7 +457,7 @@ MCP 模块默认关闭（`chat.mcp.enabled=false`，没有 node 的机器照常�
 curl -X POST http://localhost:8090/api/mcp/ask \
   -H "Content-Type: application/json" -d '{"question":"3 加 4 等于多少？"}'
 # → {"success":true,"answer":"3 加 4 等于 **7**。"}   ← 调了 MCP 的 add 工具
-# 日志：🔌 [MCP 审计] 执行完成: …McpCallToolRequest@… → 7
+# 日志： [MCP 审计] 执行完成: …McpCallToolRequest@… → 7
 
 # ② 资源原语：发现 + 读取
 curl http://localhost:8090/api/mcp/resources

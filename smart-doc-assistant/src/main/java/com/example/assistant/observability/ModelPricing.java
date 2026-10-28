@@ -5,18 +5,18 @@ import lombok.Getter;
 import java.util.Map;
 
 /**
- * Ch22 可观测性：模型单价表（每百万 token，¥ 或 $）。
+ * 可观测性：模型单价表（每百万 token，¥ 或 $）。
  *
  * <p>简化版教学数据——生产应从厂商 API 实时同步，或用 LiteLLM 等统一接口。
  *
  * <h2>数据来源</h2>
  * <ul>
- *   <li>DeepSeek-V3：input ¥1/M、output ¥2/M（官方定价 2025-08）</li>
- *   <li>DashScope qwen3.7-flash：input ¥0.003/M、output ¥0.006/M（国内通义）</li>
- *   <li>OpenAI gpt-4o-mini：input $0.15/M、output $0.60/M（海外对照）</li>
+ * <li>DeepSeek-V3：input ¥1/M、output ¥2/M（官方定价 2025-08）</li>
+ * <li>DashScope qwen3.7-flash：input ¥0.003/M、output ¥0.006/M（国内通义）</li>
+ * <li>OpenAI gpt-4o-mini：input $0.15/M、output $0.60/M（海外对照）</li>
  * </ul>
  *
- * <p>⚠️ 价格随时变动——本章价格仅供演示，请到厂商官网核对最新定价。
+ * <p> 价格随时变动——本项目价格仅供演示，请到厂商官网核对最新定价。
  *
  * @author langchain4j-tutorial
  * @since v0.19
@@ -30,7 +30,7 @@ public enum ModelPricing {
     DEEPSEEK_V4_FLASH("deepseek-v4-flash", 1.0, 2.0, "CNY"),
     // 2026-10-28 实测：请求 model-name=deepseek-v4-flash，DeepSeek 服务端在响应的
     // model 字段里归一化回传 "deepseek-flash"——listener 读的是响应名，别名不进表
-    // 成本就永远是 0（Ch22 坑点 10）
+    // 成本就永远是 0（ 踩坑清单 #10）
     DEEPSEEK_V4_FLASH_ALIAS("deepseek-flash", 1.0, 2.0, "CNY"),
     UNKNOWN("unknown", 0.0, 0.0, "CNY");
 

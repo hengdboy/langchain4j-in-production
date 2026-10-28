@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 /**
- * Ch15 新增：顺序工作流（sequence）演示——内容生产流水线
+ * 新增：顺序工作流（sequence）演示——内容生产流水线
  *
- * <p>官方 {@code langchain4j-agentic} 实验模块（javap 核实：beta29 存在、1.19.0 稳定版 404）。
+ * <p>官方 {@code langchain4j-agentic} 实验模块（源码核实：beta29 存在、1.19.0 稳定版 404）。
  * 用 {@code AgenticServices.agentBuilder()} 建 3 个无类型 Agent，再用
  * {@code sequenceBuilder()} 串联：<b>撰写 → 精简 → 定稿</b>，前一个 Agent 的
  * 输出（outputKey）作为后一个 Agent 的输入（{{占位符}} 同名变量）。

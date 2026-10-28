@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Ch24 职位服务：创建/查询职位。
+ * 职位服务：创建/查询职位。
  *
  * @author langchain4j-tutorial
  * @since v0.30
@@ -36,7 +36,7 @@ public class JobPositionService {
         job.setCreatedAt(Instant.now());
         job.setUpdatedAt(Instant.now());
         jobPositionMapper.insert(job);
-        log.info("💼 [Job] created id={} title={}", job.getId(), job.getTitle());
+        log.info("[Job] created id={} title={}", job.getId(), job.getTitle());
         return job;
     }
 

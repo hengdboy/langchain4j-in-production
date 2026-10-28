@@ -76,7 +76,7 @@ class Lab4McpServerTest {
     }
 
     @Test
-    @DisplayName("Ch19 坑点 16 在 lab 里复现：字符串 id → handle 返回 null（200 空响应的根源）")
+    @DisplayName(" 踩坑清单 #16 在 lab 里复现：字符串 id → handle 返回 null（200 空响应的根源）")
     void stringIdSilentlyDropped() throws Exception {
         JsonNode resp = call("{\"jsonrpc\":\"2.0\",\"id\":\"req-1\",\"method\":\"tools/list\",\"params\":{}}");
         assertThat(resp).isNull();

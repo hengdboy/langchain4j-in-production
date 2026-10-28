@@ -4,7 +4,7 @@ import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 
 /**
- * Ch06 新增：计算器工具
+ * 新增：计算器工具
  *
  * 演示：enum 参数 + 多种返回类型
  */

@@ -11,13 +11,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Ch16 新增：Agent 工具调用审计
+ * 新增：Agent 工具调用审计
  *
  * <p>生产环境必须知道"Agent 刚才到底调了哪些工具、参数是什么、结果如何、有没有失败"——
  * 这是排障、成本核算、安全审计的基础。
  *
  * <p>通过 {@code AiServices.afterToolExecution(Consumer&lt;ToolExecution&gt;)} 回调接入
- * （javap 核实：ToolExecution 有 request()/result()/hasFailed()/startTime()）。
+ * （源码核实：ToolExecution 有 request()/result()/hasFailed()/startTime()）。
  * 这里把每次调用记录到内存（教学版；生产写日志/DB/OpenTelemetry）。
  *
  * <p><b>复合审计 key</b>：生产多租户环境下，审计必须按 {@code tenantId:userId:sessionId}
@@ -62,7 +62,7 @@ public class AgentAuditService {
                 result != null && result.length() > 200 ? result.substring(0, 200) + "…" : result,
                 failed, startTime, LocalDateTime.now());
         auditLog.computeIfAbsent(key, k -> new ArrayList<>()).add(entry);
-        log.info("📝 [审计] 租户={} 用户={} 会话={} 工具[{}] failed={} 耗时{}ms",
+        log.info("[审计] 租户={} 用户={} 会话={} 工具[{}] failed={} 耗时{}ms",
                 tenantId, userId, memoryId, toolName, failed,
                 java.time.Duration.between(startTime, entry.endTime()).toMillis());
     }
@@ -75,7 +75,7 @@ public class AgentAuditService {
     /**
      * 按显式租户/用户/会话三元组查。
      *
-     * <p>修复记录（Ch16）：查询 HTTP 请求本身不在工具调用线程上，{@link RequestContext} 的
+     * <p>修复记录：查询 HTTP 请求本身不在工具调用线程上，{@link RequestContext} 的
      * ThreadLocal 此时是默认值（default/anonymous）——用 {@link #auditKey(Object)} 拼 key
      * 永远查不到带租户写入的记录。查询侧必须把写入时的租户/用户显式传进来。
      */

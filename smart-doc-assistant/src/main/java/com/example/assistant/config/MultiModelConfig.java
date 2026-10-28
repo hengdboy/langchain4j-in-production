@@ -9,9 +9,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 多模型分工配置（Ch03/Ch07：jsonModel + creativeModel）。
+ * 多模型分工配置（/：jsonModel + creativeModel）。
  *
- * <p>⚠️ 1.19.0 API 变化：LangChain4j starter 已移除 `langchain4j.open-ai-chat-models.*`
+ * <p> 1.19.0 API 变化：LangChain4j starter 已移除 `langchain4j.open-ai-chat-models.*`
  * 多模型自动配置，jsonModel / creativeModel 不再自动生成 Bean。
  * 这里改为手动创建，配置值仍从 application.yml 的同名 key 读取（键名不变）。
  */
@@ -20,7 +20,7 @@ public class MultiModelConfig {
 
     /**
      * 结构化输出专用模型（低温度 + JSON Mode）。
-     * 被 @AiService(chatModel = "jsonModel") 显式引用（Ch07）。
+     * 被 @AiService(chatModel = "jsonModel") 显式引用。
      */
     @Bean("jsonModel")
     public ChatModel jsonModel(

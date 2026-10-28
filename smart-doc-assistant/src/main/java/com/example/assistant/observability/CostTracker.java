@@ -12,17 +12,17 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 
 /**
- * Ch22 可观测性：成本聚合器——按维度（用户 / 工具 / 模型）累计 token 与费用。
+ * 可观测性：成本聚合器——按维度（用户 / 工具 / 模型）累计 token 与费用。
  *
  * <p>三个独立计数器（ConcurrentHashMap + LongAdder）支持：
  * <ul>
- *   <li>高并发写（LLM 调用密集时无锁竞争）</li>
- *   <li>快照读取（{@link #snapshot()} 不可变视图，外部迭代安全）</li>
- *   <li>按维度 top-N 排序（用于"哪些用户在烧钱"诊断）</li>
+ * <li>高并发写（LLM 调用密集时无锁竞争）</li>
+ * <li>快照读取（{@link #snapshot()} 不可变视图，外部迭代安全）</li>
+ * <li>按维度 top-N 排序（用于"哪些用户在烧钱"诊断）</li>
  * </ul>
  *
- * <h2>与 Ch16/Ch19 审计的关系</h2>
- * <p>Ch16 审计记"谁调了什么工具"，本类记"谁烧了多少 token"——可以 JOIN 得出"用户 X 调了 N 次工具 Y 共花 ¥X"。
+ * <h2>与 / 审计的关系</h2>
+ * <p> 审计记"谁调了什么工具"，本类记"谁烧了多少 token"——可以 JOIN 得出"用户 X 调了 N 次工具 Y 共花 ¥X"。
  * 生产建议把这俩数据源写到同一数据库做关联查询。
  *
  * @author langchain4j-tutorial

@@ -9,12 +9,12 @@ import dev.langchain4j.service.V;
 import java.util.List;
 
 /**
- * Ch24 Agent 5/6：面试出题。
+ * Agent 5/6：面试出题。
  *
  * <h2>为什么出题也过决策画像</h2>
  * <p>题目必须来自<b>候选人真实写过的技能</b>——用脱敏画像出题，
  * 既避免面试官口头泄露受保护特征，也天然防"照着年龄出简单题"这类隐性歧视：
- * 出题器根本不知道候选人的年龄性别（见 Ch25 §25.3 的讨论）。
+ * 出题器根本不知道候选人的年龄性别（见  的讨论）。
  *
  * @author langchain4j-tutorial
  * @since v0.30

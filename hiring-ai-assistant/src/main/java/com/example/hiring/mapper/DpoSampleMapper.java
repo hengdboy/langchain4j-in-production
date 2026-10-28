@@ -5,7 +5,7 @@ import com.example.hiring.entity.DpoSample;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * Ch24 v0.28 DPO 样本 Mapper。
+ * v0.28 DPO 样本 Mapper。
  *
  * @author langchain4j-tutorial
  * @since v0.28

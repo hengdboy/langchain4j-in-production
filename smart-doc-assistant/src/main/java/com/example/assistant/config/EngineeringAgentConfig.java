@@ -25,17 +25,17 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 
 /**
- * Ch16 新增：Agent 工程化装配
+ * 新增：Agent 工程化装配
  *
- * <p>给 Agent 加上六件工程化能力（均 javap 核实过 1.19.0 真实 API）：
+ * <p>给 Agent 加上六件工程化能力（均 源码核实过 1.19.0 真实 API）：
  * <ol>
- *   <li><b>动态工具注入</b>：{@code toolProvider(DynamicToolProvider)}——按查询按需给工具；</li>
- *   <li><b>工具调用审计</b>：{@code beforeToolExecution / afterToolExecution} 回调 → AgentAuditService；</li>
- *   <li><b>并发工具执行</b>：{@code executeToolsConcurrently()}——模型一次要调多个工具时并行执行；</li>
- *   <li><b>可观测性</b>：{@code registerListener(AiServiceListener)}——记录 AiService 调用完成事件（含 tokenUsage 成本）；</li>
- *   <li><b>错误处理</b>：{@code toolExecutionErrorHandler / toolArgumentsErrorHandler / hallucinatedToolNameStrategy}——
- *       工具抛异常、参数解析失败、模型调用不存在的工具，都能兜底并引导模型纠正；</li>
- *   <li><b>防循环</b>：{@code maxToolCallingRoundTrips(10)}——工具循环护栏。</li>
+ * <li><b>动态工具注入</b>：{@code toolProvider(DynamicToolProvider)}——按查询按需给工具；</li>
+ * <li><b>工具调用审计</b>：{@code beforeToolExecution / afterToolExecution} 回调 → AgentAuditService；</li>
+ * <li><b>并发工具执行</b>：{@code executeToolsConcurrently()}——模型一次要调多个工具时并行执行；</li>
+ * <li><b>可观测性</b>：{@code registerListener(AiServiceListener)}——记录 AiService 调用完成事件（含 tokenUsage 成本）；</li>
+ * <li><b>错误处理</b>：{@code toolExecutionErrorHandler / toolArgumentsErrorHandler / hallucinatedToolNameStrategy}——
+ * 工具抛异常、参数解析失败、模型调用不存在的工具，都能兜底并引导模型纠正；</li>
+ * <li><b>防循环</b>：{@code maxToolCallingRoundTrips(10)}——工具循环护栏。</li>
  * </ol>
  */
 @Configuration
@@ -54,7 +54,7 @@ public class EngineeringAgentConfig {
     public DynamicToolProvider dynamicToolProvider(@Qualifier("openAiChatModel") ChatModel chatModel) {
         // 第二个参数是意图路由用的轻量模型：生产建议用小模型（便宜、快）；教学复用主模型即可
         // 第三个参数是工具执行期护栏：在 provideTools 返回的每个工具上包一层代理，
-        // 模型真正执行工具前过黑名单/限流/角色白名单（Ch21）
+        // 模型真正执行工具前过黑名单/限流/角色白名单
         return new DynamicToolProvider(List.of(ragLookupTool, timeTools, calculatorTools), chatModel, toolGuard);
     }
 
@@ -65,10 +65,10 @@ public class EngineeringAgentConfig {
                 .chatModel(chatModel)
                 .chatMemoryProvider(chatMemoryProvider)
                 .toolProvider(dynamicToolProvider)                 // ① 动态工具
-                .beforeToolExecution(bte -> log.debug("⏳ 即将执行工具 [{}]", bte.request().name()))
+                .beforeToolExecution(bte -> log.debug("即将执行工具 [{}]", bte.request().name()))
                 .afterToolExecution(te -> {
                     // ② 审计：回调可能跑在并发执行的虚拟线程上，ThreadLocal 无请求上下文，
-                    //    租户/用户从 provideTools 在请求线程捕获的快照里取（DynamicToolProvider.contextFor）
+                    // 租户/用户从 provideTools 在请求线程捕获的快照里取（DynamicToolProvider.contextFor）
                     Object memoryId = te.invocationContext().chatMemoryId();
                     String[] ctx = dynamicToolProvider.contextFor(memoryId);
                     if (ctx != null) {
@@ -86,13 +86,13 @@ public class EngineeringAgentConfig {
                 // ⑤ 错误处理三件套：工具异常 / 参数解析失败 / 幻觉工具名，都兜底成友好文本引导模型纠正
                 .toolExecutionErrorHandler((throwable, context) -> {
                     String tool = context.toolExecutionRequest().name();
-                    log.warn("⚠️ [错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
+                    log.warn(" [错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
                     return ToolErrorHandlerResult.text(
                             "工具 [" + tool + "] 执行失败：" + throwable.getMessage()
                                     + "。请修正参数后重试，或换一种方式回答。");
                 })
                 .toolArgumentsErrorHandler((throwable, context) -> {
-                    log.warn("⚠️ [错误处理] 工具参数解析失败: {}", throwable.getMessage());
+                    log.warn(" [错误处理] 工具参数解析失败: {}", throwable.getMessage());
                     return ToolErrorHandlerResult.text(
                             "工具参数格式不正确：" + throwable.getMessage() + "。请重新生成参数。");
                 })
@@ -120,7 +120,7 @@ public class EngineeringAgentConfig {
                     tokenInfo = String.format(" tokens: in=%s out=%s total=%s",
                             tu.inputTokenCount(), tu.outputTokenCount(), tu.totalTokenCount());
                 }
-                log.info("📊 [可观测] AiService 调用完成{} result={}",
+                log.info("[可观测] AiService 调用完成{} result={}",
                         tokenInfo,
                         result == null ? "null"
                                 : result.toString().length() > 60

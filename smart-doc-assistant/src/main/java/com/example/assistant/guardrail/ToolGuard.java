@@ -10,20 +10,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Ch21 Guardrails：<strong>工具层</strong>授权与限流（呼应 Ch16 的错误处理 + Ch19 的工具白名单）。
+ * Guardrails：<strong>工具层</strong>授权与限流（呼应  的错误处理 +  的工具白名单）。
  *
  * <p>三道防线：
  * <ol>
- *   <li><strong>黑名单</strong>：永远禁止的工具（{@code blockedTools}，如 rm -rf）</li>
- *   <li><strong>角色白名单</strong>：每个角色（user / admin / readonly）有允许的工具集</li>
- *   <li><strong>速率限制</strong>：每会话每分钟最多 N 次（避免恶意调用 / 烧 token）</li>
+ * <li><strong>黑名单</strong>：永远禁止的工具（{@code blockedTools}，如 rm -rf）</li>
+ * <li><strong>角色白名单</strong>：每个角色（user / admin / readonly）有允许的工具集</li>
+ * <li><strong>速率限制</strong>：每会话每分钟最多 N 次（避免恶意调用 / 烧 token）</li>
  * </ol>
  *
- * <h2>与 Ch19 的工具白名单区别</h2>
+ * <h2>与  的工具白名单区别</h2>
  * <ul>
- *   <li>Ch19 的白名单：MCP 服务端控制哪些工具暴露给所有客户端（粗粒度）</li>
- *   <li>本类的角色白名单：单个会话内控制哪些角色能用哪些工具（细粒度 RBAC）</li>
- *   <li>两者是<strong>叠加</strong>的——MCP 白名单 ⊇ 角色白名单 ⊇ 单次调用权限</li>
+ * <li> 的白名单：MCP 服务端控制哪些工具暴露给所有客户端（粗粒度）</li>
+ * <li>本类的角色白名单：单个会话内控制哪些角色能用哪些工具（细粒度 RBAC）</li>
+ * <li>两者是<strong>叠加</strong>的——MCP 白名单 ⊇ 角色白名单 ⊇ 单次调用权限</li>
  * </ul>
  *
  * @author langchain4j-tutorial
@@ -66,7 +66,7 @@ public class ToolGuard {
         List<String> blocked = properties.getTool().getBlockedTools();
         if (blocked != null && blocked.contains(toolName)) {
             metrics.incrementToolBlock(toolName);
-            log.warn("🚫 [ToolGuard] tool blocked by blacklist: {}", toolName);
+            log.warn("[ToolGuard] tool blocked by blacklist: {}", toolName);
             throw new GuardrailViolation("tool.blacklisted",
                     "工具 [" + toolName + "] 已被系统禁用");
         }
@@ -83,13 +83,13 @@ public class ToolGuard {
         }
         List<String> allowed = roleMap.get(role);
         if (allowed == null) {
-            log.warn("🚫 [ToolGuard] role '{}' has no allowed-tools entry (deny by default)", role);
+            log.warn("[ToolGuard] role '{}' has no allowed-tools entry (deny by default)", role);
             metrics.incrementToolBlock(toolName);
             throw new GuardrailViolation("tool.role_unknown",
                     "角色 [" + role + "] 无可用工具权限");
         }
         if (!allowed.contains(toolName)) {
-            log.warn("🚫 [ToolGuard] tool '{}' not in role '{}' whitelist ({})",
+            log.warn("[ToolGuard] tool '{}' not in role '{}' whitelist ({})",
                     toolName, role, allowed);
             metrics.incrementToolBlock(toolName);
             throw new GuardrailViolation("tool.not_in_role_whitelist",
@@ -118,7 +118,7 @@ public class ToolGuard {
             bucket[1]++;
             if (bucket[1] > limit) {
                 metrics.incrementRateLimit();
-                log.warn("🚫 [ToolGuard] rate limit hit for session {}: {}/min", sessionId, limit);
+                log.warn("[ToolGuard] rate limit hit for session {}: {}/min", sessionId, limit);
                 throw new GuardrailViolation("tool.rate_limited",
                         "调用频率超限（" + limit + "/分钟），请稍后再试");
             }

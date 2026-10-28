@@ -7,13 +7,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Ch21 Guardrails：输出层防护。
+ * Guardrails：输出层防护。
  *
  * <p>三条防线（每条可独立开关）：
  * <ol>
- *   <li>{@link PiiRedactor}：PII 信息脱敏（手机号 / 邮箱 / 身份证 / 银行卡）</li>
- *   <li>{@link ApiKeyLeakDetector}：API Key / Token 泄露拦截（与 Ch19 audit 的 redact 互为补）</li>
- *   <li>{@link #guard(String)}：整合入口，逐条应用，命中即抛异常（默认行为）</li>
+ * <li>{@link PiiRedactor}：PII 信息脱敏（手机号 / 邮箱 / 身份证 / 银行卡）</li>
+ * <li>{@link ApiKeyLeakDetector}：API Key / Token 泄露拦截（与  audit 的 redact 互为补）</li>
+ * <li>{@link #guard(String)}：整合入口，逐条应用，命中即抛异常（默认行为）</li>
  * </ol>
  *
  * <h2>为什么必须脱敏而非"只过滤"</h2>
@@ -71,8 +71,8 @@ public class OutputGuard {
      *
      * <p>行为：
      * <ul>
-     *   <li>PII（手机/邮箱/身份证/银行卡）：<strong>脱敏</strong>——替换为打码</li>
-     *   <li>API Key：<strong>拦截</strong>——抛 {@link GuardrailViolation}，由 Controller 返回 500/阻止</li>
+     * <li>PII（手机/邮箱/身份证/银行卡）：<strong>脱敏</strong>——替换为打码</li>
+     * <li>API Key：<strong>拦截</strong>——抛 {@link GuardrailViolation}，由 Controller 返回 500/阻止</li>
      * </ul>
      */
     public String guard(String output) {
@@ -130,7 +130,7 @@ public class OutputGuard {
         if (!properties.getOutput().isBlockApiKey()) return text;
         Matcher m = API_KEY.matcher(text);
         if (m.find()) {
-            log.error("🚨 [Guardrail] API Key leak detected in output: {}", redactForLog(m.group()));
+            log.error("[Guardrail] API Key leak detected in output: {}", redactForLog(m.group()));
             metrics.incrementApiKeyBlock();
             throw new GuardrailViolation("output.api_key_leaked",
                     "输出检测到 API Key 泄露，已被拦截（保护用户凭证）");
@@ -150,7 +150,7 @@ public class OutputGuard {
         m.appendTail(sb);
         if (count > 0) {
             metrics.incrementPiiRedacted(metricKey, count);
-            log.info("🔒 [Guardrail] {} redacted: {} occurrences", metricKey, count);
+            log.info("[Guardrail] {} redacted: {} occurrences", metricKey, count);
         }
         return sb.toString();
     }

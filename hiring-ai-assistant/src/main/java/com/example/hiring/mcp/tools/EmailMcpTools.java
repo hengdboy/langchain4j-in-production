@@ -5,10 +5,10 @@ import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 
 /**
- * Ch24 v0.30 MCP 工具：邮件（列出已发/发送）。
+ * v0.30 MCP 工具：邮件（列出已发/发送）。
  *
  * <p>{@code emailSend} 仅写 mock 网关（教学演示"AI 发信"）；
- * 生产应换成带审批的发信通道——AI 直接对外发信必须有护栏兜底（Ch25 §25.5）。
+ * 生产应换成带审批的发信通道——AI 直接对外发信必须有护栏兜底。
  *
  * @author langchain4j-tutorial
  * @since v0.30

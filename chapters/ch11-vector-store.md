@@ -272,7 +272,7 @@ docker run -d --name redis-stack -p 6379:6379 -v redis-data:/data redis/redis-st
 核心改动——把写死的 `embeddingStore()` 拆成两个条件 Bean，用 `chat.embedding.store` 属性切换（与 Ch08 的 `provider` 切换同款套路）。下面是 `config/EmbeddingConfig.java` 里与存储相关的真实代码：
 
 ```java
-// ⚠️ RedisEmbeddingStore 与 Ch10 的 RedisChatMemoryStore 同在 community 包
+// RedisEmbeddingStore 与 RedisChatMemoryStore 同在 community 包
 //    （dev.langchain4j.community.store.embedding.redis）；langchain4j-redis 旧模块已停更。
 //    依赖 langchain4j-community-redis 已在 Ch10 的 P0 修复里引入，本章无需新增依赖。
 import dev.langchain4j.community.store.embedding.redis.RedisEmbeddingStore;
@@ -299,7 +299,7 @@ public UnifiedJedis unifiedJedisForEmbedding(
 }
 
 /** Redis 向量库（Ch11）：需要 Redis Stack（含 RediSearch 模块），数据可持久化。
- *  ⚠️ dimension 必须与 EmbeddingModel 匹配：local=384 / bailian=1024。 */
+ * dimension 必须与 EmbeddingModel 匹配：local=384 / bailian=1024。 */
 @Bean
 @ConditionalOnProperty(name = "chat.embedding.store", havingValue = "redis")
 public EmbeddingStore<TextSegment> redisEmbeddingStore(
@@ -338,7 +338,7 @@ chat:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       index-name: ${REDIS_EMBEDDING_INDEX:embedding-index}
-      dimension: ${REDIS_EMBEDDING_DIMENSION:384}  # ⚠️ 切 bailian 模型时改 1024
+      dimension: ${REDIS_EMBEDDING_DIMENSION:384}  # 切 bailian 模型时改 1024
 ```
 
 ### 11.5.4 切换验证
@@ -354,10 +354,10 @@ CHAT_EMBEDDING_STORE=redis mvn spring-boot:run
 启动日志（inmemory 路径，2026-10-28 实测；Ch10 解析修复后，默认父子分块 10 块，`--chat.rag.parent-child=false` 扁平 7 块——修复前这里曾是 26 / 20，差的是 PDF 垃圾）：
 
 ```
-📂 从 classpath:docs 加载到 4 个文档
-🧼 清洗完成（4 → 4 文档）
-✂️  分块完成：4 个文档 → 10 个块（parent-child=true）
-✅ 入库完成：累计 4 文档 / 10 块（embedding 维度=384）
+ 从 classpath:docs 加载到 4 个文档
+清洗完成（4 → 4 文档）
+ 分块完成：4 个文档 → 10 个块（parent-child=true）
+ 入库完成：累计 4 文档 / 10 块（embedding 维度=384）
 ```
 
 检索验证（两种 store 下结果应该一致）：

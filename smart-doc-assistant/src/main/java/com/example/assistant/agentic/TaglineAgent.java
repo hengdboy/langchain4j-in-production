@@ -5,9 +5,9 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
 /**
- * Ch15 新增：并行映射的子 Agent（typed 接口）
+ * 新增：并行映射的子 Agent（typed 接口）
  *
- * <p>⚠️ 核实：parallelMapper 的子 Agent 必须用 <b>typed 接口</b>（方法签名是具体参数）。
+ * <p> 核实：parallelMapper 的子 Agent 必须用 <b>typed 接口</b>（方法签名是具体参数）。
  * 若用 UntypedAgent（{@code invoke(Map)} 签名），MapperAgentInvoker 会把集合元素当
  * 位置参数塞给 {@code invoke(Map)}，报 {@code argument type mismatch}——beta29 实验模块的真实缺陷。
  */

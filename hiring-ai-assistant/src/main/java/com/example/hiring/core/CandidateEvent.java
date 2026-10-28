@@ -8,7 +8,7 @@ import lombok.Data;
 import java.time.Instant;
 
 /**
- * Ch24 FSM 状态变更流水（ARCHITECTURE.md §4.3 lead_event 表）。
+ * FSM 状态变更流水（ARCHITECTURE.md  lead_event 表）。
  *
  * <p>每次 accepted 状态转换写入一条，用于审计与回溯（v0.25 起落库，
  * 此前只打日志）。

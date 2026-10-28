@@ -132,7 +132,7 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         // 记录开始时间——attributes 跨方法传递（streaming 跨线程安全）
         ctx.attributes().put(ATTR_START_NANOS, System.nanoTime());
         ChatRequest req = ctx.chatRequest();
-        log.info("📤 [ChatModel] → onRequest model={} messages={} tools={}",
+ log.info("[ChatModel] → onRequest model={} messages={} tools={}",
                 ctx.modelProvider(),
                 req.messages() != null ? req.messages().size() : 0,
                 req.parameters() != null && req.parameters().toolSpecifications() != null
@@ -158,7 +158,7 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         costTracker.record(cost, userId, toolName);
 
         // 3. 结构化日志
-        log.info("📥 [ChatModel] ← onResponse model={} elapsedMs={} in={} out={} cost={}{}",
+ log.info("[ChatModel] ← onResponse model={} elapsedMs={} in={} out={} cost={}{}",
                 modelName, elapsedMs,
                 cost.inputTokens(), cost.outputTokens(),
                 String.format("%.6f", cost.totalCost()), cost.currency());
@@ -169,7 +169,7 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         Long startNanos = (Long) ctx.attributes().get(ATTR_START_NANOS);
         long elapsedMs = startNanos != null
                 ? (System.nanoTime() - startNanos) / 1_000_000 : -1;
-        log.warn("❌ [ChatModel] onError model={} elapsedMs={} error={}",
+ log.warn("[ChatModel] onError model={} elapsedMs={} error={}",
                 ctx.modelProvider(), elapsedMs,
                 ctx.error().getClass().getSimpleName() + ": " + ctx.error().getMessage());
     }
@@ -378,11 +378,11 @@ curl -s -X POST http://localhost:8090/api/chat \
 #   {"answer":"向量数据库是...","inputTokens":51,"outputTokens":117,"totalTokens":168,...}
 
 # 2. 响应日志（监听器算出的单次成本，恰好 = 51×1.0 + 117×2.0 = 285 微元 = ¥0.000285）
-# 📤 [ChatModel] → onRequest model=OPEN_AI messages=1 tools=0
-# 📥 [ChatModel] ← onResponse model=deepseek-flash elapsedMs=1261 in=51 out=117 cost=0.000285CNY
+# [ChatModel] → onRequest model=OPEN_AI messages=1 tools=0
+# [ChatModel] ← onResponse model=deepseek-flash elapsedMs=1261 in=51 out=117 cost=0.000285CNY
 
 # 3. 再来一轮（多轮对话把历史带进上下文：输入 51→90，输出 117→495）
-# 📥 [ChatModel] ← onResponse model=deepseek-flash elapsedMs=3814 in=90 out=495 cost=0.001080CNY
+# [ChatModel] ← onResponse model=deepseek-flash elapsedMs=3814 in=90 out=495 cost=0.001080CNY
 
 # 4. 查看累计 token 与费用（对账：168+585=753，分毫不差——见 22.6.1 修复实录）
 curl http://localhost:8090/api/metrics/tokens

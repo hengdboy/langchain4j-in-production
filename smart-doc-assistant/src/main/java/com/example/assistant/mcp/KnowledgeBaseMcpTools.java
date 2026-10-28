@@ -19,24 +19,24 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 /**
- * Ch19 MCP 深度开发：把 Ch08/Ch12 的检索能力暴露为 MCP 工具，
+ * MCP 深度开发：把 / 的检索能力暴露为 MCP 工具，
  * 让外部 MCP 客户端（Claude Desktop / Cursor / 其他智能体）能查询本应用的知识库。
  *
  * <p>实现要点：
  * <ul>
- *   <li>用 LangChain4j 标准的 {@link Tool} 注解标记方法，{@code McpServer} 会扫描 @Tool
- *       方法并自动生成 JSON Schema；不引入新的 MCP 专属注解（官方 SDK 沿用 @Tool）</li>
- *   <li>工具语义对齐 {@code SemanticSearchController} / {@code RagController}：
- *       <ul>
- *         <li>{@link #searchKnowledgeBase(String, Integer, Double)}：纯向量检索（复用 Ch08 语义检索）</li>
- *         <li>{@link #askWithRag(String, Integer, Double)}：完整 RAG（复用 Ch12 RetrievalAugmentor）</li>
- *       </ul>
- *   </li>
- *   <li>结果通过 MCP 返回 String（MCP 协议 content 数组里只有文本段），
- *       多片段用换行 + 编号组织，便于 LLM 解析</li>
+ * <li>用 LangChain4j 标准的 {@link Tool} 注解标记方法，{@code McpServer} 会扫描 @Tool
+ * 方法并自动生成 JSON Schema；不引入新的 MCP 专属注解（官方 SDK 沿用 @Tool）</li>
+ * <li>工具语义对齐 {@code SemanticSearchController} / {@code RagController}：
+ * <ul>
+ * <li>{@link #searchKnowledgeBase(String, Integer, Double)}：纯向量检索（复用  语义检索）</li>
+ * <li>{@link #askWithRag(String, Integer, Double)}：完整 RAG（复用  RetrievalAugmentor）</li>
+ * </ul>
+ * </li>
+ * <li>结果通过 MCP 返回 String（MCP 协议 content 数组里只有文本段），
+ * 多片段用换行 + 编号组织，便于 LLM 解析</li>
  * </ul>
  *
- * <p>⚠️ 本类是纯 POJO（不加 {@code @Component}），由 {@code McpServerStarter} 显式装配，
+ * <p> 本类是纯 POJO（不加 {@code @Component}），由 {@code McpServerStarter} 显式装配，
  * 避免与 Spring 上下文里的同名 Bean 冲突；MCP Server 进程独立于主 Spring Boot 进程。
  *
  * <h2>工具白名单单一真相源</h2>
@@ -73,7 +73,7 @@ public class KnowledgeBaseMcpTools {
 
     /**
      * 纯向量检索：嵌入查询 → 在向量库中检索 Top-K 相似片段。
-     * <p>对应 {@code POST /api/search/semantic}（Ch08）的能力；
+     * <p>对应 {@code POST /api/search/semantic}的能力；
      * 通过 MCP 暴露后，任何 MCP 客户端都能用同样的方式调用本应用的知识库。
      *
      * @param question  用户的非空自然语言问题
@@ -92,7 +92,7 @@ public class KnowledgeBaseMcpTools {
         int k = (topK == null || topK < 1) ? 3 : Math.min(topK, 10);
         double threshold = (minScore == null) ? 0.0 : Math.max(0.0, Math.min(1.0, minScore));
 
-        log.info("🔧 [MCP] searchKnowledgeBase(question='{}', topK={}, minScore={})", q, k, threshold);
+        log.info("[MCP] searchKnowledgeBase(question='{}', topK={}, minScore={})", q, k, threshold);
 
         Embedding queryEmbedding = embeddingModel.embed(q).content();
         EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
@@ -125,8 +125,8 @@ public class KnowledgeBaseMcpTools {
     }
 
     /**
-     * 完整 RAG 检索：复用 Ch12 的 {@link RetrievalAugmentor}（向量+关键词混合 + rerank），
-     * 返回融合+重排后的文档片段。同 Ch13 的检索层评估管线。
+     * 完整 RAG 检索：复用 {@link RetrievalAugmentor}（向量+关键词混合 + rerank），
+     * 返回融合+重排后的文档片段。同  的检索层评估管线。
      *
      * <p>注意：本工具<strong>只返回检索结果</strong>，不调 LLM 做答案生成——把"检索"和"生成"
      * 解耦，让调用方（外部 MCP 客户端的 LLM）自己拼 Prompt 与作答，避免跨进程调用 LLM 的复杂度。
@@ -147,12 +147,12 @@ public class KnowledgeBaseMcpTools {
         int k = (topK == null || topK < 1) ? 5 : Math.min(topK, 10);
         double threshold = (minScore == null) ? 0.0 : Math.max(0.0, Math.min(1.0, minScore));
 
-        log.info("🔧 [MCP] askWithRag(question='{}', topK={}, minScore={})", q, k, threshold);
+        log.info("[MCP] askWithRag(question='{}', topK={}, minScore={})", q, k, threshold);
 
         // RetrievalAugmentor 内部用 queryRouter → ContentRetriever → ContentAggregator
-        // Ch13 的 RagEvaluator 已验证这套管线的输出顺序 = 最终排名（融合 + 重排已完成）
+        // RagEvaluator 已验证这套管线的输出顺序 = 最终排名（融合 + 重排已完成）
         UserMessage userMessage = UserMessage.from(q);
-        // memoryId 占位为 "mcp-tool"（与 Ch14 RagLookupTool 一致），保证与现有管线行为相同
+        // memoryId 占位为 "mcp-tool"（与  RagLookupTool 一致），保证与现有管线行为相同
         AugmentationResult result = retrievalAugmentor.augment(
                 new AugmentationRequest(userMessage, Metadata.from(userMessage, "mcp-tool", java.util.List.of()))
         );
@@ -179,7 +179,7 @@ public class KnowledgeBaseMcpTools {
      */
     @Tool("查询知识库统计信息：embedding 向量维度、当前 embedding 模型与向量库实现。")
     public String getKnowledgeBaseStats() {
-        log.info("🔧 [MCP] getKnowledgeBaseStats()");
+        log.info("[MCP] getKnowledgeBaseStats()");
         int dim = embeddingModel.dimension();
         return String.format(
                 "知识库统计：\n- Embedding 维度: %d\n- Embedding 模型: %s\n- Vector Store: %s",
@@ -195,7 +195,7 @@ public class KnowledgeBaseMcpTools {
      */
     private String requireQuestion(String question) {
         if (question == null || question.isBlank()) {
-            log.warn("⚠️ [MCP] tool called with empty/null question");
+            log.warn(" [MCP] tool called with empty/null question");
             return ""; // sentinel；本工具不返回结果给 caller，调用方拿到 "（问题不能为空）" 后续会改
         }
         return question;

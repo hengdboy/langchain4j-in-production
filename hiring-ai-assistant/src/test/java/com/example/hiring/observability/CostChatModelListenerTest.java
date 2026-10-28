@@ -51,7 +51,7 @@ class CostChatModelListenerTest {
         AgentCallContext.clear();
         assertThat(AgentCallContext.currentCandidateId()).isNull();
         assertThat(AgentCallContext.currentAgentName()).isNull();
-        log.info("✅ ThreadLocal 上下文管理正确");
+        log.info("ThreadLocal 上下文管理正确");
     }
 
     @Test
@@ -71,7 +71,7 @@ class CostChatModelListenerTest {
         assertThat(latest.getCandidateId()).isEqualTo(99L);
         assertThat(latest.getAgentName()).isEqualTo("TestAgent");
         assertThat(latest.getStatus()).isEqualTo("success");
-        log.info("✅ agent_call 落库成功：id={} agent={} status={}", latest.getId(), latest.getAgentName(), latest.getStatus());
+        log.info("agent_call 落库成功：id={} agent={} status={}", latest.getId(), latest.getAgentName(), latest.getStatus());
     }
 
     @Test
@@ -91,6 +91,6 @@ class CostChatModelListenerTest {
         assertThat(latest.getCandidateId()).isEqualTo(100L);
         assertThat(latest.getStatus()).isEqualTo("failed");
         assertThat(latest.getErrorMessage()).contains("quota");
-        log.info("✅ 错误埋点落库成功：id={} status={}", latest.getId(), latest.getStatus());
+        log.info("错误埋点落库成功：id={} status={}", latest.getId(), latest.getStatus());
     }
 }

@@ -1,13 +1,13 @@
 package com.example.hiring.core;
 
 /**
- * Ch24 FSM 状态机：状态转换事件枚举（ARCHITECTURE.md §3.2）。
+ * FSM 状态机：状态转换事件枚举（ARCHITECTURE.md ）。
  *
  * <p>13 个事件。其中 {@link #REPLY_TIMEOUT_48H} 与 {@link #OFFER_TIMEOUT_5D}
  * <b>不直接进状态机</b>——延迟队列触发后，先在
  * {@code CandidateService.handleReplyTimeout / handleOfferTimeout} 做业务前置判断
  * （追发/催办，或转 MAX_ROUNDS_REACHED / OFFER_EXPIRED）。
- * 原因与 SDR 版 TIMEOUT_72H 的教训相同：Spring StateMachine 的 Guard 拦截
+ * 此前一版项目（TIMEOUT_72H）实测过的教训：Spring StateMachine 的 Guard 拦截
  * 无法从 sendEvent 返回值区分，自循环不能画进状态机。
  *
  * @author langchain4j-tutorial

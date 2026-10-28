@@ -12,20 +12,20 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Ch24 FSM 时间事件队列：基于 Redis ZSet 的延迟队列。
+ * FSM 时间事件队列：基于 Redis ZSet 的延迟队列。
  *
  * <h2>为什么用 Redis ZSet</h2>
  * <ul>
- *   <li>Spring StateMachine 4.x 内置 Timer <b>不能 cancel/reschedule</b></li>
- *   <li>客户中途回信时，必须取消 72h 定时器（否则误触发追发）</li>
- *   <li>ZSet 的 score = 触发时间戳，{@code ZRANGEBYSCORE 0 now} 取到期事件</li>
+ * <li>Spring StateMachine 4.x 内置 Timer <b>不能 cancel/reschedule</b></li>
+ * <li>客户中途回信时，必须取消 72h 定时器（否则误触发追发）</li>
+ * <li>ZSet 的 score = 触发时间戳，{@code ZRANGEBYSCORE 0 now} 取到期事件</li>
  * </ul>
  *
  * <h2>Key 设计</h2>
  * <pre>
- *   sdr:delayed-events
- *     member: "{candidateId}:{FsmEvent.name()}"
- *     score:  触发时间戳（毫秒）
+ * hiring:delayed-events
+ * member: "{candidateId}:{FsmEvent.name()}"
+ * score:  触发时间戳（毫秒）
  * </pre>
  *
  * <h2>原子性</h2>
@@ -41,7 +41,7 @@ import java.util.Set;
 public class DelayedEventQueue {
 
     /** ZSet Key 前缀 */
-    public static final String ZSET_KEY = "sdr:delayed-events";
+    public static final String ZSET_KEY = "hiring:delayed-events";
 
     private final StringRedisTemplate redis;
 
@@ -56,7 +56,7 @@ public class DelayedEventQueue {
         String member = encode(candidateId, event);
         Double score = (double) fireAt.toEpochMilli();
         redis.opsForZSet().add(ZSET_KEY, member, score);
-        log.debug("📥 [DelayedEvent] scheduled lead={} event={} fireAt={}",
+        log.debug("[DelayedEvent] scheduled lead={} event={} fireAt={}",
                 candidateId, event, fireAt);
     }
 
@@ -70,7 +70,7 @@ public class DelayedEventQueue {
     public boolean cancel(Long candidateId, FsmEvent event) {
         String member = encode(candidateId, event);
         Long removed = redis.opsForZSet().remove(ZSET_KEY, member);
-        log.debug("🗑 [DelayedEvent] cancelled lead={} event={} removed={}",
+        log.debug("[DelayedEvent] cancelled lead={} event={} removed={}",
                 candidateId, event, removed);
         return removed != null && removed > 0;
     }
@@ -95,7 +95,7 @@ public class DelayedEventQueue {
             try {
                 events.add(decode(m));
             } catch (Exception e) {
-                log.warn("⚠️ [DelayedEvent] skip malformed member={}", m, e);
+                log.warn(" [DelayedEvent] skip malformed member={}", m, e);
             }
         }
         return events;
@@ -125,7 +125,7 @@ public class DelayedEventQueue {
      */
     public void clearAll() {
         redis.delete(ZSET_KEY);
-        log.warn("🧹 [DelayedEvent] cleared all events");
+        log.warn("[DelayedEvent] cleared all events");
     }
 
     /** 编码 member = "candidateId:eventName"。 */

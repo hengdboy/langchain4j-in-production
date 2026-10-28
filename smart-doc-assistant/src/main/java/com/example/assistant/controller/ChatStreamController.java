@@ -21,7 +21,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Ch04 新增：流式聊天控制器
+ * 新增：流式聊天控制器
  * <p>
  * 提供 4 个接口：
  * - POST /api/chat/stream            流式多轮对话（带记忆）
@@ -32,9 +32,9 @@ import java.util.concurrent.TimeUnit;
  * 前端调用方式（fetch + ReadableStream）：
  * <pre>{@code
  * const response = await fetch('/api/chat/stream', {
- *     method: 'POST',
- *     headers: { 'Content-Type': 'application/json' },
- *     body: JSON.stringify({ sessionId: 1, message: '你好' })
+ * method: 'POST',
+ * headers: { 'Content-Type': 'application/json' },
+ * body: JSON.stringify({ sessionId: 1, message: '你好' })
  * });
  * const reader = response.body.getReader();
  * // ... 解析 SSE 流

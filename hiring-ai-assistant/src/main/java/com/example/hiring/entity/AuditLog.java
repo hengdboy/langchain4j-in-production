@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 合规审计（audit_log 表）。
+ * 合规审计（audit_log 表）。
  *
  * <p>招聘场景的审计比一般业务更硬：每一次 AI 参与的人事决策都要能回答
  * "为什么拒了他"——字段粒度的决策留痕见 candidate.matchReasons，

@@ -16,28 +16,28 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Ch19 MCP 深度开发：Streamable HTTP 传输端点。
+ * MCP 深度开发：Streamable HTTP 传输端点。
  *
- * <p>把官方 SDK 的 {@link McpJsonRpcMessage} 处理能力与本章自实现的 Resources / Prompts
+ * <p>把官方 SDK 的 {@link McpJsonRpcMessage} 处理能力与本项目自实现的 Resources / Prompts
  * 原语统一通过 {@link McpJsonRpcDispatcher} 暴露，对外只提供一个 POST 端点。
  *
  * <h2>与 stdio 传输的对比</h2>
  * <table>
- *   <tr><th>维度</th><th>stdio</th><th>HTTP（本章实现）</th></tr>
- *   <tr><td>协议载体</td><td>stdin/stdout JSON-RPC</td><td>HTTP POST + JSON body</td></tr>
- *   <tr><td>进程模型</td><td>客户端拉起的子进程</td><td>服务端长期运行的 HTTP 服务</td></tr>
- *   <tr><td>调用方式</td><td>每行一条 JSON-RPC</td><td>每个 HTTP body 一条</td></tr>
- *   <tr><td>鉴权</td><td>无标准（靠环境变量）</td><td>Header（Bearer / API Key）</td></tr>
- *   <tr><td>日志</td><td>必须走 stderr</td><td>正常走 stdout</td></tr>
+ * <tr><th>维度</th><th>stdio</th><th>HTTP（本项目实现）</th></tr>
+ * <tr><td>协议载体</td><td>stdin/stdout JSON-RPC</td><td>HTTP POST + JSON body</td></tr>
+ * <tr><td>进程模型</td><td>客户端拉起的子进程</td><td>服务端长期运行的 HTTP 服务</td></tr>
+ * <tr><td>调用方式</td><td>每行一条 JSON-RPC</td><td>每个 HTTP body 一条</td></tr>
+ * <tr><td>鉴权</td><td>无标准（靠环境变量）</td><td>Header（Bearer / API Key）</td></tr>
+ * <tr><td>日志</td><td>必须走 stderr</td><td>正常走 stdout</td></tr>
  * </table>
  *
  * <h2>端点协议</h2>
  * <pre>
- *   POST /mcp
- *   Content-Type: application/json
- *   Body: {"jsonrpc":"2.0","id":1,"method":"initialize","params":{...}}
- *   → 200 OK
- *   {"jsonrpc":"2.0","id":1,"result":{...}}
+ * POST /mcp
+ * Content-Type: application/json
+ * Body: {"jsonrpc":"2.0","id":1,"method":"initialize","params":{...}}
+ * → 200 OK
+ * {"jsonrpc":"2.0","id":1,"result":{...}}
  * </pre>
  *
  * @author langchain4j-tutorial
@@ -60,7 +60,7 @@ public class McpHttpController {
      * HTTP 传输也是调它。框架把"消息解析"和"传输层"解耦。
      *
      * <p>返回值类型为 {@code Object}：Tools 分支返回 SDK 的 {@link McpJsonRpcMessage}，
-     * Resources/Prompts 分支返回本章的 {@link JsonRpcResponse}，Jackson 自动按各自字段序列化。
+     * Resources/Prompts 分支返回本项目的 {@link JsonRpcResponse}，Jackson 自动按各自字段序列化。
      *
      * @param request     客户端发送的 JSON-RPC 请求
      * @param authHeader  {@code Authorization} 头（Bearer <key>）
@@ -77,12 +77,12 @@ public class McpHttpController {
         JsonNode rawId = request.get("id");
         Object id = (rawId == null || rawId.isNull()) ? null : rawId;
 
-        log.info("📨 [MCP HTTP] method={} id={}", method, rawId);
+        log.info("[MCP HTTP] method={} id={}", method, rawId);
 
         // 鉴权（initialize 与 ping 是握手阶段，允许匿名通过；其他方法必须鉴权）
         if (!method.equals("initialize") && !method.equals("ping") && !method.equals("notifications/initialized")) {
             if (!securityService.isAuthorized(authHeader, apiKeyHeader)) {
-                log.warn("🚫 [MCP HTTP] unauthorized request, method={}", method);
+                log.warn("[MCP HTTP] unauthorized request, method={}", method);
                 return ResponseEntity.status(401)
                         .body(JsonRpcResponse.error(id, -32001, "Unauthorized: invalid or missing API key"));
             }
@@ -90,7 +90,7 @@ public class McpHttpController {
             if (method.equals("tools/call")) {
                 String toolName = request.path("params").path("name").asText("");
                 if (!securityService.isToolAllowed(toolName)) {
-                    log.warn("🚫 [MCP HTTP] tool not in whitelist: {}", toolName);
+                    log.warn("[MCP HTTP] tool not in whitelist: {}", toolName);
                     return ResponseEntity.status(403)
                             .body(JsonRpcResponse.error(id, -32601,
                                     "Tool not allowed: " + toolName + " (allowed: " + securityService.allowedToolList() + ")"));
@@ -103,7 +103,7 @@ public class McpHttpController {
         try {
             response = dispatcher.handle(request);
         } catch (Exception e) {
-            log.error("❌ [MCP HTTP] dispatcher error: {}", e.getMessage(), e);
+            log.error("[MCP HTTP] dispatcher error: {}", e.getMessage(), e);
             error = e;
             response = JsonRpcResponse.error(id, -32603, "Internal error: " + e.getMessage());
         }
@@ -117,7 +117,7 @@ public class McpHttpController {
                     duration, error != null);
         }
 
-        log.info("📤 [MCP HTTP] response id={} duration={}ms", rawId, duration);
+        log.info("[MCP HTTP] response id={} duration={}ms", rawId, duration);
         return ResponseEntity.ok(response);
     }
 

@@ -9,13 +9,13 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Ch24 Mock 背调工具：学历/履历核验演示。
+ * Mock 背调工具：学历/履历核验演示。
  *
  * <h2>教学定位</h2>
  * <p>真实背调是第三方服务（学信网/背调公司）。教学版用姓名哈希做确定性 mock：
  * 同一输入永远同一结果——保证测试可复现、demo 可讲解。
  *
- * <h2>合规提示（进 Ch25）</h2>
+ * <h2>合规提示（进 ）</h2>
  * <p>背调必须在候选人<b>书面授权</b>后才能发起；本工具的调用点
  * （OFFER_SENT 之后、入职之前）在设计上就保证了这一点——
  * 状态机本身就是合规护栏的一部分。
@@ -44,7 +44,7 @@ public class BackgroundCheckTool {
         String verdict = VERDICTS.get(idx);
         String caseId = "BC-" + UUID.nameUUIDFromBytes(
                 seed.getBytes(StandardCharsets.UTF_8)).toString().substring(0, 8);
-        log.info("🔍 [BackgroundCheck] {} ({}): {} caseId={}", name, university, verdict, caseId);
+        log.info("[BackgroundCheck] {} ({}): {} caseId={}", name, university, verdict, caseId);
         return new CheckResult(caseId, verdict, verdict.equals("VERIFIED"),
                 "mock: 教学版按姓名+院校哈希取样，非真实核验");
     }

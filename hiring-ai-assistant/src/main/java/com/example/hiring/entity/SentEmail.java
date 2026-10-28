@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Ch24 邮件发送历史（sent_email 表）。
+ * 邮件发送历史（sent_email 表）。
  *
  * <p>round 语义：1=首发邀请、2=追发、0=确认函/催办函等事务邮件。
  *

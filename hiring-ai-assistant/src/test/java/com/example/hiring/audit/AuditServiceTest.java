@@ -50,7 +50,7 @@ class AuditServiceTest {
         assertThat(latest.getAction()).isEqualTo("export");
         assertThat(latest.getCandidateId()).isEqualTo(42L);
         assertThat(latest.getDetail()).contains("contract");
-        log.info("✅ 手动 record 写入成功：id={} actor={} action={}", latest.getId(), latest.getActor(), latest.getAction());
+        log.info("手动 record 写入成功：id={} actor={} action={}", latest.getId(), latest.getActor(), latest.getAction());
     }
 
     @Test
@@ -69,7 +69,7 @@ class AuditServiceTest {
         assertThat(latest.getAction()).isEqualTo("update");
         assertThat(latest.getResourceType()).isEqualTo("candidate");
         assertThat(latest.getDetail()).contains("APPLIED").contains("SHORTLISTED");
-        log.info("✅ 事件驱动 audit 写入：id={} candidateId={} detail={}",
+        log.info("事件驱动 audit 写入：id={} candidateId={} detail={}",
                 latest.getId(), latest.getCandidateId(), latest.getDetail());
     }
 }

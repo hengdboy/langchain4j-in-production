@@ -24,15 +24,15 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * Ch24 业务层：候选人状态变更的统一入口。
+ * 业务层：候选人状态变更的统一入口。
  *
  * <h2>职责</h2>
  * <ul>
- *   <li>封装状态变更的所有副作用（DB 更新、延迟队列调度/取消、审计落库）</li>
- *   <li>让 Agent / Controller 只调 {@link #processEvent}，不直接接触 StateMachine</li>
- *   <li>超时类事件的<b>业务前置判断</b>：{@link #handleReplyTimeout}（追发 or 关闭）、
- *       {@link #handleOfferTimeout}（催办 or 过期）——这两个事件不进状态机，
- *       原因见 {@link FsmEvent} 类注释（自循环坑）</li>
+ * <li>封装状态变更的所有副作用（DB 更新、延迟队列调度/取消、审计落库）</li>
+ * <li>让 Agent / Controller 只调 {@link #processEvent}，不直接接触 StateMachine</li>
+ * <li>超时类事件的<b>业务前置判断</b>：{@link #handleReplyTimeout}（追发 or 关闭）、
+ * {@link #handleOfferTimeout}（催办 or 过期）——这两个事件不进状态机，
+ * 原因见 {@link FsmEvent} 类注释（自循环坑）</li>
  * </ul>
  *
  * @author langchain4j-tutorial
@@ -63,11 +63,11 @@ public class CandidateService {
      * @param candidateId 候选人 ID
      * @param event       要处理的事件
      * @param overrides   额外写入 ExtendedState 的键值（verdict / replyDecision /
-     *                    evalOutcome / offerDecision / humanApproved / matchScore）
+     * evalOutcome / offerDecision / humanApproved / matchScore）
      * @return 更新后的 CandidateContext（Guard 拒绝则原样返回）
      */
     public CandidateContext processEvent(Long candidateId, FsmEvent event, Map<String, Object> overrides) {
-        log.info("📨 [CandidateService] processing candidateId={} event={} overrides={}",
+        log.info("[CandidateService] processing candidateId={} event={} overrides={}",
                 candidateId, event, overrides);
 
         // 超时类事件：业务前置判断（追发/催办 or 终态），不走 FSM 自循环
@@ -93,7 +93,7 @@ public class CandidateService {
 
         // 4. 拒绝则原样返回（不改库）
         if (newStatus == null) {
-            log.warn("⚠️ [CandidateService] event {} rejected by StateMachine, candidate unchanged", event);
+            log.warn(" [CandidateService] event {} rejected by StateMachine, candidate unchanged", event);
             return candidate;
         }
 
@@ -107,7 +107,7 @@ public class CandidateService {
         // 6. 发布状态迁移事件（事件驱动编排：CandidatePipelineService 监听并触发下一个 Agent）
         eventPublisher.publishEvent(new CandidateTransitionedEvent(candidateId, oldStatus, newStatus, event));
 
-        log.info("✅ [CandidateService] candidateId={} {} → {}", candidateId, oldStatus, newStatus);
+        log.info("[CandidateService] candidateId={} {} → {}", candidateId, oldStatus, newStatus);
         return candidate;
     }
 
@@ -115,8 +115,8 @@ public class CandidateService {
      * 处理约面邀请超时（REPLY_TIMEOUT_48H，由 DelayedEventWorker 触发）。
      *
      * <ul>
-     *   <li>inviteRounds &lt; maxInviteRounds → 追发一轮（rounds+1，重排 48h 监听）</li>
-     *   <li>inviteRounds ≥ max → 状态机发 MAX_ROUNDS_REACHED → CLOSED_NO_RESPONSE</li>
+     * <li>inviteRounds &lt; maxInviteRounds → 追发一轮（rounds+1，重排 48h 监听）</li>
+     * <li>inviteRounds ≥ max → 状态机发 MAX_ROUNDS_REACHED → CLOSED_NO_RESPONSE</li>
      * </ul>
      *
      * @return 更新后的 CandidateContext（若已不在 INVITE_SENT 则原样返回，忽略过期超时）
@@ -124,7 +124,7 @@ public class CandidateService {
     public CandidateContext handleReplyTimeout(Long candidateId) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.INVITE_SENT) {
-            log.info("⏰ [CandidateService] candidateId={} reply-timeout ignored (status={})",
+            log.info("[CandidateService] candidateId={} reply-timeout ignored (status={})",
                     candidateId, candidate == null ? null : candidate.getStatus());
             return candidate;
         }
@@ -139,13 +139,13 @@ public class CandidateService {
             schedule(candidateId, FsmEvent.REPLY_TIMEOUT_48H, props.replyTimeout());
             recordEvent(candidate, FsmEvent.REPLY_TIMEOUT_48H,
                     CandidateStatus.INVITE_SENT, CandidateStatus.INVITE_SENT);
-            log.info("🔄 [CandidateService] candidateId={} invite follow-up round {}, next timeout scheduled",
+            log.info("[CandidateService] candidateId={} invite follow-up round {}, next timeout scheduled",
                     candidateId, rounds + 1);
             return candidate;
         }
 
         // 已达最大轮次 → 状态机转 CLOSED_NO_RESPONSE
-        log.info("🛌 [CandidateService] candidateId={} max invite rounds reached, closing",
+        log.info("[CandidateService] candidateId={} max invite rounds reached, closing",
                 candidateId);
         return processEvent(candidateId, FsmEvent.MAX_ROUNDS_REACHED, Map.of());
     }
@@ -154,14 +154,14 @@ public class CandidateService {
      * 处理 offer 超时（OFFER_TIMEOUT_5D，由 DelayedEventWorker 触发）。
      *
      * <ul>
-     *   <li>未催办过 → 发催办邮件（offerReminderSent=true，重排 5 天监听）</li>
-     *   <li>已催办过 → 状态机发 OFFER_EXPIRED → EXPIRED</li>
+     * <li>未催办过 → 发催办邮件（offerReminderSent=true，重排 5 天监听）</li>
+     * <li>已催办过 → 状态机发 OFFER_EXPIRED → EXPIRED</li>
      * </ul>
      */
     public CandidateContext handleOfferTimeout(Long candidateId) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.OFFER_SENT) {
-            log.info("⏰ [CandidateService] candidateId={} offer-timeout ignored (status={})",
+            log.info("[CandidateService] candidateId={} offer-timeout ignored (status={})",
                     candidateId, candidate == null ? null : candidate.getStatus());
             return candidate;
         }
@@ -174,11 +174,11 @@ public class CandidateService {
             schedule(candidateId, FsmEvent.OFFER_TIMEOUT_5D, props.offerTimeout());
             recordEvent(candidate, FsmEvent.OFFER_TIMEOUT_5D,
                     CandidateStatus.OFFER_SENT, CandidateStatus.OFFER_SENT);
-            log.info("🔔 [CandidateService] candidateId={} offer reminder sent, rescheduled", candidateId);
+            log.info("[CandidateService] candidateId={} offer reminder sent, rescheduled", candidateId);
             return candidate;
         }
 
-        log.info("⌛ [CandidateService] candidateId={} offer expired after reminder", candidateId);
+        log.info("[CandidateService] candidateId={} offer expired after reminder", candidateId);
         return processEvent(candidateId, FsmEvent.OFFER_EXPIRED, Map.of());
     }
 
@@ -215,7 +215,7 @@ public class CandidateService {
             case INVITE_REPLIED -> {
                 if (oldStatus == CandidateStatus.INVITE_SENT) {
                     delayedQueue.cancel(candidateId, FsmEvent.REPLY_TIMEOUT_48H);
-                    log.info("🗑 [CandidateService] cancelled REPLY_TIMEOUT_48H for candidateId={}", candidateId);
+                    log.info("[CandidateService] cancelled REPLY_TIMEOUT_48H for candidateId={}", candidateId);
                 }
             }
             case EVAL_PASS -> {
@@ -227,7 +227,7 @@ public class CandidateService {
             case OFFER_REPLIED -> {
                 if (oldStatus == CandidateStatus.OFFER_SENT) {
                     delayedQueue.cancel(candidateId, FsmEvent.OFFER_TIMEOUT_5D);
-                    log.info("🗑 [CandidateService] cancelled OFFER_TIMEOUT_5D for candidateId={}", candidateId);
+                    log.info("[CandidateService] cancelled OFFER_TIMEOUT_5D for candidateId={}", candidateId);
                 }
             }
             default -> { }
@@ -240,7 +240,7 @@ public class CandidateService {
                 .eq("candidate_id", candidate.getId()).orderByDesc("id").last("LIMIT 1"))
                 .stream().findFirst().orElse(null);
         if (latest == null) {
-            log.warn("⚠️ [CandidateService] candidateId={} no invite email to resend", candidate.getId());
+            log.warn(" [CandidateService] candidateId={} no invite email to resend", candidate.getId());
             return;
         }
         String messageId = mailGateway.send(candidate.getEmail(), "Re: " + latest.getSubject(),
@@ -248,7 +248,7 @@ public class CandidateService {
         insertSent(candidate, round, "Re: " + latest.getSubject(), latest.getBody(), messageId);
     }
 
-    /** offer 催办（确定性模板：offer 是法律承诺文件，正文走固定模板不走 LLM，见 Ch25 §25.2） */
+    /** offer 催办（确定性模板：offer 是法律承诺文件，正文走固定模板不走 LLM） */
     private void sendOfferReminder(CandidateContext candidate) {
         String body = "您好 " + (candidate.getName() == null ? "候选人" : candidate.getName())
                 + "：\n\n我们此前向您发出的 offer 仍在等待您的答复。如有任何疑问欢迎回复本邮件沟通；"
@@ -275,7 +275,7 @@ public class CandidateService {
     private void schedule(Long candidateId, FsmEvent event, Duration delay) {
         Instant fireAt = Instant.now().plus(delay);
         delayedQueue.schedule(candidateId, event, fireAt);
-        log.info("📥 [CandidateService] scheduled {} for candidateId={} at {}", event, candidateId, fireAt);
+        log.info("[CandidateService] scheduled {} for candidateId={} at {}", event, candidateId, fireAt);
     }
 
     /** 审计：每次 accepted 转换写入 candidate_event 表（自循环追发也记一条，状态前后同值） */
