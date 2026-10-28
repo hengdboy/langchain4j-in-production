@@ -7,24 +7,42 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  # ============================================================
+  # smart-doc-assistant：Ch10~Ch22 教学示例（进程内存储，无需外部服务）
+  # ============================================================
+  smart-doc-assistant:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - project: smart-doc-assistant
-            services: false
-          - project: hiring-ai-assistant
-            services: true   # 集成测试要真 MySQL + Redis（Ch24/25 前置）
-          - project: labs
-            services: false  # 5 个 lab 的离线测试零 key、零外部服务
-    name: build ${{ matrix.project }}
+    name: build smart-doc-assistant
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build & Test
+        working-directory: smart-doc-assistant
+        run: mvn -B verify
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-smart-doc-assistant
+          path: smart-doc-assistant/target/surefire-reports/
+          retention-days: 7
 
-    # MySQL 与 Redis 仅 hiring 作业需要；smart-doc 默认进程内存储
+  # ============================================================
+  # hiring-ai-assistant：Ch24/25 综合实战（集成测试要真 MySQL + Redis）
+  # ⚠️ services 不支持 if 条件——所以拆成独立 job，而不是矩阵 + services.if
+  #    （2026-10-29 实测：矩阵里给 services 加 if 会让整个工作流 startup failure）
+  # ============================================================
+  hiring-ai-assistant:
+    runs-on: ubuntu-latest
+    name: build hiring-ai-assistant
     services:
       mysql:
         image: mysql:8
-        if: ${{ matrix.services }}
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: hiringdb
@@ -39,7 +57,6 @@ jobs:
           --health-retries=20
       redis:
         image: redis:8
-        if: ${{ matrix.services }}
         ports:
           - 6379:6379
         options: >-
@@ -47,43 +64,61 @@ jobs:
           --health-interval=5s
           --health-timeout=3s
           --health-retries=20
-
     env:
       MYSQL_HOST: 127.0.0.1
       REDIS_HOST: 127.0.0.1
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
-
       # hiring 不做 Spring 自动建表——schema.sql 是手动导入的（见项目 README），
       # CI 里同样先导再测
-      - name: Init MySQL schema (hiring only)
-        if: ${{ matrix.services }}
+      - name: Init MySQL schema
         working-directory: hiring-ai-assistant
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client > /dev/null
           mysql -h 127.0.0.1 -uhiring -phiring_pass hiringdb < src/main/resources/db/schema.sql
-
       # 父 pom 的 enforcer 强制 JDK 21（更高版本 Lombok 失效）；
       # runner 默认 JDK 可能更新——setup-java 已把 JAVA_HOME 指到 21
-      - name: Build & Test (${{ matrix.project }})
-        working-directory: ${{ matrix.project }}
+      - name: Build & Test
+        working-directory: hiring-ai-assistant
         run: |
           echo "JAVA_HOME=$JAVA_HOME"
           java -version
           mvn -B verify
-
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: surefire-${{ matrix.project }}
-          path: ${{ matrix.project }}/target/surefire-reports/
+          name: surefire-hiring-ai-assistant
+          path: hiring-ai-assistant/target/surefire-reports/
+          retention-days: 7
+
+  # ============================================================
+  # labs：5 个 lab 的离线测试零 key、零外部服务
+  # ============================================================
+  labs:
+    runs-on: ubuntu-latest
+    name: build labs
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build & Test
+        working-directory: labs
+        run: mvn -B verify
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-labs
+          path: labs/**/target/surefire-reports/
           retention-days: 7
