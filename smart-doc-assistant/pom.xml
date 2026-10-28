@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.13</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>smart-doc-assistant</artifactId>
+    <!--
+      版本基线说明：v0.X.Y-SNAPSHOT 中 X 对应大章节卷，Y 对应该卷下小节。
+      本仓库当前已落地 Ch01~Ch18（v0.1 ~ v0.16），故主版本号应同步到 0.16。
+      下一章（Ch19 MCP 深度开发）落地后升 0.17，依此类推。
+      维护原则：每完成一章即 bump minor 一档，README 章节勾选 / 配套项目表 / 此标签三者必须联动。
+    -->
+    <version>0.16.0-SNAPSHOT</version>
+    <name>smart-doc-assistant</name>
+    <description>LangChain4j Tutorial Demo Project - Smart Document Assistant</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <!-- 稳定模块（core / langchain4j / open-ai） -->
+        <langchain4j.version>1.22.0</langchain4j.version>
+        <!-- 实验模块（starter / agentic / mcp / skills / guardrails / community-*）：
+             这些 artifact 不发布稳定版，只有 betaNN，必须成对升级 -->
+        <langchain4j.beta.version>1.22.0-beta32</langchain4j.beta.version>
+    </properties>
+
+    <!--
+      稳定模块（langchain4j / core / open-ai / http-client）不是直接依赖，
+      而是由 *-spring-boot-starter 传递带进来的。这里显式钉住版本，解决两件事：
+      1) 让 langchain4j.version 属性真正生效——否则它只是"写了但没人引用"的死配置；
+      2) 防止 starter 的传递依赖将来漂移到别的 minor 上（比如 beta33 的 starter 带了 core 1.23）。
+      实验模块（beta 线）不在这里管，各自在 <dependency> 里写 ${langchain4j.beta.version}。
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j</artifactId>
+                <version>${langchain4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-core</artifactId>
+                <version>${langchain4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-open-ai</artifactId>
+                <version>${langchain4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-http-client</artifactId>
+                <version>${langchain4j.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Spring Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- LangChain4j Spring Boot Starter -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!-- OpenAI-compatible model starter (works with DeepSeek / Ollama / Qwen / etc.) -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Redis ChatMemoryStore 依赖（Ch05，已迁移到 community 仓库） -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-community-redis</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+        <!-- Jedis 必须显式对齐 langchain4j-community-redis 的传递版本（7.2.1）。
+             若用默认的 6.0.0，运行时会抛
+             NoSuchMethodError: UnifiedJedis.pipelined()，因为社区版按 7.x 的 API 编译。 -->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>7.2.1</version>
+        </dependency>
+
+        <!-- Ch08 本地 ONNX Embedding 模型（零成本，无需 API Key，开发调试用） -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!-- Ch10 PDF 文档解析器（PDFBox，支持文本层 PDF） -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-apache-pdfbox</artifactId>
+            <version>${langchain4j.beta.version}</version>
+            <exclusions>
+                <!-- pdfbox 会带 commons-logging；Spring 已用 spring-jcl 顶替同一套 API。
+                     两者同时在 classpath 时，spring-jcl 会往 System.out 打
+                     "Standard Commons Logging discovery..."——stdio MCP Server 的 stdout 是 JSON-RPC 协议流，
+                     这一行会把客户端解析打挂，所以排除掉。 -->
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Ch15 官方 Agentic 实验模块（@Agent + AgenticServices 多 Agent 编排） -->
+        <!-- ⚠️ 只发 beta 版本线（1.22.0 稳定版 404），用 langchain4j.beta.version，API 为实验性，随版本可能变化 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-agentic</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!-- Ch17 MCP 客户端（Model Context Protocol：stdio + Streamable HTTP 传输） -->
+        <!-- ⚠️ 排除 jdk http client：与 starter 的 spring-restclient 冲突（同 SPI 双实现） -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-mcp</artifactId>
+            <version>${langchain4j.beta.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>dev.langchain4j</groupId>
+                    <artifactId>langchain4j-http-client-jdk</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Ch18 Skills 技能封装（实验性：SKILL.md + activate_skill 按需加载） -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-skills</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!--
+          Ch19 MCP 深度开发：服务端 SDK（社区模块）。
+          仅含 stdio 传输（StdioMcpServerTransport）+ 协议层 + Jackson；
+          传递依赖 langchain4j-mcp 已由 Ch17 引入，本章不再额外加。
+          HTTP 传输由本章自实现（基于 Spring MVC + McpServer.handle(JsonNode)）。
+          ⚠️ StdioMcpServerTransport 把 JSON-RPC 协议写 System.out；
+             日志必须走 System.err，否则污染协议流导致客户端断开。
+        -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-community-mcp-server</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!--
+          Ch21 Guardrails：官方 Guardrail SDK（实验性功能）。
+          jar 内 6 个类：3 个开箱即用的内置护栏 + 3 个 DecisionModel 外壳
+          - PatternBasedPromptInjectionGuardrail（注入检测，输入层）
+          - MessageModeratorInputGuardrail（消息审核，输入层，需 ModerationModel）
+          - JsonExtractorOutputGuardrail（结构化输出校验，输出层）
+          - DecisionModelInputGuardrail / DecisionModelOutputGuardrail / DecisionModelChecks（1.21 起，委托决策模型判定）
+          整个 jar 仅 18.4K——符合 LangChain4j "small core" 哲学。
+          ⚠️ 实验性：API 与行为可能在未来版本变化；详见官方文档"实验性"提示。
+        -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-guardrails</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- 锁 JDK 21：JDK 22+ 上 Lombok 注解处理失效，会出现 398 条"找不到符号 log"，
+                 而且增量构建时 target/classes 是旧编的，看起来像"构建成功"，一 clean 就炸 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-jdk-21</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[21,22)</version>
+                                    <message>请用 JDK 21 构建（本仓库在 21.0.10 验证通过）。更高版本会让 Lombok 失效。</message>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+          MCP stdio 入口单独打一个可执行 jar：
+            mvn clean package -Pmcp
+            java -jar target/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar
+          Spring Boot fat jar 的类在 BOOT-INF/classes 下，直接 java -cp xxx.jar 主类 会 ClassNotFoundException。
+        -->
+        <profile>
+            <id>mcp</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>repackage-mcp</id>
+                                <goals>
+                                    <goal>repackage</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>mcp</classifier>
+                                    <mainClass>com.example.assistant.mcp.McpServerStarter</mainClass>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

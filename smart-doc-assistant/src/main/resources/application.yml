@@ -1,0 +1,237 @@
+server:
+  port: 8090
+
+
+# ============================================================
+# LangChain4j 配置 - v0.5 多模型分工（对话/结构化分离）
+# ============================================================
+# 设计要点：
+# 1. open-ai.chat-model 默认 Bean：通用对话，temperature=0.7 保证多样性
+# 2. open-ai-chat-models.json-model：结构化输出专用，temperature=0 + json_object
+# 3. open-ai-chat-models.creative-model：创意写作，高温度
+# 4. 结构化输出类 @AiService(chatModel = "jsonModel") 显式指定
+# ============================================================
+langchain4j:
+  open-ai:
+    chat-model:
+      # ---------- 默认模型：DashScope qwen3.7-flash（中文生产推荐；走 OpenAI 兼容端点） ----------
+      # ⚠️ 安全说明：真实 key 必须放在 application-local.yml（已被 .gitignore 排除）
+      api-key: ${DASHSCOPE_API_KEY:sk-replace-me}
+      model-name: qwen3.7-flash-2026-07-15
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      temperature: 0.7
+      top-p: 0.9
+      max-tokens: 2000
+      frequency-penalty: 0.0
+      presence-penalty: 0.0
+      timeout: PT60S
+      max-retries: 3
+      log-requests: false
+      log-responses: false
+      # Ch07 注：默认模型用 text 格式，保证普通对话不会被 JSON 格式约束
+      response-format: text
+      # ⚠️ listeners 不要在这里配——ObservabilityConfig 的 @Bean 已经注入，
+      # yml 属性 + @Bean 两路同时配 = 同一 listener 注册两次 = CostTracker token 翻倍（Ch22 坑点 9）
+
+    # ---------- 流式对话模型（Ch04 SSE）----------
+    # 与 chat-model 同一套 DeepSeek 配置，单独声明是为了让 starter 生成
+    # openAiStreamingChatModel Bean（@ConditionalOnProperty("...streaming-chat-model.api-key")）
+    streaming-chat-model:
+      api-key: ${DEEPSEEK_API_KEY:sk-replace-me}
+      model-name: deepseek-v4-flash
+      base-url: https://api.deepseek.com/v1
+      temperature: 0.7
+      max-tokens: 2000
+      timeout: PT60S
+
+  # ---------- 多模型 Bean ----------
+  open-ai-chat-models:
+    # Ch07 新增：结构化输出专用模型
+    json-model:
+      api-key: ${DEEPSEEK_API_KEY:sk-replace-me}
+      model-name: deepseek-v4-flash
+      base-url: https://api.deepseek.com/v1
+      temperature: 0.0          # 结构化任务必须低温度
+      max-tokens: 2000
+      max-retries: 3
+      response-format: json_object   # ← 强制 JSON 输出
+      timeout: PT60S
+
+    creative-model:
+      api-key: ${DEEPSEEK_API_KEY:sk-replace-me}
+      model-name: deepseek-v4-flash
+      base-url: https://api.deepseek.com/v1
+      temperature: 1.0
+      top-p: 0.95
+      frequency-penalty: 0.5
+      max-tokens: 4000
+      timeout: PT60S
+
+logging:
+  level:
+    dev.langchain4j: INFO
+
+# ============================================================
+# Spring Data Redis（Ch05 ChatMemory 持久化）
+# ============================================================
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5s
+  profiles:
+    active: local
+
+# ============================================================
+# ChatMemory 配置（Ch05）
+# ============================================================
+chat:
+  memory:
+    backend: ${CHAT_MEMORY_BACKEND:redis}
+    ttl-days: 30
+  # ============================================================
+  # Guardrails 配置（Ch21）
+  # ============================================================
+  # 三层护栏：input（输入清洗）/ output（输出脱敏）/ tool（工具执行拦截）。
+  # 每层独立开关，便于灰度与排错；任何字段不配则用 GuardrailProperties 里的默认值。
+  #
+  # 说明：default-role 取自 RequestContext（Controller 在 try/finally 中 set），
+  # 框架默认走 "user"。以下 role-allowed-tools 即「角色白名单」：
+  #   - 角色不在映射里 → 默认拒绝（deny by default）
+  #   - 角色在映射里但工具不在列表 → 拒绝
+  #   - 空列表（如 admin: []）       → 该角色不限制
+  # 这里只把 searchKnowledgeBase 开放给普通用户；submitReturnTicket 等高危工具
+  # 不进 user 列表 → 必须 admin 角色（人工坐席）确认才能执行（呼应「退货提交等人确认」）。
+  guardrail:
+    enabled: true
+    input:
+      enabled: true
+      strip-html: true
+      strip-control-chars: true
+      compress-blank: true
+      max-length: 4000
+    output:
+      enabled: true
+      redact-phone: true
+      redact-email: true
+      redact-id-card: true
+      redact-bank-card: true
+      block-api-key: true
+    tool:
+      enabled: true
+      default-role: user
+      rate-limit-per-minute: 30
+      # 永远禁止调用的工具（高危）
+      blocked-tools: [executeShell, formatDisk]
+      role-allowed-tools:
+        user:     [searchKnowledgeBase]            # 普通用户只能查知识库
+        admin:    []                               # 管理员不限制
+        readonly: [searchKnowledgeBase]            # 只读角色同样只可查
+  # ============================================================
+  # MCP 配置（Ch17 / Ch19）
+  # ============================================================
+  # enabled=false 时整个 MCP 模块（McpConfig 全部 Bean + McpController）不注册，
+  # 应用可在没有 node / 没有 MCP 服务器的环境下正常启动（mcp-tools 技能自动降级）。
+  #
+  # demo-server-script 支持相对路径与绝对路径：
+  #   相对路径按「JVM 工作目录」→「工作目录/smart-doc-assistant」顺序查找，
+  #   都找不到会 fail-fast 并打印已尝试的路径（不会干等握手超时）。
+  # 推荐始终在模块目录下启动：cd smart-doc-assistant && mvn spring-boot:run
+  mcp:
+    enabled: ${CHAT_MCP_ENABLED:false}
+    demo-server-command: ${CHAT_MCP_NODE:node}
+    demo-server-script: ${CHAT_MCP_SCRIPT:mcp-server/demo-server.mjs}
+    # 超时配置（Duration 格式：5s / 500ms / 1m）
+    # initialization 原框架默认约 30s——本地 stdio 起不来时要干等半分钟才报错，故收紧到 5s
+    timeout:
+      initialization: ${CHAT_MCP_TIMEOUT_INIT:5s}
+      tool-execution: ${CHAT_MCP_TIMEOUT_TOOL:20s}
+      resources: ${CHAT_MCP_TIMEOUT_RES:10s}
+  # ============================================================
+  # Embedding 配置（Ch08）
+  # ============================================================
+  # provider:
+  #   local   = 本地 ONNX All-MiniLM-L6-v2（默认，零成本，无需 API Key）
+  #   bailian = 阿里百炼 text-embedding-v4（OpenAI 兼容，中文生产推荐）
+  # 切换后重启即可，业务代码零改动；注意切换模型 = 向量库需要全量重嵌
+  embedding:
+    provider: ${CHAT_EMBEDDING_PROVIDER:local}
+    # Ch11：向量库切换。inmemory（默认，进程内、重启即失）/ redis（Redis Stack，可持久化）
+    store: ${CHAT_EMBEDDING_STORE:inmemory}
+    bailian:
+      api-key: ${DASHSCOPE_API_KEY:}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: text-embedding-v4
+    # Ch11：Redis 向量库配置（需 Redis Stack / Redis 8+，含 RediSearch 模块）
+    # ⚠️ dimension 必须与 embedding 模型匹配：local=384 / bailian=1024
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      index-name: ${REDIS_EMBEDDING_INDEX:embedding-index}
+      dimension: ${REDIS_EMBEDDING_DIMENSION:384}
+
+  # ============================================================
+  # 多模态配置（Ch09）
+  # ============================================================
+  # chat-model：图片理解用 qwen3.7-flash（原生支持图像/视频输入，OpenAI 兼容模式）
+  # embedding： 多模态向量用 tongyi-embedding-vision-flash（不支持 OpenAI 兼容，走 DashScope 原生 API）
+  # 说明：多模态向量 base-url 是 DashScope 根域名，客户端内部会拼接原生端点路径
+  multimodal:
+    chat-model:
+      api-key: ${DASHSCOPE_API_KEY:}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: ${CHAT_MULTIMODAL_MODEL:qwen3.7-flash}
+    embedding:
+      api-key: ${DASHSCOPE_API_KEY:}
+      base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
+      model-name: ${CHAT_MULTIMODAL_EMBEDDING_MODEL:tongyi-embedding-vision-flash-2026-03-06}
+      dimension: 768
+
+  # ============================================================
+  # 文档处理流水线配置（Ch10）
+  # ============================================================
+  # classpath 目录：随 jar 打包，启动时自动入库（无需额外路径配置）
+  # chunk-size：单块目标大小（字符），recursive 分块按 段落→行→句子→词 逐级切割
+  # chunk-overlap：相邻块重叠字符数，保留上下文连续性，避免语义被切断
+  # 调优：chunk 太小召回碎、太大语义稀释；500 字符 + 50 重叠是中文通用起点
+  document-pipeline:
+    docs-classpath: docs
+    chunk-size: ${DOC_CHUNK_SIZE:500}
+    chunk-overlap: ${DOC_CHUNK_OVERLAP:50}
+
+  # ============================================================
+  # 高级 RAG 管线配置（Ch12）
+  # ============================================================
+  # parent-child：先切大「父块」再切小「子块」；入库子块、检索展开父块。
+  #   parent/child chunk-size 单位均为「字符」（DocumentSplitters.recursive 的 int 参数是字符，非 token）。
+  # vector / keyword / reranker：混合检索三路参数。
+  rag:
+    parent-child: ${CHAT_RAG_PARENT_CHILD:true}
+    parent-chunk-size: ${CHAT_RAG_PARENT_CHUNK:1200}
+    parent-chunk-overlap: ${CHAT_RAG_PARENT_OVERLAP:150}
+    child-chunk-size: ${CHAT_RAG_CHILD_CHUNK:400}
+    child-chunk-overlap: ${CHAT_RAG_CHILD_OVERLAP:50}
+    # 向量一路（EmbeddingStoreContentRetriever）
+    vector:
+      max-results: ${CHAT_RAG_VECTOR_TOPK:5}
+      min-score: ${CHAT_RAG_VECTOR_MINSCORE:0.0}
+    # 关键词一路（混合检索的"全文"路，KeywordContentRetriever 扫描进程内 LexicalSegmentIndex）
+    keyword:
+      enabled: ${CHAT_RAG_KEYWORD_ENABLED:true}
+      max-results: ${CHAT_RAG_KEYWORD_TOPK:5}
+    # 重排序（ReRankingContentAggregator + ScoringModel）
+    reranker:
+      min-score: ${CHAT_RAG_RERANK_MINSCORE:0.0}
+      max-results: ${CHAT_RAG_RERANK_TOPK:5}
+      # Ch12 升级：重排模型选择
+      #   embedding = EmbeddingScoringModel（bi-encoder，复用 embedding 模型算余弦，零成本但增益有限）
+      #   dashscope = DashScopeRerankScoringModel（cross-encoder，调百炼 qwen3-rerank API，效果显著更好）
+      provider: ${CHAT_RAG_RERANK_PROVIDER:embedding}
+      dashscope:
+        api-key: ${DASHSCOPE_API_KEY:}
+        # 完整端点 URL（含 workspaceId），北京地域示例：
+        # https://{workspaceId}.cn-beijing.maas.aliyuncs.com/compatible-api/v1/reranks
+        base-url: ${DASHSCOPE_RERANK_URL:https://dashscope.aliyuncs.com/compatible-api/v1/reranks}
+        top-n: ${CHAT_RAG_RERANK_TOPN:10}

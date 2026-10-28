@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "question": "七天无理由退货需要满足什么条件？",
+      "expectedContextContains": "不影响二次销售",
+      "referenceAnswer": "商品需保持完好、不影响二次销售，自签收起七日内可无理由退货；定制类、鲜活易腐、数字化商品不适用。"
+    },
+    {
+      "question": "退款一般多久能到账？",
+      "expectedContextContains": "3 个工作日内原路退回",
+      "referenceAnswer": "审核通过后款项在 3 个工作日内原路退回；退款审核时限为 48 小时（FAQ 记为 24 小时）。"
+    },
+    {
+      "question": "支持哪些支付方式？",
+      "expectedContextContains": "支付宝、微信支付、银行卡、花呗分期",
+      "referenceAnswer": "支持支付宝、微信支付、银行卡、花呗分期等多种支付方式；大额订单建议对公转账。"
+    },
+    {
+      "question": "什么是 RAG？",
+      "expectedContextContains": "Retrieval-Augmented Generation",
+      "referenceAnswer": "RAG 即检索增强生成（Retrieval-Augmented Generation），先向量检索召回相关知识，再交给大模型生成答案。"
+    },
+    {
+      "question": "pgvector 是什么？",
+      "expectedContextContains": "PostgreSQL 的向量检索扩展",
+      "referenceAnswer": "pgvector 是 PostgreSQL 的向量检索扩展，支持 HNSW 索引，用于近似最近邻搜索。"
+    },
+    {
+      "question": "Spring Boot 的核心思想是什么？",
+      "expectedContextContains": "约定优于配置",
+      "referenceAnswer": "Spring Boot 的核心思想是“约定优于配置”，引入对应 starter 即自动装配所需 Bean。"
+    },
+    {
+      "question": "咖啡机多久除垢一次？",
+      "expectedContextContains": "每月：运行除垢程序",
+      "referenceAnswer": "每月运行一次除垢程序：将除垢剂倒入水箱，按【除垢】键启动；每周还需用专用清洁剂清洗萃取组件与蒸汽棒。"
+    },
+    {
+      "question": "K-3000 开箱清单里都有哪些物品？",
+      "expectedContextContains": "主机 x1、水箱 x1、电源线 x1",
+      "referenceAnswer": "包装清单：主机 x1、水箱 x1、电源线 x1、保修卡 x1、说明书 x1。"
+    },
+    {
+      "question": "K-3000 咖啡机坏了怎么报修？",
+      "expectedContextContains": "在线报修：关注官方公众号",
+      "referenceAnswer": "关注官方公众号，点击【服务-在线报修】提交工单。"
+    },
+    {
+      "question": "做一杯美式咖啡大概要多久？",
+      "expectedContextContains": "约 90 秒出杯",
+      "referenceAnswer": "选择【美式】模式，机器自动完成研磨、萃取、出水，约 90 秒出杯。"
+    },
+    {
+      "question": "K-3000",
+      "expectedContextContains": "智能咖啡机 K-3000",
+      "referenceAnswer": "K-3000 是本知识库示例文档里的智能咖啡机型号；该型号的产品使用手册涵盖开箱安装、日常使用、清洁保养和在线报修。"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+请严格按要求分析以下客户评论，返回JSON格式：
+
+评论内容：
+{{review}}
+
+返回JSON必须包含以下字段：
+- sentiment: 情感倾向，值为 POSITIVE / NEGATIVE / NEUTRAL 之一
+- rating: 评分，1-5的整数，5星最好
+- keyPoints: 评论提到的关键要点，字符串数组，没有则空数组
+- suggestions: 改进建议，字符串数组，如果是正面/中性评论返回空数组
+
+要求：
+1. 只返回JSON，不要任何解释文字或markdown标记
+2. keyPoints 要简洁，每个要点不超过20字

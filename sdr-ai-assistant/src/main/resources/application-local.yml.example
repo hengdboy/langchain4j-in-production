@@ -1,0 +1,20 @@
+# ============================================================
+# application-local.yml 模板
+# 复制为 application-local.yml（去掉 .example）后填入真实 key
+# ⚠️ application-local.yml 已被 .gitignore 排除，不会被提交
+# ============================================================
+
+# LangChain4j（必填）
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: sk-your-real-dashscope-key-here
+      model-name: qwen3.7-flash-2026-07-15
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+
+# 邮件 SMTP（生产用 SendGrid / AWS SES / 阿里云邮件推送）
+# spring.mail.username: apikey
+# spring.mail.password: your-sendgrid-api-key
+
+# MCP Server API Key（Ch19）
+# chat.mcp.api-key: your-mcp-server-api-key-min-16-chars
