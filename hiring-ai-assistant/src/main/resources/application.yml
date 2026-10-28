@@ -1,0 +1,133 @@
+# ============================================================
+# 招聘 AI 助手 - 默认配置（教学版）
+# 真实 key / 密码请放到 application-local.yml（已被 .gitignore 排除）
+# ============================================================
+
+server:
+  port: 8091   # 避开 smart-doc-assistant 的 8090 端口
+
+spring:
+  application:
+    name: hiring-ai-assistant
+
+  # ============== MySQL 8.0（业务数据，docker-compose 启） ==============
+  datasource:
+    url: jdbc:mysql://localhost:3306/hiringdb?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: hiring
+    password: hiring_pass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  # ============== Redis（运行时 KV，docker-compose 启） ==============
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# ============================================================
+# MyBatis-Plus 配置
+# ============================================================
+mybatis-plus:
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.example.hiring.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+    banner: false
+
+# ============================================================
+# Spring StateMachine 配置
+# ============================================================
+spring.statemachine:
+  data:
+    redis:
+      repositories:
+        enabled: true
+
+# ============================================================
+# LangChain4j 配置
+# ============================================================
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: ${DASHSCOPE_API_KEY:sk-replace-me}
+      model-name: qwen3.7-flash-2026-07-15
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      temperature: 0.7
+      timeout: PT60S
+      log-requests: false
+      log-responses: false
+    streaming-chat-model:
+      api-key: ${DASHSCOPE_API_KEY:sk-replace-me}
+      model-name: qwen3.7-flash-2026-07-15
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      temperature: 0.7
+      timeout: PT60S
+
+# ============================================================
+# 招聘业务配置
+# ============================================================
+hiring:
+  # ============== FSM 状态机配置（详见 HiringProperties.Fsm） ==============
+  fsm:
+    # 约面邀请 48h 无回复超时 —— 教学版 2h（生产 48h = 172800000）
+    reply-timeout-ms: 7200000
+    # offer 5 天无答复超时 —— 教学版 5min（生产 5d = 432000000）
+    offer-timeout-ms: 300000
+    # 邀请最大轮次（1 首发 + 1 追发；招聘岗位骚扰候选人伤雇主品牌，不像销售可以 3 轮）
+    max-invite-rounds: 2
+
+  # ============== 定时器扫描频率（详见 HiringProperties.Scheduler） ==============
+  scheduler:
+    # 延迟事件扫描 —— 每 1 分钟检查 48h/5d 到期
+    event-scan-interval-ms: 60000
+    # Bandit 评估 —— 每 10 分钟结算一次
+    bandit-eval-interval-ms: 600000
+
+  # ============== Agent 处理（详见 HiringProperties.Agent） ==============
+  agent:
+    # 单个 Agent 调用超时 30s
+    call-timeout-ms: 30000
+    # 失败重试 2 次
+    max-retries: 2
+    # 重试间隔 2s
+    retry-interval-ms: 2000
+
+  # ============== 多臂老虎机（详见 HiringProperties.Bandit） ==============
+  bandit:
+    strategy: thompson-sampling     # 算法选择
+    exploration-factor: 0.1         # 探索因子
+    retrain-threshold: 100          # DPO 样本≥此阈值才重训
+
+  # ============== MCP Server ==============
+  mcp:
+    server-enabled: true            # 启用 stdio MCP Server
+    http-port: 8092                 # 未来扩展 HTTP MCP 传输用
+
+  # ============== Demo（详见 HiringProperties.Demo） ==============
+  demo:
+    # demo 是否真实调 Agent（需 api key）
+    # false → canned 评估，无 key 环境（CI/本地）可跑
+    use-real-agent: true
+
+logging:
+  level:
+    com.example.hiring: INFO
+    com.baomidou.mybatisplus: WARN
+    org.springframework.statemachine: INFO
+    dev.langchain4j: INFO

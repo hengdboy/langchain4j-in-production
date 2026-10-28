@@ -1,0 +1,28 @@
+# ============================================================
+# 本地私有配置模板 —— 复制为 application-local.yml 后填写真实值
+# application-local.yml 已被 .gitignore 排除，永不入库
+# ============================================================
+
+# 覆盖默认的 DashScope 模型为 DeepSeek（示例）：
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: ${DEEPSEEK_API_KEY:sk-your-deepseek-key}
+      model-name: deepseek-v4-flash
+      base-url: https://api.deepseek.com/v1
+      temperature: 0.7
+      timeout: PT60S
+    streaming-chat-model:
+      api-key: ${DEEPSEEK_API_KEY:sk-your-deepseek-key}
+      model-name: deepseek-v4-flash
+      base-url: https://api.deepseek.com/v1
+      temperature: 0.7
+      timeout: PT60S
+
+# 本地联调把超时调快（秒级观察追发/催办）：
+# hiring:
+#   fsm:
+#     reply-timeout-ms: 15000
+#     offer-timeout-ms: 10000
+#   scheduler:
+#     event-scan-interval-ms: 3000

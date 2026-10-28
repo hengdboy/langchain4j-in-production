@@ -37,7 +37,8 @@
 
 | 章 | 主题 | 一句话产出 |
 |---|---|---|
-| [Ch24 企业级实战](chapters/ch24-sdr-ai-assistant.md) | B2B 外贸 SDR 自动化 | FSM 12 状态 13 转换全景图、E2E 全链路实跑、64/64 测试全绿 |
+| [Ch24 综合实战（上）](chapters/ch24-hiring-automation.md) | AI 招聘官：FSM 编排 | 12 态 15 转换全景图、事件驱动编排、E2E 12 项断言、63/63 测试全绿 |
+| [Ch25 综合实战（下）](chapters/ch25-guardrails-evolution.md) | AI 招聘官：护栏与演化 | 歧视防护三层闸、Bandit 话术自迭代、每 Agent 真机成本账 |
 
 ## 实验室（Labs）：5 个小业务场景
 
@@ -56,7 +57,7 @@
 | 项目 | 端口 | 是什么 |
 |---|---|---|
 | [`smart-doc-assistant/`](smart-doc-assistant/) | 8090 | 智能文档问答：RAG 全管线 + Agent + MCP + Skills + 护栏 + 可观测（版本 v0.19） |
-| [`sdr-ai-assistant/`](sdr-ai-assistant/) | 8091 | B2B 外贸 SDR：FSM 状态机 + 5 Agent + MCP Server + Bandit/DPO + GDPR 审计（版本 v1.0） |
+| [`hiring-ai-assistant/`](hiring-ai-assistant/) | 8091 | 招聘流程自动化：FSM 状态机 + 6 Agent + 三护栏 + MCP Server + Bandit/DPO + 合规审计（版本 v0.30） |
 
 ## 快速开始
 

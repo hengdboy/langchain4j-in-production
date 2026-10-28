@@ -991,4 +991,4 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 
 ---
 
-**下一章预告**：Ch21 Guardrails 安全护栏 → Ch22 可观测性 · 日志 · 成本控制 → Ch24 企业级项目工程化实战（多租户 SaaS）。
+**下一章预告**：Ch21 Guardrails 安全护栏 → Ch22 可观测性 · 日志 · 成本控制 → Ch24/25 综合实战：AI 招聘官。

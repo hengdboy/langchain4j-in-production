@@ -18,7 +18,7 @@
 | 项目 | 端口 | 是什么 | 服务哪些章 |
 |---|---|---|---|
 | `smart-doc-assistant` | 8090 | 智能文档问答（RAG + Agent，多租户） | Ch10~Ch19、Ch21、Ch22 |
-| `sdr-ai-assistant` | 8091 | B2B 外贸 SDR 自动化（FSM + 多 Agent + 自迭代） | Ch24 |
+| `hiring-ai-assistant` | 8091 | 招聘流程自动化（FSM + 6 Agent + 三护栏 + 自迭代） | Ch24/25 |
 
 内容分两条主线。**RAG 主线**（Ch10→13）从文档进库讲到评估门禁，解决"怎么让 AI 答得准、并且知道它到底准不准"；**Agent 主线**（Ch14→18）从单个工具调用讲到工程化治理和外部生态，解决"怎么让 AI 自己干活、并且干得可控"。Ch19 是 MCP 的服务端视角（与 Ch17 客户端对照读），Ch21/22 是横切能力（防护与可观测），Ch24 把前面所有能力组装成一个完整业务系统。
 
@@ -51,7 +51,7 @@ Rule 0: RequireJavaVersion failed with message:
 | 组件 | 哪章需要 | 不装会怎样 |
 |---|---|---|
 | Node.js ≥ 18 | Ch17、Ch19 | MCP demo 服务器起不来；`demo-server.mjs` 零 npm 依赖，装 Node 即可 |
-| MySQL 8 | Ch24（sdr 项目） | sdr 起不来；smart-doc 默认进程内存储，不需要 |
+| MySQL 8 | Ch24/25（hiring 项目） | hiring 起不来；smart-doc 默认进程内存储，不需要 |
 | Redis 8 | Ch24 必需；Ch11 的 Redis 向量库、Ch5 分布式记忆可选 | smart-doc 用 `--chat.memory.backend=memory` 参数可完全绕开 |
 | Claude Desktop | Ch19.9.2（可选验证） | 不装也能用 curl 完成 stdio 模式自测 |
 
@@ -94,7 +94,7 @@ curl -s -X POST http://localhost:8090/api/chat \
 # → {"answer":"...","inputTokens":...,"outputTokens":...,"totalTokens":...}
 ```
 
-sdr 项目（Ch24）需要 MySQL + Redis 先就位，启动与 E2E 验证见 Ch24 的 24.10 节，那里有完整实测记录。
+hiring 项目（Ch24/25）需要 MySQL + Redis 先就位，启动与 E2E 验证见 Ch24 的 24.8 节，那里有完整实测记录。
 
 ---
 
@@ -115,7 +115,7 @@ sdr 项目（Ch24）需要 MySQL + Redis 先就位，启动与 E2E 验证见 Ch2
 | Ch19 | MCP 服务端（stdio + Streamable HTTP） | Ch17 | Node、可选 Claude Desktop |
 | Ch21 | Guardrails（输入/输出/工具三层防护） | Ch14 | 无（护栏单测不需要 Spring） |
 | Ch22 | 可观测性（token 计量 + 成本对账 + 告警阈值） | Ch02 | LLM key |
-| Ch24 | 企业级实战：SDR 自动化全链路 | 全部 | MySQL + Redis |
+| Ch24/25 | 企业级实战：招聘自动化全链路 | 全部 | MySQL + Redis |
 
 两个"顺序不敏感"的地方：Ch16~18 可以互换顺序（都只依赖 Ch14）；Ch21/22 是横切能力，插在主线任意位置读都成立。只有 Ch13 建议放在 Ch12 之后立刻读——**评估是前面所有优化的裁判**，没有它的 MRR 数字，Ch12 里"父子分块更好"就只是一句主张。
 
