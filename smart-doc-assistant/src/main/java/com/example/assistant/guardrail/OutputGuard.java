@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
  *
  * <p>三条防线（每条可独立开关）：
  * <ol>
- * <li>{@link PiiRedactor}：PII 信息脱敏（手机号 / 邮箱 / 身份证 / 银行卡）</li>
- * <li>{@link ApiKeyLeakDetector}：API Key / Token 泄露拦截（与  audit 的 redact 互为补）</li>
+ * <li>{@link #redactPii(String)}：PII 信息脱敏（手机号 / 邮箱 / 身份证 / 银行卡）</li>
+ * <li>API Key / Token 泄露拦截（与 Ch19 audit 的 redact 互为补）</li>
  * <li>{@link #guard(String)}：整合入口，逐条应用，命中即抛异常（默认行为）</li>
  * </ol>
  *
@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  * <h2>API Key 泄露为什么必须拦截</h2>
  * <p>LLM 训练数据可能含别人泄露的 Key；如果用户在 prompt 里贴了带 Key 的上下文，
  * 模型可能在输出里"复述"——这就是把用户的 Key 暴露给下一个访问者。
- * 必须用 {@link ApiKeyLeakDetector} 在输出后再次 redact 并计数。
+ * 必须在输出后再次 redact 并计数。
  *
  * @author langchain4j-tutorial
  * @since v0.18

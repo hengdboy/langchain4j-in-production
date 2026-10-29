@@ -36,12 +36,12 @@ public class AiServiceConfig {
 
 
     // 通过token进行回话截断
-// @Bean
-// public ChatMemoryProvider chatMemoryProvider(){
-// return memoryId -> TokenWindowChatMemory.builder()
-// .id(memoryId)
-// .maxTokens(2000, new OpenAiTokenCountEstimator("qwen3.7-flash-2026-07-15"))
-// .chatMemoryStore(chatMemoryStore)
-// .build();
-// }
+//    @Bean
+//    public ChatMemoryProvider chatMemoryProvider(){
+//        return memoryId -> TokenWindowChatMemory.builder()
+//                .id(memoryId)
+//                .maxTokens(2000, new OpenAiTokenCountEstimator("qwen3.7-flash-2026-07-15"))
+//                .chatMemoryStore(chatMemoryStore)
+//                .build();
+//    }
 }

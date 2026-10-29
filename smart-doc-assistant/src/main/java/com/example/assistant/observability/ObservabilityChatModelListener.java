@@ -18,7 +18,7 @@ import java.util.Map;
  * + TokenUsage 成本核算 串联起来。
  *
  * <p>这是 Ch22 全部逻辑的"心脏"——其他类（{@link CostTracker}、{@link TokenCostCalculator}、
- * {@link MetricsController}）都是它的下游。
+ * {@link com.example.assistant.controller.ObservabilityController}）都是它的下游。
  *
  * <h2>attributes 跨方法传数据</h2>
  * <p>对 streaming 调用，{@code onResponse} 跑在<strong>另一个线程</strong>，
