@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>三种数据源：
  * <ul>
  * <li>classpath 目录（启动自动入库，随 jar 打包）</li>
- * <li>文件系统目录（手动触发，生产环境常用）</li>
+ * <li>文件系统目录（手动触发，单机部署常用）</li>
  * <li>上传文件（MultipartFile 流式解析，不落盘）</li>
  * </ul>
  *
@@ -129,7 +129,7 @@ public class DocumentIngestionService implements ApplicationRunner {
         ingest(documents);
     }
 
-    /** 数据源二：文件系统目录（生产环境：服务器上的文档目录） */
+    /** 数据源二：文件系统目录（单机部署：服务器上的文档目录） */
     public synchronized void ingestFromDirectory(String directoryPath) {
         Path dir = Path.of(directoryPath);
         List<Document> documents;

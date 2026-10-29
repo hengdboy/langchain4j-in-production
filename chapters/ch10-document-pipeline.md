@@ -155,9 +155,9 @@ List<Document> documents = ClassPathDocumentLoader.loadDocuments(docsClasspath, 
 - 第二个参数是解析器——**这里是统一传了 `TextDocumentParser`**，这个"统一"在 10.4.4 会变成一个实测抓到的坑，先记着；
 - 目录随 jar 打包，部署后不需要额外拷贝文件——教学演示最友好。
 
-### 10.3.3 文件系统：生产环境的标准做法
+### 10.3.3 文件系统：单机部署的标准做法
 
-生产环境文档经常由运营/法务/客服手工维护，放服务器固定目录最省事：
+单机部署（jar 直接跑在一台服务器上）时，运营/法务/客服手工维护的文档放服务器固定目录最省事：
 
 ```java
 List<Document> documents;
@@ -173,6 +173,8 @@ try (var files = Files.list(Path.of(directoryPath))) {
 注意这里的写法：**自己遍历目录、逐文件过 `parserFor` 选解析器**。这不是绕弯——1.19 起 `loadDocuments(Path, Function<String, DocumentParser>)` 这个"遍历时按文件名自动选解析器"的重载已被移除（1.22.0 用 `javap` 核过，确实没有），所以逐文件选择只能自己写。上面就是项目里 `ingestFromDirectory` 的真实实现，目录里混着 txt 和 pdf 也能各归其位。
 
 > 💡 两个加载器在 1.22.0 里都有 `loadDocuments(dir, PathMatcher, DocumentParser)` 这一族重载（各 8 个 PathMatcher 变体，`javap` 核过），都**没有** `Function<String, DocumentParser>` 这种"逐文件按名选解析器"的重载。所以"按扩展名分拨"只有两种写法：PathMatcher 过滤后分两次加载（10.4.4 的修复配方用这个），或者像上面这样手工遍历、逐文件 `parserFor`。项目目录入口选了后者，两种都对。
+
+> ⚠️ **坑点：「放服务器目录」只对单机部署成立**。容器文件系统是易失的——Pod 一重建，目录里的文档就没了；多副本部署时每个实例各挂各的目录，互相看不见。生产上的标准做法是：文档先进对象存储（OSS / S3 / MinIO），由事件或定时任务触发入库；退一步是挂载共享存储（NFS）再扫描目录。本项目是单机教学部署，本地目录够用——哪天要搬进 K8s，先换掉这一层。
 
 ### 10.3.4 URL：远程网页 / 远程文件
 
@@ -670,7 +672,7 @@ public synchronized void ingestClasspathDocs() {
 ### 10.8.4 数据源二：文件系统目录手动入库
 
 ```java
-/** 数据源二：文件系统目录（生产环境：服务器上的文档目录） */
+/** 数据源二：文件系统目录（单机部署：服务器上的文档目录） */
 public synchronized void ingestFromDirectory(String directoryPath) {
     Path dir = Path.of(directoryPath);
     List<Document> documents;
