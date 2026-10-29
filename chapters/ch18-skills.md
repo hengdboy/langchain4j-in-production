@@ -79,7 +79,7 @@ description: 处理退款、退货、运费赔付类客服问题   # 一句话�
 
 ### 18.2.2 框架怎么解析 SKILL.md（源码级）
 
-> 🔍 **核实留痕**：解包 `langchain4j-skills` 源码确认，加载链是：  
+> **核实留痕**：解包 `langchain4j-skills` 源码确认，加载链是：  
 > `ClassPathSkillLoader.loadSkill(dir)` → 找 `SKILL.md` → **`SkillLoaderCommon.parseFrontMatter(markdown)`** 解析 YAML front matter（取 `name` / `description`）→ front matter 以下全部内容作为 `content`（激活时给模型）→ 扫描目录除 `SKILL.md` / `scripts/` 外的文件为 `SkillResource`。
 
 两个容易被忽略的实现细节：
@@ -136,7 +136,7 @@ Skill skill = Skill.builder()
 
 ### 18.4.2 激活机制源码拆解（激活 = 三件事）
 
-> 🔍 **核实留痕**：解包 `ActivateSkillToolExecutor.java`，激活不是"一个标志位"那么简单，`executeWithContext` 里做了三件事：
+> **核实留痕**：解包 `ActivateSkillToolExecutor.java`，激活不是"一个标志位"那么简单，`executeWithContext` 里做了三件事：
 
 ```java
 // ① 解析参数拿技能名
@@ -162,7 +162,7 @@ return ToolExecutionResult.builder()
 
 ### 18.4.3 可见性切换：为什么"激活后工具才可见"
 
-> 🔍 **核实留痕**：`Skills.toolProvider()` 返回的是一个 **`isDynamic() = true` 的动态 ToolProvider**（`Skills.java` 源码确认）。动态 ToolProvider 的特点是**每次模型调用前都会被重新执行**（Ch16 讲过）。它的决策逻辑：
+> **核实留痕**：`Skills.toolProvider()` 返回的是一个 **`isDynamic() = true` 的动态 ToolProvider**（`Skills.java` 源码确认）。动态 ToolProvider 的特点是**每次模型调用前都会被重新执行**（Ch16 讲过）。它的决策逻辑：
 
 ```
 每次模型请求前：
@@ -352,7 +352,7 @@ description: 处理支付失败、发货异常、登录异常等订单技术问�
 订单不会重复扣款。若仍失败，建议更换支付方式（微信/支付宝/银行卡）后再试。"
 ```
 
-④ **装配**（`SkillConfig`，Classpath 加载 + 按需绑工具）——启动日志一行确认：`🧠 加载到 3 个技能: [mcp-tools, troubleshooting, refund-policy]`；需要 skill-scoped 工具的技能用 `Skill.builder()` 编程式重建绑上（18.4.4）。
+④ **装配**（`SkillConfig`，Classpath 加载 + 按需绑工具）——启动日志一行确认：`加载到 3 个技能: [mcp-tools, troubleshooting, refund-policy]`；需要 skill-scoped 工具的技能用 `Skill.builder()` 编程式重建绑上（18.4.4）。
 
 ⑤ **验证**（18.10 的三连问）：触发场景问一句、无关场景问一句、看话术是否逐字来自资源文件——三关全过才算上线。
 

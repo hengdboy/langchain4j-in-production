@@ -649,7 +649,7 @@ curl -X POST http://localhost:8090/api/search/semantic \
 
 ---
 
-## 12.9 ⚠️ 高频坑点与最佳实践汇总
+## 12.9 高频坑点与最佳实践汇总
 
 ### 坑 1：recursive 的参数当 token 估
 

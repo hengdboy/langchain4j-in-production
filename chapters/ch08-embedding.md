@@ -61,12 +61,12 @@
 ```mermaid
 flowchart TD
     subgraph "向量空间（语义相近 → 空间相近）"
-        A1["🎨 红色"] --- A2["🔴 深红"]
-        A1 --- A3["🟠 橙色"]
-        B1["🐱 猫"] --- B2["🐶 狗"]
-        B1 --- B3["🐯 老虎"]
-        C1["💻 Java"] --- C2["☕ Kotlin"]
-        C1 --- C3["🐍 Python"]
+        A1["红色"] --- A2["深红"]
+        A1 --- A3["橙色"]
+        B1["猫"] --- B2["狗"]
+        B1 --- B3["老虎"]
+        C1["Java"] --- C2["Kotlin"]
+        C1 --- C3["Python"]
     end
 ```
 
@@ -143,7 +143,7 @@ Embedding 模型和对话模型（LLM）是**完全不同的两类模型**，职
 
 > ✅ **最佳实践**：先花 0 成本用本地模型把链路跑通，确认效果瓶颈确实在"向量质量"而不是"检索逻辑/分块质量"后，再升级远程模型。**远程 API 的成本大头往往是被无效检索浪费的**，而不是模型单价本身。
 
-### 8.2.4 ⚠️ 坑点：同一个向量库只能用一个模型
+### 8.2.4 坑点：同一个向量库只能用一个模型
 
 一个向量库里所有向量**必须来自同一个 Embedding 模型**（同一维度、同一语义空间）。
 
@@ -629,22 +629,22 @@ EmbeddingModel model = OpenAiEmbeddingModel.builder()
 
 > 复核时间 2026-10-28：`langchain4j-community-dashscope` 的版本列表已包含 `1.22.0-beta32`。本项目仍不采用这个 starter（原因见下），但"版本错位"不再是当前版本的障碍。
 
-### 8.6.4 ⚠️ 坑点：DeepSeek 官方不支持 Embedding
+### 8.6.4 坑点：DeepSeek 官方不支持 Embedding
 
 截至 2026 年 8 月，**DeepSeek 官方 API 只提供对话模型（deepseek-chat / deepseek-reasoner），没有 embedding 端点**。这点很容易踩坑——很多人以为"我用了 DeepSeek 就能一路 DeepSeek"。
 
 ```mermaid
 flowchart TD
     Q[我要做中文 RAG] --> D1{用 DeepSeek 做 Embedding?}
-    D1 -- "❌ 官方不支持 embeddings" --> D2[换方案 ↓]
-    D2 --> O1[阿里百炼: text-embedding-v4 ★推荐]
+    D1 -- "官方不支持 embeddings" --> D2[换方案 ↓]
+    D2 --> O1[阿里百炼: text-embedding-v4 推荐]
     D2 --> O2[本地: bge-m3 / BGE-small-zh 等]
     D2 --> O3[OpenAI: text-embedding-3-small]
 ```
 
 > ✅ **最佳实践**：**对话用 DeepSeek（便宜+中文好），向量用阿里百炼/本地模型**——两者互不冲突，本项目就是这种"混合供应商"架构：`chat-model` 走 DeepSeek，`embedding-model` 走百炼。
 
-### 8.6.5 ⚠️ 坑点：多模态 Embedding 不走 OpenAI 兼容
+### 8.6.5 坑点：多模态 Embedding 不走 OpenAI 兼容
 
 你想测试的 `tongyi-embedding-vision-flash-2026-03-06`（以及 `qwen3-vl-embedding`）这类**多模态向量模型，官方明确不支持 OpenAI 兼容接口**，必须走 DashScope 原生多模态向量 API：
 
@@ -831,7 +831,7 @@ public class DocumentSearchService implements ApplicationRunner {
 
         List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
         embeddingStore.addAll(embeddings, segments);
-        log.info("✅ 已索引 {} 个文档片段到内存向量库（embedding 维度={}）",
+        log.info("已索引 {} 个文档片段到内存向量库（embedding 维度={}）",
                 segments.size(), embeddingModel.dimension());
     }
 
@@ -909,13 +909,13 @@ public class SemanticSearchController {
 flowchart TD
     subgraph "关键词搜索：搜'退货'"
         K1["query: 退货"] --> K2["命中 faq-001（含'退货'）"]
-        K2 --> K3["漏掉 faq-002（只说'质量问题可退款'）❌"]
+        K2 --> K3["漏掉 faq-002（只说'质量问题可退款'）"]
     end
     subgraph "语义搜索：搜'买的东西坏了想退钱'"
         S1["query: 商品坏了想退钱"] --> S2["embedding 嵌入"]
-        S2 --> S3["faq-001 '无理由退货' ✅"]
-        S3 --> S4["faq-002 '质量问题可退款' ✅"]
-        S4 --> S5["faq-003 '退款3个工作日' ✅"]
+        S2 --> S3["faq-001 '无理由退货' "]
+        S3 --> S4["faq-002 '质量问题可退款' "]
+        S4 --> S5["faq-003 '退款3个工作日' "]
     end
 ```
 
@@ -1002,10 +1002,10 @@ EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
 
 | 手段 | 说明 | 省成本效果 |
 |------|------|-----------|
-| **查询向量缓存** | 相同/相似 query 复用结果（如 LRU 缓存 top-K） | ⭐⭐⭐ 高 |
-| **批量嵌入** | 入库时一次 embedAll | ⭐⭐ |
-| **本地模型承担冷启动** | 开发/小流量用本地，上量再切远程 | ⭐⭐⭐ |
-| **控制 maxResults** | 只取够用的 top-K，别拿 20 条 | ⭐ |
+| **查询向量缓存** | 相同/相似 query 复用结果（如 LRU 缓存 top-K） | ★★★ 高 |
+| **批量嵌入** | 入库时一次 embedAll | ★★ |
+| **本地模型承担冷启动** | 开发/小流量用本地，上量再切远程 | ★★★ |
+| **控制 maxResults** | 只取够用的 top-K，别拿 20 条 | ★ |
 | **降维** | text-embedding-v4 降到 512 维（64~2048 可选） | 存储/检索成本 ↓ |
 
 ```java
@@ -1077,13 +1077,13 @@ Embedding 检索能召回"相关片段"，但**片段切得烂，检索神仙也
 cd smart-doc-assistant
 # 方式一：本地 ONNX（默认，无需 API Key，直接可跑）
 mvn spring-boot:run
-# 启动日志: ✅ 已索引 8 个文档片段到内存向量库（embedding 维度=384）
+# 启动日志: 已索引 8 个文档片段到内存向量库（embedding 维度=384）
 
 # 方式二：切到阿里百炼（你测试的平台）
 export DASHSCOPE_API_KEY=sk-xxx
 export CHAT_EMBEDDING_PROVIDER=bailian
 mvn spring-boot:run
-# 启动日志: ✅ 已索引 8 个文档片段到内存向量库（embedding 维度=1024）
+# 启动日志: 已索引 8 个文档片段到内存向量库（embedding 维度=1024）
 
 # 语义搜索
 curl -X POST http://localhost:8090/api/search/semantic \

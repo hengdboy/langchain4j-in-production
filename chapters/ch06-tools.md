@@ -477,12 +477,12 @@ class ScreenAutomation {
 | 场景 | 用 IMMEDIATE？ | 原因 |
 |------|--------------|------|
 | 纯计算工具（加减乘除） | ✅ | 结果就是数字，不需要自然语言包装 |
-| 实时数据查询（股价/天气） | 🤔 看需求 | 用户要原始数据就直接返，要解读就走 LLM |
+| 实时数据查询（股价/天气） | 看需求 | 用户要原始数据就直接返，要解读就走 LLM |
 | 副作用操作（下单/发邮件） | ✅ | 返回操作结果 + messageId 即可，不用 LLM 再加工 |
 | RAG 检索 | ❌ | LLM 需要基于检索结果组织回答 |
 | 多步推理的中间工具 | ❌ | 中间结果需要继续给 LLM 推理 |
 
-🔧 **最佳实践**：给工具类做一次"成本审计"，把纯数据返回、无副作用、不需要自然语言包装的工具标成 `IMMEDIATE`，月 token 账单能降 20~40%。
+**最佳实践**：给工具类做一次"成本审计"，把纯数据返回、无副作用、不需要自然语言包装的工具标成 `IMMEDIATE`，月 token 账单能降 20~40%。
 
 ---
 
@@ -1005,7 +1005,7 @@ public interface OrderAssistant {
 assistant.chat(123L, "tenant-A", "查一下订单 ORD-1001");
 ```
 
-🔧 **最佳实践**：
+**最佳实践**：
 - **租户ID、用户角色、traceId** 等安全相关的上下文走 InvocationContext，不要走 @P 参数
 - 工具方法里用 ctx 做**权限校验**，比在 Controller 层校验更可靠（LLM 无法绕过）
 - 审计日志里带上 `ctx.memoryId()` + `ctx.attributes().get("traceId")`，方便排查问题
@@ -1114,7 +1114,7 @@ sequenceDiagram
     L->>T1: debit(A, 1000)
     T1-->>L: {txId: "TX-1", status: SUCCESS}
     L->>T2: credit(B, 1000)
-    T2-->>L: ❌ 失败：账号冻结
+    T2-->>L: 失败：账号冻结
     
     Note over L,C: 框架检测到工具失败 + compensateOnToolErrors=true
     Note over L,C: 自动查找 debit 的 @CompensateFor 补偿方法
@@ -1151,14 +1151,14 @@ sequenceDiagram
 - ❌ 不是强一致性事务（中间状态可能被外部系统看到）
 - ❌ 无法补偿"已发送的邮件""已推送的通知"等不可逆操作
 
-🔧 **生产最佳实践**：
+**生产最佳实践**：
 - 补偿方法必须**幂等**：多次调用和一次调用效果一样
 - 补偿操作记**独立审计日志**，标注是"补偿执行"
 - 对不可逆操作（发邮件、发短信），用"延迟发送"模式——所有步骤都成功了才真正发
 
 ---
 
-## 6.13 ⚠️ 高频坑点与最佳实践
+## 6.13 高频坑点与最佳实践
 
 ### 坑1：工具方法可见性——官方文档说任意可见性都可以
 
@@ -1173,7 +1173,7 @@ private int add(int a, int b) { return a + b; }  // ✅ 可以工作
 public int add(@P("第一个数") int a, @P("第二个数") int b) { return a + b; }
 ```
 
-🔧 **最佳实践**：虽然 `private` 也能工作，但生产代码推荐用 `public`——可读性更好，调试更方便，也避免某些特殊环境下反射权限不足的问题。
+**最佳实践**：虽然 `private` 也能工作，但生产代码推荐用 `public`——可读性更好，调试更方便，也避免某些特殊环境下反射权限不足的问题。
 
 ### 坑2：参数描述太模糊
 
@@ -1294,7 +1294,7 @@ AiServices.builder(Assistant.class)
 )
 ```
 
-🔧 **核心原则**：对 LLM "可理解但不泄密"，对日志和监控系统保留完整细节。
+**核心原则**：对 LLM "可理解但不泄密"，对日志和监控系统保留完整细节。
 
 ### 坑7：Pojo 参数没加 @P 描述
 
@@ -1341,7 +1341,7 @@ public String deleteUser(@P("用户ID") Long userId, InvocationContext ctx) {
 }
 ```
 
-🔧 **补充**：配合 `handleBeforeTool` / `handleAfterTool` 钩子，可以在全局层面统一做审计和监控，不需要每个工具都写：
+**补充**：配合 `handleBeforeTool` / `handleAfterTool` 钩子，可以在全局层面统一做审计和监控，不需要每个工具都写：
 
 ```java
 AiServices.builder(Assistant.class)
@@ -1377,7 +1377,7 @@ AiServices.builder(Assistant.class)
 
 ---
 
-## 6.14 💡 Spring AI 对比：工具调用
+## 6.14 Spring AI 对比：工具调用
 
 | 能力 | LangChain4j | Spring AI |
 |------|-------------|-----------|
@@ -1719,7 +1719,7 @@ import dev.langchain4j.service.UserMessage;
  * 需要用 AiServices.builder() 手动配置（见 ToolConfig.toolAssistant()）。
  * 如果加了 @AiService，starter 会自动注册一个不带工具的 Bean，和手动的 Bean 冲突。
  *
- * 🔧 返回 Result<String> 而不是 String，这样可以拿到：
+ * 返回 Result<String> 而不是 String，这样可以拿到：
  * - content()：最终回答
  * - tokenUsage()：Token 用量（成本核算）
  * - toolExecutions()：本次调用执行了哪些工具（审计/排错）

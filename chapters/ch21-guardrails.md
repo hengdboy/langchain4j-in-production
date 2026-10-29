@@ -582,7 +582,7 @@ mvn spring-boot:run
 # 日志应该看到：
 #  [Guardrail] GuardrailProperties bound (input/output/tool all enabled)
 # [Guardrail] 输出层 PII redactor armed (phone/email/idcard/bankcard)
-# 🚫 [ToolGuard] rate limiter armed (60 calls/min/session)
+# [ToolGuard] rate limiter armed (60 calls/min/session)
 
 # 2. 正常提问（无 PII / 无注入）
 curl -X POST http://localhost:8090/api/chat \
@@ -615,7 +615,7 @@ curl -X POST http://localhost:8090/api/agent/chat \
 
 ---
 
-## 21.10 ⚠️ 高频坑点清单
+## 21.10 高频坑点清单
 
 | # | 坑 | 现象 | 对策 |
 |---|---|---|---|

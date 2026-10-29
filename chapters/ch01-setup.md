@@ -56,13 +56,13 @@ public class ChatController {
 
 | 需求演进 | 需要额外写的代码量 | 复杂度 |
 |---------|------------------|--------|
-| 多轮对话（带上下文记忆） | 手动维护消息历史、Token计数、窗口截断 | ⭐⭐ |
-| 流式输出（打字机效果） | SSE 或 WebSocket、chunk 解析、背压控制 | ⭐⭐⭐ |
-| 让 AI 调工具/查数据库 | 函数调用协议解析、参数JSON反序列化、结果回传、循环判断 | ⭐⭐⭐⭐ |
-| 基于私有文档问答（RAG） | 文档解析→分块→Embedding→向量库→检索→注入Prompt | ⭐⭐⭐⭐⭐ |
-| 结构化输出（返回POJO） | JSON Schema约束、解析失败重试、类型转换 | ⭐⭐⭐ |
-| 多模型切换（OpenAI/DeepSeek/本地） | 每个厂商API格式不同，要么抽象一层要么改一堆代码 | ⭐⭐⭐⭐ |
-| 生产级（重试/限流/监控/审计） | 每处调用都要包一层，代码膨胀 | ⭐⭐⭐⭐ |
+| 多轮对话（带上下文记忆） | 手动维护消息历史、Token计数、窗口截断 | ★★ |
+| 流式输出（打字机效果） | SSE 或 WebSocket、chunk 解析、背压控制 | ★★★ |
+| 让 AI 调工具/查数据库 | 函数调用协议解析、参数JSON反序列化、结果回传、循环判断 | ★★★★ |
+| 基于私有文档问答（RAG） | 文档解析→分块→Embedding→向量库→检索→注入Prompt | ★★★★★ |
+| 结构化输出（返回POJO） | JSON Schema约束、解析失败重试、类型转换 | ★★★ |
+| 多模型切换（OpenAI/DeepSeek/本地） | 每个厂商API格式不同，要么抽象一层要么改一堆代码 | ★★★★ |
+| 生产级（重试/限流/监控/审计） | 每处调用都要包一层，代码膨胀 | ★★★★ |
 
 一个人月不到，你的代码就会变成一堆拼接 HTTP 请求、解析 JSON、管理状态的**样板代码泥潭**——而你真正想写的业务逻辑只占 20%。
 
@@ -108,12 +108,12 @@ HTTP 请求、JSON 解析、认证、重试、消息组装——**全部由框�
 
 ```mermaid
 graph TB
-    subgraph 应用层["🖥️ 应用层（你写的代码）"]
+    subgraph 应用层["应用层（你写的代码）"]
         Controller["REST Controller / Service"]
         AIService["@AiService 接口<br/>（声明式AI能力）"]
     end
 
-    subgraph 编排层["⚙️ 编排层（LangChain4j 核心）"]
+    subgraph 编排层["编排层（LangChain4j 核心）"]
         AISvc["AiServices<br/>（动态代理+消息组装+输出解析）"]
         Memory["ChatMemory<br/>（对话记忆管理）"]
         Tools["Tools<br/>（函数调用/工具执行）"]
@@ -122,21 +122,21 @@ graph TB
         Guardrails["Guardrails<br/>（安全护栏）"]
     end
 
-    subgraph 模型层["🤖 模型层（统一API抽象）"]
+    subgraph 模型层["模型层（统一API抽象）"]
         ChatModel["ChatModel<br/>（聊天补全）"]
         StreamingChatModel["StreamingChatModel<br/>（流式聊天）"]
         EmbeddingModel["EmbeddingModel<br/>（向量嵌入）"]
         ImageModel["ImageModel<br/>（图像生成/理解）"]
     end
 
-    subgraph 存储层["💾 存储/基础设施层"]
+    subgraph 存储层["存储/基础设施层"]
         EmbeddingStore["EmbeddingStore<br/>（向量数据库）"]
         ChatMemoryStore["ChatMemoryStore<br/>（记忆持久化）"]
         DocumentParser["DocumentParser<br/>（文档解析）"]
         MCP["MCP Client/Server<br/>（外部工具协议）"]
     end
 
-    subgraph LLM["☁️ LLM 提供商 / 向量数据库"]
+    subgraph LLM["LLM 提供商 / 向量数据库"]
         DeepSeek["DeepSeek / OpenAI / Claude / Gemini / Ollama ..."]
         PG["pgvector / Milvus / Redis / ES / Chroma ..."]
     end
@@ -176,7 +176,7 @@ graph TB
 
 ---
 
-#### 🤖 ChatModel / StreamingChatModel——最底层的模型抽象
+#### ChatModel / StreamingChatModel——最底层的模型抽象
 
 **解决的问题：** 不同 LLM 厂商的 API 格式、参数名、认证方式、返回结构都不一样。OpenAI 是 `messages` 数组，Anthropic 又加了 `system` 字段，Ollama 又是另一个格式。直接写代码的话，换个模型等于重写。
 
@@ -200,7 +200,7 @@ public interface ChatModel {
 
 ---
 
-#### 🧠 ChatMemory——对话状态管理
+#### ChatMemory——对话状态管理
 
 **解决的问题：** LLM 本身是**无状态**的——每次调用都必须把完整的对话历史传过去，它才"记得"之前说了什么。手动管理消息列表有几个麻烦：
 
@@ -232,7 +232,7 @@ public interface ChatMemory {
 
 ---
 
-#### ⚡ AiServices——你天天用的声明式门面（最重要的组件）
+#### AiServices——你天天用的声明式门面（最重要的组件）
 
 **解决的问题：** ChatModel 太底层，每次都手动拼 `List<ChatMessage>`、传 ChatMemory、挂工具、解析输出——这些事每个接口都要做一遍，重复且易错。
 
@@ -274,7 +274,7 @@ graph LR
 
 ---
 
-#### 🔧 Tools（@Tool）——让 LLM 操作真实世界
+#### Tools（@Tool）——让 LLM 操作真实世界
 
 **解决的问题：** LLM 本质是"文本进、文本出"，它自己不能查数据库、不能调 API、不能发邮件。要让 AI 真正"做事"，就需要工具调用（Function Calling）机制。
 
@@ -297,7 +297,7 @@ class OrderTools {
 
 ---
 
-#### 📄 Document + EmbeddingModel + EmbeddingStore——RAG 三件套
+#### Document + EmbeddingModel + EmbeddingStore——RAG 三件套
 
 **解决的问题：** LLM 的知识截止到训练时间，且不知道你的私有数据（公司文档、产品手册、用户上传的文件）。RAG（检索增强生成）= 先搜相关文档，再把内容塞给 LLM 当参考。
 
@@ -313,7 +313,7 @@ class OrderTools {
 
 ---
 
-#### 🔍 RetrievalAugmentor——RAG 的智能编排器
+#### RetrievalAugmentor——RAG 的智能编排器
 
 **解决的问题：** 基础 RAG（用户问题→向量检索→塞Prompt）效果有限，实际生产需要：查询改写、多路检索、Rerank重排、上下文压缩等一整套管线。
 
@@ -336,7 +336,7 @@ class OrderTools {
 
 ---
 
-#### 🤖 AgenticServices——多 Agent 编排（进阶）
+#### AgenticServices——多 Agent 编排（进阶）
 
 **解决的问题：** 复杂任务需要多个 AI 协作（比如"先搜索资料→分析数据→写报告→审核润色"），单个 Agent 做不好所有事。
 
@@ -346,7 +346,7 @@ class OrderTools {
 
 ---
 
-#### 🛡️ Guardrails——安全护栏
+#### Guardrails——安全护栏
 
 **解决的问题：** AI 应用的安全风险——Prompt 注入越狱、敏感数据泄露、危险工具调用、有害内容输出。
 
@@ -726,7 +726,7 @@ curl -X POST http://localhost:8090/api/chat \
 {"answer":"Java是一种广泛使用的面向对象编程语言，以'一次编写，到处运行'的跨平台特性著称。"}
 ```
 
-🎉 恭喜，你已经有了一个能工作的 AI 对话接口。
+恭喜，你已经有了一个能工作的 AI 对话接口。
 
 现在再回看 1.2.2 节的流程图，你应该能完全理解这次请求背后发生了什么。
 
@@ -764,17 +764,17 @@ langchain4j:
 
 | 模型 | 适用场景 | 成本（输入/输出 每百万tokens） | 速度 | 中文能力 |
 |------|---------|---------------------------|------|---------|
-| DeepSeek-V3 | 通用对话、代码、性价比首选 | ¥1 / ¥2 | 快 | ⭐⭐⭐⭐⭐ |
-| GPT-4o-mini | 英文任务、简单分类 | $0.15 / $0.60 | 快 | ⭐⭐⭐⭐ |
-| GPT-4o | 复杂推理、多模态 | $2.5 / $10 | 中等 | ⭐⭐⭐⭐ |
-| Claude Sonnet | 长文本、写作 | $3 / $15 | 中等 | ⭐⭐⭐⭐ |
-| Qwen2.5-7B (本地) | 开发调试、离线场景 | 免费 | 看GPU | ⭐⭐⭐⭐ |
+| DeepSeek-V3 | 通用对话、代码、性价比首选 | ¥1 / ¥2 | 快 | ★★★★★ |
+| GPT-4o-mini | 英文任务、简单分类 | $0.15 / $0.60 | 快 | ★★★★ |
+| GPT-4o | 复杂推理、多模态 | $2.5 / $10 | 中等 | ★★★★ |
+| Claude Sonnet | 长文本、写作 | $3 / $15 | 中等 | ★★★★ |
+| Qwen2.5-7B (本地) | 开发调试、离线场景 | 免费 | 看GPU | ★★★★ |
 
-> 🔧 **最佳实践**：生产项目中通常配置多个 ChatModel Bean（`@Bean("cheapModel")` 用于简单分类/提取，`@Bean("smartModel")` 用于复杂推理），不同 AiService 注入不同模型，成本可以差 10-50 倍。多模型 Bean 的完整拆法在 Ch03 详解。
+> **最佳实践**：生产项目中通常配置多个 ChatModel Bean（`@Bean("cheapModel")` 用于简单分类/提取，`@Bean("smartModel")` 用于复杂推理），不同 AiService 注入不同模型，成本可以差 10-50 倍。多模型 Bean 的完整拆法在 Ch03 详解。
 
 ---
 
-## 1.12 ⚠️ 新手必踩的 7 个坑
+## 1.12 新手必踩的 7 个坑
 
 ### 坑 1：base-url 末尾少了 `/v1` 或多了斜杠
 

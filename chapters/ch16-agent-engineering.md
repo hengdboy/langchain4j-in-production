@@ -129,7 +129,7 @@ public ToolProviderResult provideTools(ToolProviderRequest request) {
 
 > ⚠️ **坑点（源码核实）**：`ToolProviderResult.Builder` 的方法是 **`addAll(Map<ToolSpecification, ToolExecutor>)`** 或 `add(spec, executor)`，没有 `tools(...)`。`ToolExecutor` 在 `dev.langchain4j.service.tool` 包（不在 `agent.tool.execution`）。`ChatModel` 没有 `generate(String)`，轻量分类用 `chat(String)`（返回 `String`）。
 
-**④ 执行期护栏（ToolGuard 包裹）——"看得见"不等于"有权跑"**。`DynamicToolProvider` 在返回前给每个选出的工具包了一层代理 executor：真正执行前再过一次 `ToolGuard`（黑名单 / 角色白名单 / 限流，Ch21 的组件在这里提前上岗），被拦就返回 `⛔ 操作被安全策略拦截：…` 的提示文本，交由模型向用户解释。它和 ③ 是**两层正交的闸门**：`TenantToolFilter` 管"模型看得见哪些工具"（暴露时），`ToolGuard` 管"这个角色跑了才算数"（执行时兜底）——即使模型通过提示注入点名叫工具，没有权限也执行不了。16.10 的 ② 有这组边界的实测。
+**④ 执行期护栏（ToolGuard 包裹）——"看得见"不等于"有权跑"**。`DynamicToolProvider` 在返回前给每个选出的工具包了一层代理 executor：真正执行前再过一次 `ToolGuard`（黑名单 / 角色白名单 / 限流，Ch21 的组件在这里提前上岗），被拦就返回 `操作被安全策略拦截：…` 的提示文本，交由模型向用户解释。它和 ③ 是**两层正交的闸门**：`TenantToolFilter` 管"模型看得见哪些工具"（暴露时），`ToolGuard` 管"这个角色跑了才算数"（执行时兜底）——即使模型通过提示注入点名叫工具，没有权限也执行不了。16.10 的 ② 有这组边界的实测。
 
 **真实效果**（2026-10-28 实测）：问"退款政策里运费谁出？再算 500×8"（`tenantA/u1001/role=user`），注入日志 `域=[refund, calc] → 暴露 3 个工具`——检索工具正常执行并给出完整答案，`calculate` 被 ToolGuard 以 `角色 [user] 无权调用工具 [calculate]` 拦下，审计如实留痕。
 
@@ -429,7 +429,7 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
   -d '{"sessionId":"17","question":"退款政策里运费谁出？再帮我算一下 500 乘以 8",
        "tenantId":"tenantA","userId":"u1001","role":"user"}'
 # → 运费规则完整作答（searchKnowledgeBase 正常执行）
-# 日志：🎯 … 租户=tenantA 角色=user 域=[refund, calc] → 暴露 3 个工具
+# 日志：… 租户=tenantA 角色=user 域=[refund, calc] → 暴露 3 个工具
 # [审计] … 工具[searchKnowledgeBase] failed=false 耗时107ms（virtual-76）
 #        tokens: in=1350 out=628 total=1978
 
@@ -438,13 +438,13 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 curl -X POST http://localhost:8090/api/agent/engineering/chat \
   -H "Content-Type: application/json" \
   -d '{"sessionId":"18","question":"帮我算一下 128 乘以 7 等于多少","tenantId":"tenantA","userId":"u1001","role":"user"}'
-# → calculate 被 ToolGuard 拦截："⛔ 操作被安全策略拦截：角色 [user] 无权调用工具 [calculate]"
+# → calculate 被 ToolGuard 拦截："操作被安全策略拦截：角色 [user] 无权调用工具 [calculate]"
 #    模型拿到拦截文本后向用户解释"没有计算权限"，而不是 500
 # 审计： 文本如实入库（failed=false——拦截是正常返回，不是异常）
 
 # ③ 审计查询：必须带显式租户/用户（16.3 修复实录）
 curl "http://localhost:8090/api/agent/audit?sessionId=17&tenantId=tenantA&userId=u1001"
-# → key=tenantA:u1001:17, entries=[calculate(⛔拦截), searchKnowledgeBase(片段1…)]
+# → key=tenantA:u1001:17, entries=[calculate(拦截), searchKnowledgeBase(片段1…)]
 curl "http://localhost:8090/api/agent/audit?sessionId=17"
 # → key=default:anonymous:17, entries=[]   ← 不带参数就是查不到，复合 key 的教训活标本
 

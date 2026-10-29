@@ -30,7 +30,7 @@
 
 ## 14.2 什么是 Agent（LangChain4j 视角）
 
-> 🔍 **核实留痕（重要）**：解包 `langchain4j-core-1.22.0.jar` 确认：`dev.langchain4j.agent` 包下**只有 `tool/` 子包**（`Tool` / `P` / `ToolSpecification` / `ToolExecutionRequest` 等），**没有 `Agent` 接口或类**。全局搜索 `Agent.class` 同样为空（1.19 到 1.22 这一结论没变）。
+> **核实留痕（重要）**：解包 `langchain4j-core-1.22.0.jar` 确认：`dev.langchain4j.agent` 包下**只有 `tool/` 子包**（`Tool` / `P` / `ToolSpecification` / `ToolExecutionRequest` 等），**没有 `Agent` 接口或类**。全局搜索 `Agent.class` 同样为空（1.19 到 1.22 这一结论没变）。
 
 也就是说：**在 LangChain4j 里，Agent 不是一个类，而是一种组装模式**。它由三样东西拼出来：
 
@@ -265,7 +265,7 @@ while (true) {
 本项目两组实测（除零，`calculate(5, DIVIDE, 0)` 抛 `IllegalArgumentException`，2026-10-28）：
 
 - **声明式路径**：`/api/agent/chat` 问"5 除以 0"→ HTTP 200，回答先把工具的报错原样引出来（"计算器返回了错误：**除数不能为零**"）再给数学解释——② 的默认行为；
-- **手动循环路径**：同样问题 → 同样 200，`ManualAgentService` 的执行日志里工具结果直接就是错误文案（`🔧 …执行工具[calculate] → 除数不能为零，请换个非零的第二个数字`）——① 的就地转换。
+- **手动循环路径**：同样问题 → 同样 200，`ManualAgentService` 的执行日志里工具结果直接就是错误文案（`…执行工具[calculate] → 除数不能为零，请换个非零的第二个数字`）——① 的就地转换。
 
 两条路殊途同归，但**机制不同**：前者异常真的抛了、被 handler 接住（日志留痕），后者压根没抛。什么时候有区别？当你配了自定义 handler（Ch16 的审计/熔断）或跑异步模式时——① 会把异常吞在执行器里，你的 handler 根本收不到。要在手动循环里复现框架语义，构造执行器时用 `DefaultToolExecutor.builder().propagateToolExecutionExceptions(true)`。
 
@@ -377,7 +377,7 @@ public String run(Object sessionId, String question) {
 }
 ```
 
-> ⚠️ **修复实录（2026-10-28，本章实测抓到的真 bug）**：上面 ② 那三行原本写的是 `chatModel.chat(messages)`——**不带工具清单**。后果很隐蔽：编译过、启动过、接口也返回 200，但模型从不知道自己有工具，永远一轮就"直接回答"。实测问它"请调用 calculate 工具计算 5 除以 0"，模型回了句大实话：**「当前会话没有提供 `calculate` 工具」**。这正是 14.4.3 说的"工具清单每轮随请求下发"——框架替你做了这件事，手动复刻时漏掉它，循环就只剩个壳。修复用 `ChatRequest.builder().toolSpecifications(...)`（1.22 的 `ChatRequest` 直接收 `List<ToolSpecification>`，javap 核实），修复后同一组问题，模型当轮并行请求了 `currentTime` 和 `calculate` 两个工具，日志里两行 `🔧` 全出现。**如果你照任何教程手写工具循环，先检查这一条。**
+> ⚠️ **修复实录（2026-10-28，本章实测抓到的真 bug）**：上面 ② 那三行原本写的是 `chatModel.chat(messages)`——**不带工具清单**。后果很隐蔽：编译过、启动过、接口也返回 200，但模型从不知道自己有工具，永远一轮就"直接回答"。实测问它"请调用 calculate 工具计算 5 除以 0"，模型回了句大实话：**「当前会话没有提供 `calculate` 工具」**。这正是 14.4.3 说的"工具清单每轮随请求下发"——框架替你做了这件事，手动复刻时漏掉它，循环就只剩个壳。修复用 `ChatRequest.builder().toolSpecifications(...)`（1.22 的 `ChatRequest` 直接收 `List<ToolSpecification>`，javap 核实），修复后同一组问题，模型当轮并行请求了 `currentTime` 和 `calculate` 两个工具，日志里两行 `` 全出现。**如果你照任何教程手写工具循环，先检查这一条。**
 
 **工具名 → 执行器映射**是手动循环另一个容易翻车的地方，构造时扫描每个工具对象的 `@Tool` 方法建立：
 

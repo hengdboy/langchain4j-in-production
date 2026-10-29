@@ -52,7 +52,7 @@ flowchart LR
     A --> D["serializeToFile<br/>轻量持久化兜底"]
 ```
 
-> 🔭 **先剧透一句（11.3 展开）**：很多人一上来就纠结"向量库选哪个"——但本章会用实测数据论证，对检索质量影响最大的**根本不是向量库，而是 Embedding 模型（天花板）和分块与上游解析的质量**。向量库只决定"召回率多高、延迟多低"。先把这条认知顺序立住，选型时才不会本末倒置。
+> **先剧透一句（11.3 展开）**：很多人一上来就纠结"向量库选哪个"——但本章会用实测数据论证，对检索质量影响最大的**根本不是向量库，而是 Embedding 模型（天花板）和分块与上游解析的质量**。向量库只决定"召回率多高、延迟多低"。先把这条认知顺序立住，选型时才不会本末倒置。
 
 > 💡 **Spring AI 对比**：Spring AI 的对应抽象是 `VectorStore`，同样有 `SimpleVectorStore`（内存版）与各类实现；LangChain4j 的 `EmbeddingStore` 与之同构。两者都遵循同一个原则：**业务代码面向接口，换存储不动业务**。
 
@@ -479,7 +479,7 @@ curl -X POST 'http://localhost:8090/api/docs/ingest?dir=src/main/resources/docs&
 
 ---
 
-## 11.8 ⚠️ 高频坑点与最佳实践汇总
+## 11.8 高频坑点与最佳实践汇总
 
 ### 坑 1：普通 Redis 没有 RediSearch，报 `ERR unknown command 'FT._LIST'`
 

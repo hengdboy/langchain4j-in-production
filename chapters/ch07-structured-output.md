@@ -114,7 +114,7 @@ boolean positive = analyzer.isPositive("这产品太棒了！");  // true
 int score = scorer.score("还行吧，一般般");                // 3
 ```
 
-🔧 **注意**：原始类型虽然可以用，但**推荐用 enum**（更可读 + 框架校验更严）。
+**注意**：原始类型虽然可以用，但**推荐用 enum**（更可读 + 框架校验更严）。
 
 ### 7.2.2 Enum：分类任务首选
 
@@ -547,7 +547,7 @@ public ReviewAnalysis safeAnalyze(String review) {
 }
 ```
 
-🔧 **最佳实践**：
+**最佳实践**：
 - 结构化任务**一定用低 temperature**（0.0~0.2）
 - **字段不要超过 10 个**，太多字段模型容易漏；复杂任务拆成多轮
 - @Description 里写**格式要求 + 示例**
@@ -679,7 +679,7 @@ public record ResumeRequest(String resumeText) {}
 
 ---
 
-## 7.8 ⚠️ 高频坑点与最佳实践
+## 7.8 高频坑点与最佳实践
 
 ### 坑1：没开 JSON Mode，返回 markdown 包裹的 JSON
 
@@ -793,7 +793,7 @@ public Map<String, Object> analyze(@RequestBody ReviewRequest req) {
 
 ---
 
-## 7.9 💡 Spring AI 对比：结构化输出
+## 7.9 Spring AI 对比：结构化输出
 
 | 能力 | LangChain4j | Spring AI |
 |------|-------------|-----------|

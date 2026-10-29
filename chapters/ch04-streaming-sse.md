@@ -980,7 +980,7 @@ public class ReactiveChatController {
 
 ---
 
-## 4.10 ⚠️ 高频坑点与最佳实践
+## 4.10 高频坑点与最佳实践
 
 ### 坑1：流式下忘设 maxTokens
 
@@ -1117,7 +1117,7 @@ streamingAssistant.chatStream(sessionId, message)
 
 ---
 
-## 4.11 💡 Spring AI 对比：流式输出
+## 4.11 Spring AI 对比：流式输出
 
 Spring AI 的流式 API 与 LangChain4j 思路类似，但更靠近 Reactor 风格：
 

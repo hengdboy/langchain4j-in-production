@@ -51,7 +51,7 @@ flowchart LR
 
 ### 15.2.1 AgenticScope：所有 Agent 的共享黑板
 
-> 🔍 **核实留痕**：解包 `DefaultAgenticScope.java`——内部就是一个 `ConcurrentHashMap` + `memoryId`：
+> **核实留痕**：解包 `DefaultAgenticScope.java`——内部就是一个 `ConcurrentHashMap` + `memoryId`：
 
 ```java
 public class DefaultAgenticScope implements AgenticScope {
@@ -70,7 +70,7 @@ public class DefaultAgenticScope implements AgenticScope {
 
 ### 15.2.2 Planner 接口：编排模式的统一内核
 
-> 🔍 **核实留痕**：所有编排模式（sequence/parallel/loop/conditional/mapper/supervisor）的底层都实现同一个 `Planner` 接口（`dev.langchain4j.agentic.planner.Planner`）：
+> **核实留痕**：所有编排模式（sequence/parallel/loop/conditional/mapper/supervisor）的底层都实现同一个 `Planner` 接口（`dev.langchain4j.agentic.planner.Planner`）：
 
 ```java
 public interface Planner {

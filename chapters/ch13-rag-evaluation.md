@@ -234,7 +234,7 @@ AugmentationResult aug = retrievalAugmentor.augment(
 List<Content> contents = aug.contents();   // 已融合+重排的结果，顺序即最终排名
 ```
 
-> 🔍 **核实留痕**：`1.22.0` 中 `RetrievalAugmentor.augment(AugmentationRequest)` 返回 `AugmentationResult`（非旧文档的 `RetrievalAugmentorResult`）——javap 核实（1.22 只新增了 `augmentAsync` 这个 default 方法，签名未变）。`Metadata.from(ChatMessage, Object chatMemoryId, List<ChatMessage>)` 里的 memoryId 传 `"eval"` 占位即可。
+> **核实留痕**：`1.22.0` 中 `RetrievalAugmentor.augment(AugmentationRequest)` 返回 `AugmentationResult`（非旧文档的 `RetrievalAugmentorResult`）——javap 核实（1.22 只新增了 `augmentAsync` 这个 default 方法，签名未变）。`Metadata.from(ChatMessage, Object chatMemoryId, List<ChatMessage>)` 里的 memoryId 传 `"eval"` 占位即可。
 
 ### 13.5.3 第二步：算 Recall@K 与 MRR
 
@@ -301,9 +301,9 @@ private String askLlm(String prompt) {
 
 两个细节值得说：
 
-> 🔍 **核实留痕**：`1.22.0` 的 `ChatModel` **没有** `generate()`，统一用 `chat(...)` 返回 `ChatResponse`，取答案走 `chatResponse.aiMessage().text()`——javap 核实（老教程里的 `Response<AiMessage>` 写法已失效，写代码时别照抄旧版）。
+> **核实留痕**：`1.22.0` 的 `ChatModel` **没有** `generate()`，统一用 `chat(...)` 返回 `ChatResponse`，取答案走 `chatResponse.aiMessage().text()`——javap 核实（老教程里的 `Response<AiMessage>` 写法已失效，写代码时别照抄旧版）。
 >
-> ✍️ **Prompt 里的引号用的是中文弯引号（“是”），不是直引号**。Java 字符串字面量里的直引号必须转义（`\"是\"`），漏了就编译不过——早期章稿的示例代码就栽在这里。仓库代码选中文弯引号，一石二鸟：不用转义，LLM 读起来也更自然。裁判 Prompt 是中文任务，就别用英文标点添乱。
+> ️ **Prompt 里的引号用的是中文弯引号（“是”），不是直引号**。Java 字符串字面量里的直引号必须转义（`\"是\"`），漏了就编译不过——早期章稿的示例代码就栽在这里。仓库代码选中文弯引号，一石二鸟：不用转义，LLM 读起来也更自然。裁判 Prompt 是中文任务，就别用英文标点添乱。
 
 ### 13.5.5 一个真实存在过的解析漏洞（发现当天已修复）
 
@@ -463,7 +463,7 @@ python3 -c "import sys; sys.exit(0 if float('$RECALL3') >= 0.9 else 1)" \
 
 ---
 
-## 13.10 ⚠️ 高频坑点与最佳实践汇总
+## 13.10 高频坑点与最佳实践汇总
 
 ### 坑 1：关键句选择绑架指标
 

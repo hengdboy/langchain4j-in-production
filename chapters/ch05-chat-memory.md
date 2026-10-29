@@ -610,14 +610,14 @@ public class ConciseSummarizer implements Summarizer {
 }
 ```
 
-🔧 **最佳实践**：
+**最佳实践**：
 - 摘要 Prompt 里明确字数限制和保留要点，避免摘要本身太长
 - 生产环境可以缓存摘要结果，避免对同一段历史重复摘要
 - 摘要质量直接影响模型回答质量——宁可多花一点 token 在摘要上，也别丢关键信息
 
 ---
 
-## 5.8 ⚠️ 高频坑点与最佳实践
+## 5.8 高频坑点与最佳实践
 
 ### 坑1：忘加 @MemoryId 导致所有用户串台
 
@@ -737,7 +737,7 @@ public void updateMessages(Object memoryId, List<ChatMessage> messages) {
 
 ---
 
-## 5.9 💡 Spring AI 对比：记忆管理
+## 5.9 Spring AI 对比：记忆管理
 
 | 能力 | LangChain4j | Spring AI |
 |------|-------------|-----------|

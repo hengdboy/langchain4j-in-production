@@ -831,7 +831,7 @@ public class CachedAssistantService {
 
 ---
 
-## 3.9 ⚠️ 高频坑点与最佳实践
+## 3.9 高频坑点与最佳实践
 
 ### 坑1：maxTokens 不设，被恶意刷输出
 
@@ -920,7 +920,7 @@ temperature=1.0 + topP=0.99 = 输出基本完全随机
 
 ---
 
-## 3.10 💡 Spring AI 对比：参数和 Prompt 的处理方式
+## 3.10 Spring AI 对比：参数和 Prompt 的处理方式
 
 Spring AI 的设计哲学和 LangChain4j 有差异，下面是核心对比：
 

@@ -251,7 +251,7 @@ public interface McpAgent {
 
 ### 17.5.2 传输内部机制（解包 `StdioMcpTransport.java`）
 
-> 🔍 **核实留痕**：stdio 传输的"启动子进程"不是黑魔法，源码（解包 sources）就是标准 `ProcessBuilder`：
+> **核实留痕**：stdio 传输的"启动子进程"不是黑魔法，源码（解包 sources）就是标准 `ProcessBuilder`：
 
 ```java
 // StdioMcpTransport.start(McpOperationHandler)（1.22.0-beta32，简化）：
@@ -308,7 +308,7 @@ chat:
 | `tool-execution` | **20s** | 上限 = 最慢工具的 P99 × 富余。检索类工具给 10~30s；有外部 I/O（GitHub API 等）按其 SLA 定，并让超时走 `failIfOneServerFails=false` 的降级而不是拖死整轮对话 |
 | 重连 | `start()` 幂等可重入 | 子进程崩溃后由健康检查拉起；**客户端侧救不了的是协议级失败**（服务器 stdout 被污染），那会稳定复现，重连无用——靠 17.4 的 stderr 纪律预防 |
 
-配套的两个工程习惯（本项目已落地，启动日志可查）：**客户端审计包装**——`McpConfig` 在 `tools/call` 前后打 `🔌 [MCP 审计] 即将执行 / 执行完成 → 结果`，把"外部服务器被调了什么、返回了什么"纳入可观测；**默认密钥告警**——`McpSecurityService` 检测到 `chat.mcp.api-key` 还是示例值时打 `⚠️ Using default API key`，生产的启动脚本应把这条告警当失败处理。
+配套的两个工程习惯（本项目已落地，启动日志可查）：**客户端审计包装**——`McpConfig` 在 `tools/call` 前后打 `[MCP 审计] 即将执行 / 执行完成 → 结果`，把"外部服务器被调了什么、返回了什么"纳入可观测；**默认密钥告警**——`McpSecurityService` 检测到 `chat.mcp.api-key` 还是示例值时打 `⚠️ Using default API key`，生产的启动脚本应把这条告警当失败处理。
 
 ### 17.5.4 真实输出（2026-10-28 实测，node v24）
 

@@ -331,7 +331,7 @@ chat:
 
 这本质就是「图片理解 + 语义归纳」，通用视觉模型就能做。而发票数字、税号这类**精确文本**提取，用 `qwen-vl-ocr` 更稳。
 
-> 🔧 **最佳实践**：一句话——**要理解用通用模型，要精确抠字用专用 OCR**。两个都只需要改 model-name，同一套代码。
+> **最佳实践**：一句话——**要理解用通用模型，要精确抠字用专用 OCR**。两个都只需要改 model-name，同一套代码。
 
 ---
 
@@ -511,7 +511,7 @@ public class MultimodalEmbeddingClient {
 }
 ```
 
-> 🔧 **为什么手动 HTTP 而不是官方 SDK？** 官方 `dashscope-sdk-java` 会引入一堆传递依赖（OkHttp / RxJava / Gson / Lombok 等），违背你「轻量零依赖」的偏好。而这里只需要一个 POST + 一个 JSON 解析，Java 21 原生能力足够。
+> **为什么手动 HTTP 而不是官方 SDK？** 官方 `dashscope-sdk-java` 会引入一堆传递依赖（OkHttp / RxJava / Gson / Lombok 等），违背你「轻量零依赖」的偏好。而这里只需要一个 POST + 一个 JSON 解析，Java 21 原生能力足够。
 
 ### 9.6.2 跨模态检索服务：MultimodalSearchService
 
@@ -696,7 +696,7 @@ curl -X POST http://localhost:8090/api/search/multimodal \
 
 ## 9.7 最佳实践与避坑
 
-### ⚠️ 坑点汇总
+### 坑点汇总
 
 | # | 坑点 | 对策 |
 |---|---|---|
@@ -707,14 +707,14 @@ curl -X POST http://localhost:8090/api/search/multimodal \
 | 5 | 图片按像素计 token（`h×w/1024+2`） | 批量处理前先压缩分辨率，控制成本 |
 | 6 | 视觉任务 temperature 要低 | 描述/OCR 压到 0.2，避免模型自由发挥 |
 
-### 🔧 最佳实践
+### 最佳实践
 
 1. **混合架构**：DeepSeek 管推理、qwen3.7-flash 管看图，各取所长、成本最低。
 2. **模型按任务分档**：理解用 flash、旗舰视觉用 plus/max、纯文字提取用 qwen-vl-ocr——只改 model-name，同一套代码。
 3. **图片入库前先归一化**：压缩到统一尺寸（如最长边 1024），既省 token 又稳。
 4. **多模态向量小规模先用内存暴力扫描**，图片库超过几万张再上 pgvector / ES（对齐 Ch11）。
 
-### 💡 Spring AI 对比
+### Spring AI 对比
 
 | 能力 | LangChain4j | Spring AI |
 |---|---|---|
@@ -746,12 +746,12 @@ curl -X POST http://localhost:8090/api/search/multimodal \
 
 | 模块 | 文件 | 说明 |
 |---|---|---|
-| 配置 | `config/VisionModelConfig.java` | 🆕 qwen3.7-flash 视觉模型 Bean（OpenAI 兼容） |
-| 服务 | `service/VisionAnalysisService.java` | 🆕 图像理解（URL / Base64 双模式） |
-| 控制器 | `controller/VisionController.java` | 🆕 POST /api/vision/analyze |
-| 服务 | `service/MultimodalEmbeddingClient.java` | 🆕 DashScope 原生多模态 Embedding 客户端（零依赖） |
-| 服务 | `service/MultimodalSearchService.java` | 🆕 跨模态检索（启动建库 + 文本搜图/图搜图） |
-| 控制器 | `controller/MultimodalSearchController.java` | 🆕 POST /api/search/multimodal |
+| 配置 | `config/VisionModelConfig.java` | 新增 qwen3.7-flash 视觉模型 Bean（OpenAI 兼容） |
+| 服务 | `service/VisionAnalysisService.java` | 新增 图像理解（URL / Base64 双模式） |
+| 控制器 | `controller/VisionController.java` | 新增 POST /api/vision/analyze |
+| 服务 | `service/MultimodalEmbeddingClient.java` | 新增 DashScope 原生多模态 Embedding 客户端（零依赖） |
+| 服务 | `service/MultimodalSearchService.java` | 新增 跨模态检索（启动建库 + 文本搜图/图搜图） |
+| 控制器 | `controller/MultimodalSearchController.java` | 新增 POST /api/search/multimodal |
 | 配置 | `application.yml` | + `chat.multimodal.*` 配置块 |
 | 依赖 | `pom.xml` | 版本 v0.6→v0.7，**零新增依赖** |
 

@@ -282,7 +282,7 @@ String chat(String question);
 // 但为了可读性和重构安全，教程统一用 @V 显式标注
 ```
 
-> 🔧 **最佳实践**：教程所有代码都用 `@V` 显式标注变量名，避免因为 IDE/构建配置差异导致参数绑定失败——**这是一种"显式优于隐式"的防御式编程。**
+> **最佳实践**：教程所有代码都用 `@V` 显式标注变量名，避免因为 IDE/构建配置差异导致参数绑定失败——**这是一种"显式优于隐式"的防御式编程。**
 
 ### 2.4.3 没有 SystemMessage 支持的模型
 
@@ -315,7 +315,7 @@ String summarize(@V("document") String doc, @V("maxWords") int maxWords);
 {{document}}
 ```
 
-> 🔧 **Prompt 版本管理最佳实践**：所有 Prompt 模板统一放 `resources/prompts/` 目录下，用清晰的命名规范：`{业务}-{场景}-{role}.txt`。比如 `kbaas-answer-system.txt`、`kbaas-answer-user.txt`、`kbaas-extract-fields-user.txt`。这样改Prompt时不用搜代码。
+> **Prompt 版本管理最佳实践**：所有 Prompt 模板统一放 `resources/prompts/` 目录下，用清晰的命名规范：`{业务}-{场景}-{role}.txt`。比如 `kbaas-answer-system.txt`、`kbaas-answer-user.txt`、`kbaas-extract-fields-user.txt`。这样改Prompt时不用搜代码。
 
 ---
 
@@ -951,7 +951,7 @@ curl -X POST http://localhost:8090/api/review/analyze \
 
 ---
 
-## 2.11 ⚠️ 高频坑点与最佳实践
+## 2.11 高频坑点与最佳实践
 
 ### 坑1：Prompt 模板里的变量名和 @V 对不上
 
