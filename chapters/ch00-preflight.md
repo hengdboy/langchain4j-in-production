@@ -52,7 +52,7 @@ Rule 0: RequireJavaVersion failed with message:
 |---|---|---|
 | Node.js ≥ 18 | Ch17、Ch19 | MCP demo 服务器起不来；`demo-server.mjs` 零 npm 依赖，装 Node 即可 |
 | MySQL 8 | Ch24/25（hiring 项目） | hiring 起不来；smart-doc 默认进程内存储，不需要 |
-| Redis 8 | Ch24 必需；Ch11 的 Redis 向量库、Ch5 分布式记忆可选 | smart-doc 用 `--chat.memory.backend=memory` 参数可完全绕开 |
+| Redis 7 | Ch24 必需；Ch11 的 Redis 向量库、Ch5 分布式记忆可选 | smart-doc 用 `--chat.memory.backend=memory` 参数可完全绕开 |
 | Claude Desktop | Ch19.9.2（可选验证） | 不装也能用 curl 完成 stdio 模式自测 |
 
 ### 0.2.3 API Key 放哪
@@ -70,7 +70,7 @@ key 欠费时的报错长这样，见到就该去充值而不是改代码：
 ## 0.3 五分钟跑通 smart-doc-assistant
 
 ```bash
-git clone <仓库地址> && cd langchain4j-tutorial
+git clone <仓库地址> && cd langchain4j-in-production
 # 先创建 smart-doc-assistant/src/main/resources/application-local.yml，填入你的 key
 
 cd smart-doc-assistant
@@ -78,7 +78,7 @@ mvn spring-boot:run
 # 首次启动会下载本地 ONNX 嵌入模型（All-MiniLM-L6-v2，384 维），并自动入库 classpath:docs/ 下的文档
 ```
 
-本机没有 Redis 时加一个参数即可（教学默认就是进程内记忆）：
+记忆后端默认是 Redis（`chat.memory.backend` 缺省即 redis）。本机没有 Redis 时加一个参数切到进程内实现：
 
 ```bash
 mvn spring-boot:run \

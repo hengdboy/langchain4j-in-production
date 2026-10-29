@@ -1405,9 +1405,9 @@
   {
    "id": "e039",
    "type": "arrow",
-   "x": 1440,
+   "x": 1320,
    "y": 326.0,
-   "width": 0,
+   "width": 120.0,
    "height": 124.0,
    "angle": 0,
    "strokeColor": "#1e1e1e",
@@ -1437,15 +1437,11 @@
      0.0
     ],
     [
-     0,
-     110.0
+     120,
+     0.0
     ],
     [
-     -960,
-     110.0
-    ],
-    [
-     -960,
+     120,
      124.0
     ]
    ],
@@ -1770,9 +1766,9 @@
   {
    "id": "e049",
    "type": "text",
-   "x": 1478.0859375,
+   "x": 1465.07421875,
    "y": 472.75,
-   "width": 123.828125,
+   "width": 149.8515625,
    "height": 22.5,
    "angle": 0,
    "strokeColor": "#64748B",
@@ -1794,8 +1790,8 @@
    "updated": 1793201768723,
    "link": null,
    "locked": false,
-   "text": "Ch24 SDR 实战",
-   "originalText": "Ch24 SDR 实战",
+   "text": "Ch24/25 招聘实战",
+   "originalText": "Ch24/25 招聘实战",
    "fontSize": 18,
    "fontFamily": 2,
    "textAlign": "left",
@@ -1844,9 +1840,9 @@
   {
    "id": "e051",
    "type": "arrow",
-   "x": 1380,
+   "x": 1300,
    "y": 496.0,
-   "width": 40,
+   "width": 120.0,
    "height": 0.0,
    "angle": 0,
    "strokeColor": "#64748B",
@@ -1876,7 +1872,7 @@
      0.0
     ],
     [
-     40,
+     120,
      0.0
     ]
    ],
