@@ -28,7 +28,7 @@
 | 决策脱敏（`DecisionFieldFilter`） | 受保护特征进 prompt | 输入侧 | 白名单+值清洗，确定性 |
 | 输出合规（`DiscriminationGuardrail`） | 理由/评价里的受保护特征词 | 输出侧 | 词表，确定性 |
 
-三道全是代码层硬约束，没有一个依赖"提示词里嘱咐模型"。
+三道全是代码层硬约束，没有一个依赖"提示词里嘱咐模型"。它们挂在整体架构的哪一层，见 Ch24 §24.1 的架构图——Agent 调用进出各过一道闸。
 
 ## 25.2 歧视防护三层闸（本项目招牌）
 
@@ -61,6 +61,17 @@ public static final Set<String> DECISION_ALLOWED = Set.of(
 **回合 2（candidate #65）**：LLM 又变招——把标签丢掉，只写"原文标注：女，"。没有"性别："前缀，标签规则落空。
 
 **修复**：补一条"标点分隔的独立男/女字"规则，前后都是标点或端点才命中——避免误伤"女士/男方"这类正常词。
+
+值级清洗里最容易写错的两条规则，原样贴出来：
+
+```java
+// "性别：女 / 年龄：28 岁 / 户籍：杭州" 这类 标签:值 结构，值段最长 12 字
+"(性别|年龄|婚姻状况|婚姻|婚育|籍贯|户籍|民族|政治面貌|出生日期|出生年月)\\s*[：:]?\\s*[^；;，,、\\n]{0,12}"
+
+// 标点分隔的独立"男/女"字——LLM 会把标签丢掉只留字；
+// 前后都是标点或端点才命中，避免误伤"女士/男方"这类正常词
+"(?<=[：:，,；;、（(【\\s]])[男女](?=[，,；;）)】。\\s]|$)"
+```
 
 **回合 3（candidate #69）**：画像变成：
 
@@ -133,7 +144,62 @@ private static final Pattern CN_INJECTION = Pattern.compile(
 
 约面邀请的措辞有 6 个臂：`tone ∈ {formal, warm, concise} × cta ∈ {calendar-link, reply-slot}`。每次发邀请前 `BanditOptimizer.selectArm` 按 Thompson Sampling 选一个（每个臂维护 Beta(α, β) 分布，按后验采样选最大值），臂信息作为 prompt 参数交给邀请 Agent。
 
-### 25.4.2 Reward 映射是业务决策
+`ThompsonSampling` 的实现核心就两段，直接看代码：
+
+```java
+// 冷启动保护：有还没拉满 minPulls（默认 5）的臂，本轮轮转均匀探索
+List<ArmState> cold = arms.stream()
+        .filter(a -> a.totalPulls() < minPulls).toList();
+if (!cold.isEmpty()) {
+    return cold.get(Math.floorMod(coldStartCursor.getAndIncrement(),
+            cold.size())).armId();
+}
+// Thompson Sampling：每个臂从 Beta(α, β) 采一个值，选最大的臂
+return arms.stream().max((a, b) -> Double.compare(
+                sampleBeta(a.alpha(), a.beta()),
+                sampleBeta(b.alpha(), b.beta())))
+        .map(ArmState::armId).orElseThrow();
+
+// 更新：reward 不必是 0/1——α += r，β += (1-r)，连续 reward 直接进分布
+double newAlpha = arm.alpha() + r;
+double newBeta  = arm.beta() + (1.0 - r);
+```
+
+两个实现决策值得单独说：
+
+**冷启动轮转排在采样之前。** 新臂的均匀先验 Beta(1,1) 可能连续采出低值，被老臂压到永远选不中——先让每个臂拉满 5 次再交给 Thompson Sampling，探索量有了下限。
+
+**Beta 分布采样用两个 Gamma 变量的比值近似**（Marsaglia & Tsang 2000 的拒绝采样，形状 <1 走 Boor 校正），标准库之外零依赖。更新侧注意 reward 是连续值：0.5、0.8 这类中间 reward 按「α 加一份、β 加零点几份」入账，比只认 0/1 保留了更多业务梯度。
+
+### 25.4.2 结算闭环：reward 是异步算出来的
+
+选臂和结算**不在同一时刻**——邀请发出去的瞬间没人知道这臂值多少，要等候选人把流程走出一段，状态才长得出来。所以 `bandit_outcome` 被设计成待结算队列：选臂时只插入一行（candidateId、armId、prompt、output），`EvolutionScheduler` 每 10 分钟批量结一次：
+
+```java
+List<BanditOutcome> unsettled = outcomeMapper.selectList(
+        new QueryWrapper<BanditOutcome>().isNull("processed_at")
+                .orderByAsc("id").last("LIMIT 200"));
+for (BanditOutcome o : unsettled) {
+    CandidateContext candidate = candidateMapper.selectById(o.getCandidateId());
+    if (candidate == null) {             // 脏数据兜底：reward=0 收口，不堵队列
+        o.setProcessedAt(Instant.now());
+        o.setReward(0.0);
+        outcomeMapper.updateById(o);
+        continue;
+    }
+    o.setOutcomeStatus(candidate.getStatus().name());   // 按当前状态算 reward
+    optimizer.settleOutcome(o);          // 更新 α/β 落 bandit_state，回写 reward
+    dpoWriter.writeBanditSample(o.getArmPrompt(), o.getArmOutput(), "", …);
+}
+```
+
+三个设计点：
+
+- **按结算时刻的状态给 reward，不等终态。** 等 HIRED 才结算最准，但一条流程可能走几周；SHORTLISTED=0.3、INTERVIEW_SCHEDULED=0.5 的梯度让中间态也有信号。同一条 outcome 只结一次，后续走到更高状态不补差——想要更准可以改成按状态跃迁多次结算，代价是 reward 语义复杂一截
+- **队列只进不堵。** 候选人记录不存在这类脏数据，reward=0 并标记 processed，下一轮不再扫到
+- **结算顺手沉淀 DPO 样本。** Bandit 对比样本在结算时自动落库；教学版 rejected 留空占位，生产应取同 prompt 另一臂的输出
+
+### 25.4.3 Reward 映射是业务决策
 
 ```java
 case "HIRED" -> 1.0;
@@ -146,7 +212,7 @@ default -> 0.0;   // 流失/淘汰全 0
 
 这张映射表是业务决策不是算法细节：招聘语义里"进面但不入职"值 0.5、"婉拒"值 0。换一个业务（比如销售），映射表完全不同——**算法是通用的，reward 永远是你们的**。
 
-### 25.4.3 真机结算数据
+### 25.4.4 真机结算数据
 
 2026-10-29 真机跑完全部结算（43 次选臂）：
 
@@ -239,6 +305,7 @@ Ch22 的 `CostChatModelListener` 在这里升级为按 Agent 维度的核算（�
 | 5 | reward 映射拍脑袋 | 臂演化方向与业务目标背离 | 映射表进测试，改映射先改测试 |
 | 6 | MCP 子进程连 DB | 启动慢、连接泄漏 | 内存 mock 目录，真数据走 HTTP MCP |
 | 7 | 歧义拦截后自动重试 | 模型换句话继续歧视 | fatal → 停人工，不重试（25.2.3） |
+| 8 | 新臂先验被压制 | 新话术臂长期选不中，拿不到数据 | 冷启动轮转：拉满 minPulls（默认 5）前均匀探索（25.4.1） |
 
 ## 25.10 速查表
 
@@ -248,6 +315,7 @@ Ch22 的 `CostChatModelListener` 在这里升级为按 Agent 维度的核算（�
 | 调决策白名单 | `DecisionFieldFilter.DECISION_ALLOWED` | 动白名单前先想清楚这个字段该不该进 prompt |
 | 加话术臂 | `CannedInviteTemplates.ARM_IDS` | 模板 + `BanditOptimizer.knownArms` 两处同步 |
 | 改 reward | `BanditOptimizer.rewardFor` | 先改 `BanditOptimizerTest` 再改实现 |
+| 调冷启动阈值 | `new ThompsonSampling(minPulls)` | 默认 5；调小探索变少，调大收敛变慢 |
 | 沉淀人工修正 | `POST /api/candidates/{id}/correction` | (prompt, chosen, rejected) 三元组 |
 | 查 Agent 成本 | `agent_call` 表按 `agent_name` 聚合 | Ch22 监听器自动埋点 |
 | 验证歧视防护 | `HiringIntegrationTest#testPiiResumeRedactedProfileClean` + E2E Step 5 | 每轮新泄漏固化为断言 |
@@ -260,4 +328,4 @@ Ch22 的 `CostChatModelListener` 在这里升级为按 Agent 维度的核算（�
 
 ## 参考与实测数据出处
 
-三道护栏的实现都在 `hiring-ai-assistant/src/main/java/com/example/hiring/guardrail/`，`DecisionFieldFilter` 200 行出头，是全项目最值得逐行读的类。25.4.3 的 Bandit 结算数字和 25.7 的成本账来自 2026-10-29 真机运行后的 `bandit_state` 与 `agent_call` 表，复现方式：`docker-compose up -d` 起库、跑 `POST /api/demo/run` 若干次、等 EvolutionScheduler 结算后查询。Guardrails 机制官方文档：https://docs.langchain4j.dev/tutorials/agents/#guardrails ；Thompson Sampling 想深挖可读 Chapelle & Li (NeurIPS 2011)，本文只用到 Beta 分布采样的直觉。
+三道护栏的实现都在 `hiring-ai-assistant/src/main/java/com/example/hiring/guardrail/`，`DecisionFieldFilter` 200 行出头，是全项目最值得逐行读的类。25.4.4 的 Bandit 结算数字和 25.7 的成本账来自 2026-10-29 真机运行后的 `bandit_state` 与 `agent_call` 表，复现方式：`docker-compose up -d` 起库、跑 `POST /api/demo/run` 若干次、等 EvolutionScheduler 结算后查询。Guardrails 机制官方文档：https://docs.langchain4j.dev/tutorials/agents/#guardrails ；Thompson Sampling 想深挖可读 Chapelle & Li (NeurIPS 2011)，本文只用到 Beta 分布采样的直觉。

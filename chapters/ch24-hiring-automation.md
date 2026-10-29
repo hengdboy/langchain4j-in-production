@@ -14,29 +14,30 @@
 
 ---
 
-## 24.1 场景选择：为什么是招聘，而不是又一个客服 demo
+## 24.1 总体架构：一条招聘流水线怎么搭
 
-综合实战项目的场景选择有三个硬标准：
+先把成品的样子立起来。项目定位是**招聘方侧、可自托管的候选人全流程自动化**——简历数据不出内网，这正是企业愿意自托管一个开源招聘助手的采购理由。整个系统分六层，一张图：
 
-| 标准 | 为什么 |
-|---|---|
-| 受众不用先学业务 | 读者没做过外贸，但每个人都当过求职者——简历、约面、offer 是全民经验 |
-| 竞品不能是红海 | 智能客服是 AI Agent 渗透率第一的场景（超 70%），开源 demo 铺天盖地；而**招聘方侧**的开源 Agent 接近空白——现有开源项目几乎全是"求职者侧"（帮人改简历、海投） |
-| 技术点一个不丢 | 换场景不能降级教学覆盖 |
+![系统架构总览](../assets/ch24-architecture.png)
 
-第三个标准展开讲。本项目从前一版综合实战（SDR 销售线索助手）整体平移，每个技术模块都有对等物：
+读法：一次投递自上而下走一条线——API 受理 → 状态机迁移 → 监听器按新状态触发叶子 Agent（调模型前后各过一道护栏）→ 结果落库；演化层异步结算，不阻塞主流程。各层职责与展开章节：
 
-| SDR 里的模块 | 招聘场景的对应物 | 教学价值变化 |
-|---|---|---|
-| 5 个 Agent（评估/背调/搜索/外联/判级） | 6 个 Agent（解析/评估/邀请/分类/出题/评价） | 多出"出题"这个结构化生成场景 |
-| 12 态 FSM + Redis 持久化 | 12 态 FSM + Redis 持久化 | 状态语义更贴近读者经验 |
-| 72h 静默期追发 | 48h 约面超时追发 + 5 天 offer 催办 | 从一个定时器变两个，且语义更正当 |
-| Bandit 话术演化 + DPO 样本 | Bandit 约面话术演化 + HR 修正样本 | 数学完全同构，业务故事更自然 |
-| MCP 工具（海关/KP/飞书/SMTP） | MCP 工具（候选人/职位/面试/邮件） | 新增"最小披露"安全话题 |
-| PII + 注入双护栏 | PII + 注入 + **歧视防护**三护栏 | 全系列独有话题，Ch25 主角 |
-| 审计（GDPR 合规） | 审计（人事决策合规） | "拒信可解释性"是硬需求 |
+| 层 | 职责 | 关键组件 | 展开 |
+|---|---|---|---|
+| 接入层 | 投递、回复、复核、面试反馈、一键 demo 的 REST 入口 | 5 个 Controller | — |
+| 编排层 | 事件受理与状态迁移，迁移后按新状态触发下一个 Agent | `CandidatePipelineService` + Spring StateMachine | 24.4、24.5 |
+| Agent 层 | 6 个叶子 Agent，只做单步生成/分类，不做编排 | `agent/` + `HiringAgentConfig` | 24.6 |
+| 护栏层 | 注入检测、决策脱敏（输入侧）+ 歧视防护、PII 抹除（输出侧） | `guardrail/` 四件套 | Ch25 |
+| 演化层 | 约面话术 Bandit 自迭代，DPO 样本沉淀 | `evolution/` 三件套 | Ch25 |
+| 基础设施与横切 | MySQL 11 表、Redis 延迟队列、mock 工具、MCP、成本/审计埋点 | `core/` `tools/` `mcp/` | 24.4.5、Ch25 |
 
-招聘场景还多送一个真实动机：**简历数据不出内网**——这正是"企业要自托管一个开源招聘助手"的采购理由，项目定位因此立得住。
+图上有三条架构主线，这里先立住，后文逐个拆开：
+
+- **编排权在状态机，不在 LLM。** 每次状态迁移由确定性 FSM 裁决，Agent 只在被触发的时刻做叶子工作——为什么这样定，24.2.4 给三个理由
+- **MySQL 是唯一事实源。** Redis 上的 FSM 快照与延迟队列都是可丢的缓存，`candidate.status` 永远以库里的为准（24.4.2）
+- **Agent 调用进出各过一道闸。** 输入侧拦注入与受保护特征，输出侧拦歧视表述，全部是代码层硬约束（Ch25 主题）
+
+技术选型一段话交代：Java 21 + Spring Boot 3.5；AI 层 LangChain4j 1.22.0（Guardrails/MCP 用 1.22.0-beta32 实验线）；编排选 Spring StateMachine 4.0.1 而不是 if/else 或工作流引擎，这个「为什么」单独有一节（24.4.1）；存储 MySQL 8 + Redis 7——前者当事实源，后者只干两件丢了也不心疼的活（FSM 快照写透、延迟事件队列）。
 
 ## 24.2 业务建模
 
@@ -69,7 +70,7 @@
 | `OFFER_EXPIRED` | 业务层（催办后仍无答复） | — |
 | `REPLY_TIMEOUT_48H` / `OFFER_TIMEOUT_5D` | 延迟队列 | **不进状态机**（见 24.4.4） |
 
-### 24.2.3 15 条转换（8 条带 Guard）
+### 24.2.3 15 条转换（11 条带 Guard）
 
 同一事件路由到不同目标状态，靠 Guard 按业务值分支——这是 Spring StateMachine 最实用的模式：
 
@@ -159,6 +160,10 @@ sm.getStateMachineAccessor().doWithAllRegions(access -> access.resetStateMachine
 ```
 
 Redis 的 `RedisStateMachineContextRepository` 只写一份快照（审计/观测用）。**别让 Redis 当事实源**——重启丢数据、TTL 到期蒸发，而 MySQL 里的 `candidate.status` 永远在。
+
+把 `sendEvent` 的完整链路摊开，一次事件处理就五步（`CandidateStateMachineService`）：
+
+① 从工厂按 `candidateId` 取机器实例（同一候选人固定用同一个 machineId）；② 组装 ExtendedState——candidate 业务字段加事件 overrides，**null 值不能放**（`resetStateMachine` 拷贝进 ConcurrentHashMap 时直接 NPE）；③ 以 DB 里的当前状态 `resetStateMachine`，机器永远从库里的事实出发；④ 发事件，用状态前后比对判定是否真迁移——Guard 拒绝时 `sendEvent` 仍返回 true，布尔返回值不可信；⑤ 真迁移才写透 Redis 快照，新状态交调用方落库。
 
 ### 24.4.3 三个集成 bug（实测踩出来的）
 

@@ -22,7 +22,7 @@ import java.util.EnumSet;
  * <li>@EnableStateMachineFactory 注册 StateMachineFactory Bean，供
  * CandidateStateMachineService 按 machineId 取实例（@EnableStateMachine 只注册
  * 单例机器，不提供 Factory Bean）</li>
- * <li>15 条转换里 8 条带 Guard：评估结论、回复决定、评价结论、offer 答复、
+ * <li>15 条转换里 11 条带 Guard：评估结论、回复决定、评价结论、offer 答复、
  * HR 复核这五类多路分支全部由 Guard 按业务值路由</li>
  * <li>REPLY_TIMEOUT_48H / OFFER_TIMEOUT_5D 不进状态机（自循环坑，见类注释），
  * 由 CandidateService 业务前置判断</li>

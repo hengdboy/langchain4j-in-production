@@ -37,7 +37,7 @@
 
 | 章 | 主题 | 一句话产出 |
 |---|---|---|
-| [Ch24 综合实战（上）](chapters/ch24-hiring-automation.md) | AI 招聘官：FSM 编排 | 12 态 15 转换全景图、事件驱动编排、E2E 12 项断言、63/63 测试全绿 |
+| [Ch24 综合实战（上）](chapters/ch24-hiring-automation.md) | AI 招聘官：FSM 编排 | 系统架构总览、12 态 15 转换全景图、事件驱动编排、E2E 12 项断言、63/63 测试全绿 |
 | [Ch25 综合实战（下）](chapters/ch25-guardrails-evolution.md) | AI 招聘官：护栏与演化 | 歧视防护三层闸、Bandit 话术自迭代、每 Agent 真机成本账 |
 
 ## 实验室（Labs）：5 个小业务场景
