@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Lab2 离线测试：不调真实模型——stub 返回"模型最可能给出的脏 JSON"，
  * 归一化器必须把它洗成可比对的强类型记录。8 种真实公告里的写法逐条钉死。
+ * @author hengdboy
  */
 @DisplayName("Lab2 招投标字段归一化")
 class Lab2NormalizationTest {

@@ -9,6 +9,7 @@ import java.util.List;
  * <p>结构化抽取的真正难点从来不是"让模型吐 JSON"，而是吐出来的值没法直接入库：
  * "3,500万元" 和 35000000 之间隔着一整套中文数字习惯。本类每个方法都对应
  * 一类真实公告里出现的写法（单元测试逐条钉死）。
+ * @author hengdboy
  */
 public final class TenderNormalizer {
 

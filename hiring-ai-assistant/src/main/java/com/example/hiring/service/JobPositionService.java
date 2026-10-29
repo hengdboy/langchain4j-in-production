@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 职位服务：创建/查询职位。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

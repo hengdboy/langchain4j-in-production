@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
  * <p>主管 Agent 拿到用户问题后<b>自主决定</b>接下来调用哪个子 Agent、按什么顺序，
  * 直到任务完成（内部生成计划，类似 "AgentInvocation 列表"），最后用
  * {@code SupervisorResponseStrategy.SUMMARY} 汇总各子 Agent 的结果返回给用户。
+ * @author hengdboy
  */
 @Service
 public class CustomerServiceSupervisor {

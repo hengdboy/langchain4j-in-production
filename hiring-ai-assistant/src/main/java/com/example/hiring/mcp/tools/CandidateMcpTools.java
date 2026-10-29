@@ -12,7 +12,7 @@ import java.util.List;
  * <p>暴露面刻意收窄：只有<b>只读查询</b>，且只吐概要字段（姓名/状态/匹配分）——
  * 简历原文与联系方式不出 MCP 边界（最小披露原则）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public class CandidateMcpTools {

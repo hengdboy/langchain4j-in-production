@@ -10,6 +10,7 @@ package com.example.assistant.engineering;
  *
  * <p> 必须在请求结束时 {@link #clear()}（当前在 EngineeringAgentController 的 finally 块里；
  * 生产建议收口到 HandlerInterceptor 的 afterCompletion），否则线程复用会串租户。
+ * @author hengdboy
  */
 public final class RequestContext {
 

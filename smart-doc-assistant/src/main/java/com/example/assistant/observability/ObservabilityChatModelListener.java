@@ -32,7 +32,7 @@ import java.util.Map;
  * <li>异常从 listener 方法抛出只 WARN，不中断后续 listener——同</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @Slf4j

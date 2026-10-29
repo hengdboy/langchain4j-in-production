@@ -35,7 +35,7 @@ import java.util.Map;
  * 原因见 {@link FsmEvent} 类注释（自循环坑）</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * 本类用 {@link AtomicLong} 自维护 + {@link PostConstruct} 注册到全局 MeterRegistry（如果有）。
  * 既能 standalone 跑，又能接 Micrometer / Prometheus。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.18
  */
 @Slf4j

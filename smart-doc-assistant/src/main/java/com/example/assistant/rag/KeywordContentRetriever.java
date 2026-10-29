@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
  * <p> 这是<b>教学用</b>的简化实现：分词对中文做"字 unigram + 相邻 bigram"、对拉丁做单词；
  * 打分是 BM25 的简化版（IDF 用本机索引的文档频率近似）。生产应把这一路换成
  * Postgres tsvector + zhparser（中文分词专业、可下推到 SQL），见 Ch12 末。
+ * @author hengdboy
  */
 public class KeywordContentRetriever implements ContentRetriever {
 

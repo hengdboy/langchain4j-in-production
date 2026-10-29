@@ -25,6 +25,7 @@ import java.util.Map;
  *
  * <p>所有 API 均 源码核实（ParallelAgentService / LoopAgentService /
  * ConditionalAgentService / ParallelMapperService，公共方法见下）。
+ * @author hengdboy
  */
 @Service
 public class WorkflowDemoService {

@@ -31,7 +31,7 @@ import java.util.UUID;
  * 设置。{@code ChatModelListener} 在 LangChain4j 内部回调链中可能跨线程，因此 {@code agentName}
  * 也通过 {@code requestContext.attributes()} 兜底传递（{@code AgentBuilder} 注册 listener 时注入）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29
  */
 @Slf4j

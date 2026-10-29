@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * <p>候选人确认（INTERVIEW_SCHEDULED）时由 pipeline 自动占位 + 出题；
  * 面试完成后回填 {@link #feedback}（原始反馈）与评价结论。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

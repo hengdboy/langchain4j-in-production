@@ -48,7 +48,7 @@ import java.util.Map;
  * POST /api/candidates/{id}/events           调试直发 FSM 事件（教学用）
  * </pre>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

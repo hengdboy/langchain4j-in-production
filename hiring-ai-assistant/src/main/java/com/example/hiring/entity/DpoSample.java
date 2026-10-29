@@ -15,7 +15,7 @@ import java.time.Instant;
  * <p>两个来源：Bandit 对比样本（自动）、HR 人工修正（手动）。
  * 累积到 {@code hiring.bandit.retrain-threshold} 后供离线重训。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

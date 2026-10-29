@@ -40,6 +40,7 @@ import java.util.Set;
  *
  * <p>构造期仍扫描每个工具对象的 {@code @Tool} 方法，但额外按其所属业务域登记到 {@link ToolCatalog}，
  * 并为每个工具标注 {@code requiredRoles / enabledTenants}（见下方 DOMAIN_META 注册表）。
+ * @author hengdboy
  */
 @Slf4j
 public class DynamicToolProvider implements ToolProvider {

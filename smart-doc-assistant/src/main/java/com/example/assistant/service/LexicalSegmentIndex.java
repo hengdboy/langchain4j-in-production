@@ -13,6 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * 混合检索的"全文"一路需要一个可扫描的段集合——本索引在入库时由
  * {@link com.example.assistant.service.DocumentIngestionService} 填充，
  * 启动时随建库重建。生产环境可把这路换成 Postgres tsvector + zhparser（见 Ch12 末）。
+ * @author hengdboy
  */
 @Component
 public class LexicalSegmentIndex {

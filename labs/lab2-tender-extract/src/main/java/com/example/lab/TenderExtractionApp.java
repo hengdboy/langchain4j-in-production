@@ -18,6 +18,7 @@ import java.util.Set;
  * mvn compile exec:java -Dexec.mainClass=com.example.lab.TenderExtractionApp
  * </pre>
  * 输出 8 份公告 × 6 字段 = 48 项的字段级准确率与逐项差异。
+ * @author hengdboy
  */
 public final class TenderExtractionApp {
 

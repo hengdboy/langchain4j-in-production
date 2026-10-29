@@ -19,6 +19,7 @@ import java.util.List;
  * 提到的 3 个工作日换算成小时是多少"——先调知识库工具拿到退款时效，再调计算器工具换算。
  *
  * <p>实现上直接复用 {@code RetrievalAugmentor} Bean，把检索结果拼成文本返回给 LLM。
+ * @author hengdboy
  */
 public class RagLookupTool {
 

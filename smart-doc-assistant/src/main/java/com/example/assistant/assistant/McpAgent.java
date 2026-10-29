@@ -14,6 +14,7 @@ import dev.langchain4j.service.UserMessage;
  * 找不到 Bean，会直接让整个应用上下文启动失败——无法做到"MCP 可选"。
  * 因此改为在 {@link com.example.assistant.config.McpConfig} 里用
  * {@code AiServices.builder(...)} 显式构建，随 MCP 开关一起生效/跳过。
+ * @author hengdboy
  */
 public interface McpAgent {
 

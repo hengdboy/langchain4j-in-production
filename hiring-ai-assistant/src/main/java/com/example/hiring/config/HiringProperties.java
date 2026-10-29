@@ -10,6 +10,7 @@ import java.time.Duration;
  *
  * <p>约面超时、offer 超时、追发轮次、扫描频率这类魔法数字统一收口在这里，
  * 对应 application.yml 的 hiring.* 段；测试 / 教学 / 生产用不同 profile 覆盖。
+ * @author hengdboy
  */
 @Data
 @ConfigurationProperties(prefix = "hiring")

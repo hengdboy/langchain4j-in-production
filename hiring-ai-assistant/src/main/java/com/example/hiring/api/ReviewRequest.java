@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotNull;
  *
  * @param approve 是否通过
  * @param reason  复核意见（否决时必填，落审计）
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public record ReviewRequest(

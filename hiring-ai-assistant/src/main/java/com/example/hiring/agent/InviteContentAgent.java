@@ -16,7 +16,7 @@ import dev.langchain4j.service.V;
  *
  * <p>输出挂 PII 脱敏 guardrail：LLM 有小概率把画像里的联系方式抄进正文。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public interface InviteContentAgent {

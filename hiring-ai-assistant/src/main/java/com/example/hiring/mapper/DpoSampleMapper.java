@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * v0.28 DPO 样本 Mapper。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.28
  */
 @Mapper

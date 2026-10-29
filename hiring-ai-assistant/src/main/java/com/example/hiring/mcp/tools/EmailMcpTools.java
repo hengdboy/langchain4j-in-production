@@ -10,7 +10,7 @@ import dev.langchain4j.agent.tool.Tool;
  * <p>{@code emailSend} 仅写 mock 网关（教学演示"AI 发信"）；
  * 生产应换成带审批的发信通道——AI 直接对外发信必须有护栏兜底。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public class EmailMcpTools {

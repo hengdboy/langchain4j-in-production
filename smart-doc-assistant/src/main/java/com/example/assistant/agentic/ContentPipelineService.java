@@ -17,6 +17,7 @@ import java.util.Map;
  * 输出（outputKey）作为后一个 Agent 的输入（{{占位符}} 同名变量）。
  *
  * <p>这是"确定性工作流"：步骤固定、顺序固定，与 Supervisor（自主编排）互补。
+ * @author hengdboy
  */
 @Service
 public class ContentPipelineService {

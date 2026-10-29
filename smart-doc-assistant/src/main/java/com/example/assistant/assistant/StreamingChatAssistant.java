@@ -24,6 +24,9 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
         chatModel = "openAiChatModel",
         streamingChatModel = "openAiStreamingChatModel",
         chatMemoryProvider = "chatMemoryProvider")   // ← 多模型 Bean：显式指定对话/流式模型 + 记忆
+/**
+ * @author hengdboy
+ */
 public interface StreamingChatAssistant {
 
     /**

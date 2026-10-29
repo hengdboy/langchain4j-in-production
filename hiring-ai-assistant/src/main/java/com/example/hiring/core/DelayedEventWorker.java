@@ -26,7 +26,7 @@ import java.time.Instant;
  *
  * <h2>扫描频率可配（hiring.scheduler.event-scan-interval-ms）</h2>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.23 → v0.30
  */
 @Slf4j

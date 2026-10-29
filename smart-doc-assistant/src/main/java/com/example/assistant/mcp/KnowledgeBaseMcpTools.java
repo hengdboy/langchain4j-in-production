@@ -43,7 +43,7 @@ import java.util.List;
  * <p>{@link #TOOL_NAMES} 是工具白名单的单一来源；{@link McpSecurityService} 直接引用此常量，
  * 加新工具时只需在这里加方法 + 在此列表里加名字，不会有两个真相源漂移的风险。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @Slf4j

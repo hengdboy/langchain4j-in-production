@@ -13,7 +13,7 @@ import java.util.Map;
  *
  * <p>哪种话术回复率高，由 Bandit 用数据说话。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public final class CannedInviteTemplates {

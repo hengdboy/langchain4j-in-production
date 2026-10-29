@@ -16,6 +16,7 @@ import java.util.Map;
  * <p>POST /api/search/semantic  —— 文档语义检索
  * 请求：{"query":"...", "topK":3, "minScore":0.5}
  * 响应：{"success":true, "query":"...", "hits":[{score, docId, category, content}, ...]}
+ * @author hengdboy
  */
 @RestController
 @RequiredArgsConstructor

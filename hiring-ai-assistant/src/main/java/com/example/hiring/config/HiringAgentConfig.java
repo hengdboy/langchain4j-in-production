@@ -46,7 +46,7 @@ import java.util.List;
  * <p><b>Observability</b>：{@link CostChatModelListener} 挂在包装后的 ChatModel 上，
  * 通过 {@link InstrumentedChatModel} 桥接。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Configuration

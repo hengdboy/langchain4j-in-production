@@ -16,7 +16,7 @@ import java.util.List;
  * 既避免面试官口头泄露受保护特征，也天然防"照着年龄出简单题"这类隐性歧视：
  * 出题器根本不知道候选人的年龄性别（见  的讨论）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public interface InterviewQuestionAgent {

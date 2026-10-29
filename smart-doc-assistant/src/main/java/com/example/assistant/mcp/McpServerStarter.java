@@ -67,7 +67,7 @@ import java.util.List;
  * {@code classifier=mcp} + {@code mainClass=McpServerStarter} 重新打包），
  * 走 {@code JarLauncher} 才能正确构造类加载器。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 public final class McpServerStarter {

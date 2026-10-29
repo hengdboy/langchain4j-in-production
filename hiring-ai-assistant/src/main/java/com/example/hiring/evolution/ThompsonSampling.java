@@ -17,7 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * <p>{@code totalPulls < minPulls} 的臂当次按"轮转"选择（均匀分布优先探索），
  * 避免新臂因先验不足被永远压制。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.28
  */
 public class ThompsonSampling implements BanditStrategy {

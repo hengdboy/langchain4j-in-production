@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Ch21/Ch25 注入检测护栏单元测试（中英双语面）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29 → v0.30
  */
 @Slf4j

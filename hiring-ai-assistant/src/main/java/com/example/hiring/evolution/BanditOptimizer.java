@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * DpoSampleWriter.write (Bandit 对比样本)
  * </pre>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.28 → v0.30
  */
 @Slf4j

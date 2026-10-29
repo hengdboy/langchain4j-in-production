@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
  * <li>视觉任务需要独立的模型名 + 更低的 temperature（描述类任务要客观准确）</li>
  * <li>Bean 名为 {@code visionChatModel}，通过 @Qualifier 显式注入，与默认模型互不干扰</li>
  * </ul>
+ * @author hengdboy
  */
 @Configuration
 public class VisionModelConfig {

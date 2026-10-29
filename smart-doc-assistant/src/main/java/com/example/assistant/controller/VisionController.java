@@ -18,6 +18,7 @@ import java.util.Map;
  * { "imageBase64": "iVBORw0KGgo...", "mimeType": "image/png", "question": "..." }  // Base64 传图
  * </pre>
  * 响应：{"success": true, "answer": "模型回答"}
+ * @author hengdboy
  */
 @RestController
 @RequiredArgsConstructor

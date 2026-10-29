@@ -5,6 +5,7 @@ package com.example.lab;
  *
  * <p>金额一律用「分」（Long）：浮点算钱是工程红线，"99.9 元"这种数在 double 里
  * 根本存不准。阈值 500 元 = 50_000 分，超过即拒绝自动退款、转人工。
+ * @author hengdboy
  */
 public final class RefundGuard {
 

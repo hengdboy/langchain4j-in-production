@@ -20,6 +20,7 @@ import java.time.Duration;
  *
  * 启用 Redis：在 application.yml 设 chat.memory.backend=redis
  * 不启用（默认）：使用内存版 ChatMemoryStore
+ * @author hengdboy
  */
 @Configuration
 @Slf4j

@@ -12,6 +12,7 @@ import java.util.List;
  * <p> 核实：beta29 中 <b>UntypedAgent 顶层的 parallelMapper 有缺陷</b>（实测
  * {@code invoke(Map)} 报 argument type mismatch），官方示例的顶层一律是 <b>typed 接口</b>。
  * 所以这里用 {@code @Agent} 注解接口 + {@code parallelMapperBuilder(Class)} 模式。
+ * @author hengdboy
  */
 public interface BatchTaglineAgent {
 

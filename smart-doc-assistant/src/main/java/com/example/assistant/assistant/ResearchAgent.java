@@ -12,6 +12,7 @@ import dev.langchain4j.service.UserMessage;
  * 框架在底层自动跑"模型调用 → 工具执行 → 再把结果喂回模型"的循环，直到模型不再请求工具。
  *
  * <p>返回值用 {@code Result<String>} 而非 {@code String}，可额外拿到 tokenUsage / toolExecutions 用于审计。
+ * @author hengdboy
  */
 public interface ResearchAgent {
 

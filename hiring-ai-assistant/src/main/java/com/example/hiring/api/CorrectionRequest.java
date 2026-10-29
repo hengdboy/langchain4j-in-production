@@ -12,7 +12,7 @@ import jakarta.validation.constraints.NotBlank;
  * @param prompt   原始输入（哪个环节的 prompt）
  * @param chosen   人工认可的版本
  * @param rejected AI 原始输出
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public record CorrectionRequest(

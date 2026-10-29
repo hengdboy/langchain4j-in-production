@@ -8,7 +8,7 @@ import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 /**
- * @author DuHeng
+ * @author hengdboy
  * @desc 多模态聊天助手
  * @since 2026/8/21
  */

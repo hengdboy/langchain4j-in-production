@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Lab4 离线测试：直接驱动官方 SDK 的 {@code McpServer.handle(JsonNode)}——
  * 不起子进程、不接 Claude Desktop，JSON-RPC 协议行为全部可断言。
+ * @author hengdboy
  */
 @DisplayName("Lab4 会议室 MCP Server：协议 + 业务护栏")
 class Lab4McpServerTest {

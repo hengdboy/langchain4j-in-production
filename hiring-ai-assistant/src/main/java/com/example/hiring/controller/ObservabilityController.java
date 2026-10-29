@@ -27,7 +27,7 @@ import java.util.Map;
  * <li>{@code GET /api/observability/summary} — 聚合：总调用数 / 总 token / 各 agent 调用数</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v1.0
  */
 @RestController

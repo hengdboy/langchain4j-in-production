@@ -19,7 +19,7 @@ import java.util.Locale;
  *
  * <p>生产应替换为真实 SMTP 客户端（MailHog / SendGrid / Amazon SES）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.26
  */
 @Slf4j

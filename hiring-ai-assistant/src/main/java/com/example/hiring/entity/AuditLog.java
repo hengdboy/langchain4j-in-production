@@ -16,7 +16,7 @@ import java.time.Instant;
  * "为什么拒了他"——字段粒度的决策留痕见 candidate.matchReasons，
  * 本表记录操作级流水（谁在何时对哪个候选人做了什么）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

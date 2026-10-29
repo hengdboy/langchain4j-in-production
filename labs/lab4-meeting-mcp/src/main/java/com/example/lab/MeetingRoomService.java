@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <p>三条业务规则（也是护栏的落点）：
  * 单次预订 ≤ 4 小时；同一房间同时段冲突直接拒绝；过去日期/已开始的预订不可操作。
+ * @author hengdboy
  */
 public final class MeetingRoomService {
 

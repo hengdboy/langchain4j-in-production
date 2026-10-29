@@ -26,7 +26,7 @@ import java.util.Map;
  * 自建 3 个端点把 LangChain4j 埋点的数据原样吐出，
  * 想接 Prometheus / Grafana 时直接读取 {@link CostTracker#snapshot()} 即可。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @RestController

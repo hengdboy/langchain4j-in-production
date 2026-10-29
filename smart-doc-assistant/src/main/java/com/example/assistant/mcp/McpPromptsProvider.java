@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
  * <p>不支持：Jinja2 的过滤器（{@code {{x | default(...)}}}）、控制结构（{@code if if}）。
  * 够教学用；生产建议用 StringTemplate / Pebble 等正式模板引擎。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @Slf4j

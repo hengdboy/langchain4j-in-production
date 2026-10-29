@@ -48,7 +48,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  * <p><b>必须用 {@code -jar}，不能用 {@code -cp xxx.jar 主类}</b>：fat jar 的类和依赖都在
  * {@code BOOT-INF/} 下，{@code -cp} 看不到。这个 jar 由 {@code mvn package -Pmcp} 产出。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.27 → v0.30
  */
 public final class McpServerStarter {

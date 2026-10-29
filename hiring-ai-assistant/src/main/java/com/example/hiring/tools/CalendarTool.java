@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>生产应替换为 Google Calendar / 飞书日历 API（教学版内存实现，重启即失）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

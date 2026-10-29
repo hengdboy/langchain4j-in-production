@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
  * const reader = response.body.getReader();
  * // ... 解析 SSE 流
  * }</pre>
+ * @author hengdboy
  */
 @RestController
 @RequestMapping("/api")

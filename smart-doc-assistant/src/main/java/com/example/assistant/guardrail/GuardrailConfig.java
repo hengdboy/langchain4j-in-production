@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
  * 官方 {@code PatternBasedPromptInjectionGuardrail} / {@code JsonExtractorOutputGuardrail}
  * 是 <strong>AiServices 层</strong> 防护——两者叠加使用，详见 Ch21.3。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.18
  */
 @Configuration

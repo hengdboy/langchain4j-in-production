@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * 客户回信 Mapper（MyBatis-Plus）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.26
  */
 @Mapper

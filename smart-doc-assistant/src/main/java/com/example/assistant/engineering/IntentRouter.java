@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
  *
  * <p>为什么不直接全量给模型（方案 C）？当工具里包含<b>写操作/高权限/高成本</b>（如 admin 域的发短信、删数据）
  * 时，必须先"分类裁剪 + 二次权限校验"再暴露，避免模型越权调用。纯只读低风险工具可走方案 C。
+ * @author hengdboy
  */
 public class IntentRouter {
 

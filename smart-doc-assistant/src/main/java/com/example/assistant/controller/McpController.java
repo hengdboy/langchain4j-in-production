@@ -37,6 +37,7 @@ import java.util.Map;
  * <p>本控制器依赖 McpAgent / McpClient，故与 {@link com.example.assistant.config.McpConfig}
  * 共用同一开关：{@code chat.mcp.enabled=false} 时整个 MCP 模块（含本控制器）不注册，
  * 应用其余功能不受影响。
+ * @author hengdboy
  */
 @RestController
 @RequiredArgsConstructor

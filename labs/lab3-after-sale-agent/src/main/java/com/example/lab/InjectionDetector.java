@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
  *
  * <p>与主教程 Ch21 的口径一致：第一道用正则而不是 LLM——便宜、快、自己不会被劫持。
  * 规则来自真实注入攻击的高频句式；教学版宁误报不漏报。
+ * @author hengdboy
  */
 public final class InjectionDetector {
 

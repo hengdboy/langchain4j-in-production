@@ -22,6 +22,7 @@ import java.util.function.Function;
  * <p>只重写 {@code chat(ChatRequest)} 一个方法：AiServices 内部经
  * ChatExecutor 最终调的就是它（源码 DirectChatExecutor L29，源码核实）。
  * 脚本条目支持两种形态：纯文本、或 @@TOOL@@id|name|json 形态的工具调用。
+ * @author hengdboy
  */
 public final class StubChatModel implements ChatModel {
 

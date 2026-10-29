@@ -23,6 +23,7 @@ import java.util.Map;
  *
  * <p>sendEvent 转换成功返回新状态；Guard 拒绝或状态不匹配返回 null，
  * 由调用方记录并原样返回。
+ * @author hengdboy
  */
 @Slf4j
 @Service

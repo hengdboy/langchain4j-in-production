@@ -32,7 +32,7 @@ import java.util.Set;
  * <p>{@link #takeDueEvents()} 用 {@code rangeByScore} + {@code remove} 两步操作。
  * 教学版接受少量并发误差；生产可改为 Lua 脚本做严格原子。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.23
  */
 @Slf4j

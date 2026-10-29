@@ -30,6 +30,7 @@ import redis.clients.jedis.UnifiedJedis;
  * </ul>
  *
  * <p>切换只改配置，业务代码零改动（依赖倒置的好处）。
+ * @author hengdboy
  */
 @Configuration
 public class EmbeddingConfig {

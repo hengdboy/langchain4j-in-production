@@ -16,6 +16,7 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
  * - FlexibleAssistant：每个方法按场景传入不同参数
  *
  * 关键：参数类型必须是 ChatRequestParameters，命名随意，框架会自动识别并合并
+ * @author hengdboy
  */
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "openAiChatModel")   // ← 多模型 Bean 显式指定默认对话模型
 public interface FlexibleAssistant {

@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * v1.0 Observability / Audit Controller 集成测试。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v1.0
  */
 @SpringBootTest

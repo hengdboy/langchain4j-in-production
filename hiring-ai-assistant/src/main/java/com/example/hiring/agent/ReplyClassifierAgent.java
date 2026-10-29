@@ -18,7 +18,7 @@ import dev.langchain4j.service.V;
  *
  * <p>输出挂 PII 脱敏 guardrail（回信里可能带候选人的备用联系方式）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public interface ReplyClassifierAgent {

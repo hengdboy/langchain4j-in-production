@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * Agent 只在叶子节点产出结构化结果。
  *
  * <p>架构契约与表结构见 ARCHITECTURE.md。
+ * @author hengdboy
  */
 
 @EnableScheduling

@@ -23,7 +23,7 @@ import java.util.Set;
  * <p>LangChain4j 1.19 的 ChatModel 接口默认 {@code listeners()} 返回空列表，
  * 没有 setter。要加 listener 必须自写 wrapper，委托给底层 ChatModel 并在调用前后分发事件。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29
  */
 @RequiredArgsConstructor

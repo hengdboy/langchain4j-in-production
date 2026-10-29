@@ -37,6 +37,7 @@ import java.util.List;
  * 工具抛异常、参数解析失败、模型调用不存在的工具，都能兜底并引导模型纠正；</li>
  * <li><b>防循环</b>：{@code maxToolCallingRoundTrips(10)}——工具循环护栏。</li>
  * </ol>
+ * @author hengdboy
  */
 @Configuration
 @RequiredArgsConstructor

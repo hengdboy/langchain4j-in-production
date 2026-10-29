@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * v0.30 MCP 工具：职位查询。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public class JobMcpTools {

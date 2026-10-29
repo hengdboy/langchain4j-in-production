@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * # 含端到端答案 + LLM-as-Judge（需 Key，会触发多次 LLM 调用）
  * curl "http://localhost:8090/api/rag/evaluate?includeAnswer=true"
  * </pre>
+ * @author hengdboy
  */
 @RestController
 @RequiredArgsConstructor

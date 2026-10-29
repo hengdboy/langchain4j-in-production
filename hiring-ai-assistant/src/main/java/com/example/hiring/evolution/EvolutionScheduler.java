@@ -24,7 +24,7 @@ import java.util.List;
  *
  * <p>频率见 {@code hiring.scheduler.bandit-eval-interval-ms}（默认 10 分钟）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.28 → v0.30
  */
 @Slf4j

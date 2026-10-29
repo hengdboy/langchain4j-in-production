@@ -16,6 +16,9 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
         chatModel = "openAiChatModel",
         retrievalAugmentor = "advancedRetrievalAugmentor"
 )
+/**
+ * @author hengdboy
+ */
 public interface DocQaAssistant {
 
     @SystemMessage("你是智能文档助手，只依据下方提供的参考资料用简洁中文回答；" +

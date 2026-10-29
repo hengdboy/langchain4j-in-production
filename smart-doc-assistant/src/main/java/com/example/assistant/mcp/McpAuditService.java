@@ -31,7 +31,7 @@ import java.util.List;
  *
  * <p>生产版应把审计写到 ELK / 数据库，本类仅做内存版演示。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @Slf4j

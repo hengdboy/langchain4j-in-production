@@ -19,7 +19,7 @@ import java.util.List;
  * <p>{@code name} 用 {@code "smart-doc-assistant"}、{@code version} 用 {@code "0.17.0"}，
  * 与 pom.xml 的 {@code <version>} 标签同步（v0.17 在 Ch19 引入）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 public final class McpServerFactory {

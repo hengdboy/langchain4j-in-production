@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
  * </ul>
  * 两条通道同时上 = 每通道一个实例 = 数字翻倍。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @Slf4j

@@ -18,7 +18,7 @@ import java.util.Map;
  *
  * <p> 价格随时变动——本项目价格仅供演示，请到厂商官网核对最新定价。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @Getter

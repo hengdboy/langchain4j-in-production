@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
  * 选择哪种存储？
  * - 生产：RedisChatMemoryStore（默认）
  * - 开发/测试：InMemoryChatMemoryStore（设 chat.memory.backend=memory）
+ * @author hengdboy
  */
 @Configuration
 @RequiredArgsConstructor

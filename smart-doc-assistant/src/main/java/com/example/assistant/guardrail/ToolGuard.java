@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <li>两者是<strong>叠加</strong>的——MCP 白名单 ⊇ 角色白名单 ⊇ 单次调用权限</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.18
  */
 @Slf4j

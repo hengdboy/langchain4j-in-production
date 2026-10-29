@@ -21,7 +21,7 @@ import java.time.Instant;
  * <p>v0.28 教学版只启用 {@code SOURCE_BANDIT}：Bandit 对比同一 prompt 不同臂产出，
  * 转化高=chosen、低=rejected。{@code SOURCE_HUMAN} 留接口位。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.28
  */
 @Slf4j

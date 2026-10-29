@@ -17,6 +17,7 @@ import java.util.List;
  * DEEPSEEK_API_KEY=sk-xxx mvn compile exec:java \
  * -Dexec.mainClass=com.example.lab.ResumeScreeningApp
  * </pre>
+ * @author hengdboy
  */
 public final class ResumeScreeningApp {
 

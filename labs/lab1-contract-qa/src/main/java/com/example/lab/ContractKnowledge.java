@@ -24,6 +24,7 @@ import java.util.List;
  *
  * <p>入库三步（切块 → 嵌入 → 写库）故意手写而不包 Ingestor，
  * 读者改任何一步都看得见。
+ * @author hengdboy
  */
 public final class ContractKnowledge {
 

@@ -20,6 +20,7 @@ import java.util.List;
  * 因为后者把 query+doc 拼在一起过一次模型，能捕捉细粒度交互。生产追求极致命中率应换交叉编码器
  * （{@code langchain4j-reranker-cohere} / {@code langchain4j-reranker-score} 提供的 {@link ScoringModel} 实现）。
  * 本项目用双编码器把"重排序"这条链路完整跑通、讲透，并在 12.6 给出升级路径。
+ * @author hengdboy
  */
 public class EmbeddingScoringModel implements ScoringModel {
 

@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Configuration;
  * </ul>
  *
  * <p>{@code SupervisorResponseStrategy.SUMMARY}：由主管汇总各子 Agent 的结果返回给用户。
+ * @author hengdboy
  */
 @Configuration
 public class SupervisorAgentConfig {

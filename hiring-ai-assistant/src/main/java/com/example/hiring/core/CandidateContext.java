@@ -24,7 +24,7 @@ import java.time.Instant;
  * <li><b>Agent 共享</b>：{@link #extras}（JSON 字段）跨 Agent 传临时数据</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

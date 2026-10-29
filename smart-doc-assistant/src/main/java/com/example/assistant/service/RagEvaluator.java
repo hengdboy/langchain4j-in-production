@@ -32,6 +32,7 @@ import java.util.List;
  *
  * <p>核心思路：用一份 <b>golden set</b>（问题 + 应出现在上下文里的关键句 + 标准答案）做回归基线，
  * 每次改了分块/检索/重排参数，跑一遍评估看指标涨跌，形成"评估→调参→再评估"的闭环。
+ * @author hengdboy
  */
 @Service
 @Slf4j

@@ -13,6 +13,7 @@ import java.util.Map;
  * <p>金额全部用分。{@code submitRefund} 是写操作——护栏在工具方法体第一行，
  * 超阈值抛 {@link RefundGuard.GuardViolation}，框架会把它转成 isError 结果回喂模型
  * （主教程 Ch14 失败三层机制的第一层），模型自然会改道转人工。
+ * @author hengdboy
  */
 public class AfterSaleTools {
 

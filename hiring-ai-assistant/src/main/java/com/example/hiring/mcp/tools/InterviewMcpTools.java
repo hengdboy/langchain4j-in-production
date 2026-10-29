@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * v0.30 MCP 工具：面试安排查询。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public class InterviewMcpTools {

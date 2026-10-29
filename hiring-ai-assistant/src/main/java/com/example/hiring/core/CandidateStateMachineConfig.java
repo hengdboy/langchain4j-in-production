@@ -27,6 +27,7 @@ import java.util.EnumSet;
  * <li>REPLY_TIMEOUT_48H / OFFER_TIMEOUT_5D 不进状态机（自循环坑，见类注释），
  * 由 CandidateService 业务前置判断</li>
  * </ul>
+ * @author hengdboy
  */
 @Slf4j
 @Configuration

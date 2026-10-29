@@ -31,7 +31,7 @@ import java.util.List;
  * <li>限流（每秒最大调用数）+ 熔断（连续失败自动禁用工具）</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @Slf4j

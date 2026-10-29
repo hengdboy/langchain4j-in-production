@@ -21,6 +21,7 @@ import java.util.Set;
  *
  * <p>按文本去重（而非 parentId），因为扁平段没有 parentId；用 {@link LinkedHashMap}
  * 保持每个 query 首次出现的顺序，避免改变原始排名语义。
+ * @author hengdboy
  */
 public class DeduplicatingContentAggregator implements ContentAggregator {
 

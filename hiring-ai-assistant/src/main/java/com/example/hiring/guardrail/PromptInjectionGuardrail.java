@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  * <p><b>策略</b>：命中 {@code fatal(...)}。pipeline 在评估前还会用本护栏对决策画像
  * 做一次<b>确定性预检</b>（不依赖 LLM 在场），命中即冷处理淘汰并留审计。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29 → v0.30
  */
 @Slf4j

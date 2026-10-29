@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
  *
  * <p>这是多租户 SaaS 防止"租户 A 调到了租户 B/管理员专属工具"的核心手段。
  * 注意：它和意图路由<b>正交</b>——路由决定"应该用哪些"，闸门决定"这个用户能不能用"。
+ * @author hengdboy
  */
 public class TenantToolFilter {
 

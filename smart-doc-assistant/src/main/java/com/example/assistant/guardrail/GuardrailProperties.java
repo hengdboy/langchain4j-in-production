@@ -35,7 +35,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * blocked-tools: [executeShell, formatDisk]
  * </pre>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.18
  */
 @Getter

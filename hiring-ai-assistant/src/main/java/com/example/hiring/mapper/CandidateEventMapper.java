@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
  *
  * <p>继承 {@link BaseMapper} 自动获得 CRUD；lead_event 表（ARCHITECTURE.md ）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.25
  */
 @Mapper

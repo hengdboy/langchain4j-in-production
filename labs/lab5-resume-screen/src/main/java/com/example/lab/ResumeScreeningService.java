@@ -10,6 +10,7 @@ import dev.langchain4j.service.V;
  *
  * <p>三步都在一个入口里：简历原文先过 {@link PiiRedactor}（模型只看打码版），
  * 结构化输出拿回打分对象，最后把模型的等级表述（"A"/"A级"/"a"）归一成枚举口径。
+ * @author hengdboy
  */
 public final class ResumeScreeningService {
 

@@ -9,6 +9,7 @@ import dev.langchain4j.service.V;
  *
  * <p>方法签名返回 {@link RawTender}——langchain4j 会按字段生成 JSON Schema 下发，
  * 并把模型输出反序列化成对象。字段全部 String 的原因见 {@link RawTender}。
+ * @author hengdboy
  */
 public final class TenderExtractionService {
 

@@ -41,6 +41,7 @@ import java.util.Map;
  * curl -X POST http://localhost:8090/api/agentic/mapper \
  * -H "Content-Type: application/json" -d '{"topics":["咖啡机","空气炸锅","扫地机器人"]}'
  * </pre>
+ * @author hengdboy
  */
 @RestController
 @RequiredArgsConstructor

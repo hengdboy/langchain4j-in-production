@@ -23,6 +23,7 @@ import java.util.Set;
  *
  * <p>这样"要暴露哪些工具"就变成：意图路由出候选域 → 按租户/角色过滤，
  * 而不是维护一张爆炸的关键词表。
+ * @author hengdboy
  */
 public class ToolCatalog {
 

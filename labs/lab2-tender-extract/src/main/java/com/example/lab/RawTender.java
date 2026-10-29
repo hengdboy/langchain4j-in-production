@@ -5,6 +5,7 @@ import java.util.List;
 /**
  * Lab2 模型返回的原始字段——全部按字符串收（LLM 输出本质是文本），
  * 归一化交给 {@link TenderNormalizer}。字段越"弱类型"，测试越好写。
+ * @author hengdboy
  */
 public class RawTender {
 

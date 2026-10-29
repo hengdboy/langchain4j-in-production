@@ -4,9 +4,9 @@ Dual License — LangChain4j 生产实战（langchain4j-in-production）
 本仓库包含两类内容，分别适用不同的开源协议：
 
 1. 代码（Apache License 2.0）
-   范围：smart-doc-assistant/ 与 sdr-ai-assistant/ 两个 Maven 项目的全部
-   源码、构建脚本（pom.xml、CI 工作流、scripts/）、配置模板，以及
-   .github/ 下的工程文件。
+   范围：smart-doc-assistant/、hiring-ai-assistant/ 与 labs/ 下各 Maven
+   项目的全部源码、构建脚本（pom.xml、CI 工作流、scripts/）、配置模板，
+   以及 .github/ 下的工程文件。
 
    Copyright 2026 hengdboy
 

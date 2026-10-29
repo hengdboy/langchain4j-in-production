@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  * <li>未来切换定价模型（按月费、按 token 包）不影响调用方</li>
  * </ol>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @Slf4j

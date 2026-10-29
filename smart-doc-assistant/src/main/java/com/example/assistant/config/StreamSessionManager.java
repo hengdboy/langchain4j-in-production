@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * 注意：这只关闭了客户端连接，并不能真的"杀掉"LLM 厂商的请求。
  * LLM 仍会生成到下一个 token 到达为止，但不会再写到客户端。
+ * @author hengdboy
  */
 @Component
 @Slf4j

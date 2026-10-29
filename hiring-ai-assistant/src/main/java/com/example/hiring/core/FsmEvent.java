@@ -10,7 +10,7 @@ package com.example.hiring.core;
  * 此前一版项目（TIMEOUT_72H）实测过的教训：Spring StateMachine 的 Guard 拦截
  * 无法从 sendEvent 返回值区分，自循环不能画进状态机。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public enum FsmEvent {

@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * （注：{@code DefaultToolExecutor(Object, ToolExecutionRequest)} 的便利构造是按"方法名"反射查找，
  * 当 {@code @Tool} 显式指定了 name 时可能匹配不上；所以这里按"工具名 = @Tool.name() 或方法名"
  * 自己建映射，再用 {@code DefaultToolExecutor(Object, Method)} 精确绑定，最稳。）
+ * @author hengdboy
  */
 @Slf4j
 public class ManualAgentService {

@@ -14,7 +14,7 @@ import java.time.Instant;
  *
  * <p>教学版通过 API 模拟回信注入（Webhook/IMAP 拉取的生产接法见 ARCHITECTURE.md ）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

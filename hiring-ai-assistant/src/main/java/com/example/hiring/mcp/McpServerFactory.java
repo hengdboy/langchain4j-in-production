@@ -19,7 +19,7 @@ import java.util.List;
  * <h2>工具白名单单一真相源</h2>
  * <p>{@link #TOOL_NAMES} 是所有暴露给 MCP 的工具名清单——外部客户端能调用什么由这里唯一决定。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.27 → v0.30
  */
 public final class McpServerFactory {

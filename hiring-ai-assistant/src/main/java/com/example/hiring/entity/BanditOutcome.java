@@ -15,7 +15,7 @@ import java.time.Instant;
  * <p>每次选臂插一条；候选人流到终态（或阶段性状态）后由 EvolutionScheduler
  * 按 reward 映射结算，回填 {@link #reward} 与 {@link #processedAt}。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

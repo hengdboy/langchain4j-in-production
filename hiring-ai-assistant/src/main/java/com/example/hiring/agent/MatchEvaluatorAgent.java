@@ -20,7 +20,7 @@ import java.util.List;
  * <p>挂 {@code DiscriminationGuardrail}：理由里出现受保护特征词直接拦截。
  * 拦截后 pipeline 不自动重试、不自动决策，停下来等人工（合规违规宁可停，不可错）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public interface MatchEvaluatorAgent {

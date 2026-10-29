@@ -12,6 +12,7 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
  * 演示：
  * - @SystemMessage 从外部资源文件加载（fromResource）
  * - 多 @V 参数绑定到模板变量
+ * @author hengdboy
  */
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "openAiChatModel")   // ← 多模型 Bean 显式指定默认对话模型
 public interface TranslationAssistant {

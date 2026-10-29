@@ -41,6 +41,7 @@ import java.util.List;
  * <tr><td>成本</td><td>零（复用本地 embedding）</td><td>0.5 元/百万 token</td></tr>
  * </table>
  *
+ * @author hengdboy
  * @see <a href="https://help.aliyun.com/zh/model-studio/text-rerank-api">通用文本排序模型 API 文档</a>
  */
 public class DashScopeRerankScoringModel implements ScoringModel {

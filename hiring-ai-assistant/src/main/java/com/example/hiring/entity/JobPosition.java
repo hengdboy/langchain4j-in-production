@@ -15,7 +15,7 @@ import java.time.Instant;
  * <p>JD 全文与必备技能是评估 Agent 的输入之一；requiredSkills 同时是
  * canned 评估模式的确定性打分依据。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

@@ -11,6 +11,7 @@ import java.util.List;
  * <p>stdout 只允许出现 JSON-RPC 协议流——这是 stdio 传输的铁律（主教程  踩坑清单 #1）。
  * 本 lab 无任何日志依赖，天然不污染 stdout；接了 Logback 的项目要照 Ch19 的做法
  * 把日志重定向到 stderr。
+ * @author hengdboy
  */
 public final class McpServerMain {
 

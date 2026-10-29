@@ -55,6 +55,7 @@ import java.util.Map;
  * 根目录下而非模块目录，导致 node 子进程立即退出；客户端随后干等握手超时，最终抛出
  * 与真实原因无关的 {@code mcpController} 依赖错误。
  * <p>因此这里做两件事：<b>多候选目录回退查找</b> + <b>启动前存在性校验</b>（fail-fast）。
+ * @author hengdboy
  */
 @Configuration
 @Slf4j

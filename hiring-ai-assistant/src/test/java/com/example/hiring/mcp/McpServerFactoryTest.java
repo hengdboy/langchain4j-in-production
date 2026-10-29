@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 /**
  * v0.30 MCP Server 工厂单元测试（工具白名单装配）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.27 → v0.30
  */
 @Slf4j

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * <p>Ch16 审计记"谁调了什么工具"，本类记"谁烧了多少 token"——可以 JOIN 得出"用户 X 调了 N 次工具 Y 共花 ¥X"。
  * 生产建议把这俩数据源写到同一数据库做关联查询。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @Slf4j

@@ -51,7 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <li>超时链路：追发 → CLOSED_NO_RESPONSE；催办 → EXPIRED</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

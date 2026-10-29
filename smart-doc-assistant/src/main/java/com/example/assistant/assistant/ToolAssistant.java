@@ -21,6 +21,7 @@ import dev.langchain4j.service.UserMessage;
  * - content()：最终回答
  * - tokenUsage()：Token 用量（用于成本核算）
  * - toolExecutions()：本次调用执行了哪些工具（用于审计和排错）
+ * @author hengdboy
  */
 public interface ToolAssistant {
 

@@ -11,7 +11,7 @@ import java.util.List;
  * <li>UCB1、epsilon-greedy（预留接口位）</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.28
  */
 public interface BanditStrategy {

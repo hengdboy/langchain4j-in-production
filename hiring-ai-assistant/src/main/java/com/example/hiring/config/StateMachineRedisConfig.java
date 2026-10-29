@@ -26,7 +26,7 @@ import org.springframework.statemachine.data.redis.RedisStateMachineContextRepos
  * TTL: 1 小时（spring-statemachine-data-redis 内置）
  * </pre>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.23
  */
 @Slf4j

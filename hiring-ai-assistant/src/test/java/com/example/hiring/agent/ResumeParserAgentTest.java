@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 /**
  * ResumeParserAgent 单元测试（mock ChatModel）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

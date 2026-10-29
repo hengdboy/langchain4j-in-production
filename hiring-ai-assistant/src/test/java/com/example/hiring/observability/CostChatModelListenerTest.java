@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * v0.29 CostChatModelListener 集成测试（agent_call 表落库）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29
  */
 @Slf4j

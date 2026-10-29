@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Ch21：InputGuard 输入清洗（Application 层第一道）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @DisplayName("InputGuard：HTML/控字符清洗与截断")

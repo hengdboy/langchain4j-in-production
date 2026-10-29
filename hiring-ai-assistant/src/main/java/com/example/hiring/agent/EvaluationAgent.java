@@ -16,7 +16,7 @@ import java.util.List;
  * strengths/concerns 进评价存档；汇总文本挂 PII 脱敏 + 歧义特征双输出护栏
  * ——面试官手打的反馈里什么都有，落库前必须过筛。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public interface EvaluationAgent {

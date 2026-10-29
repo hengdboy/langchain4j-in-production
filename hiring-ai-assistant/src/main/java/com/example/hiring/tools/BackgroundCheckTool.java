@@ -20,7 +20,7 @@ import java.util.UUID;
  * （OFFER_SENT 之后、入职之前）在设计上就保证了这一点——
  * 状态机本身就是合规护栏的一部分。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

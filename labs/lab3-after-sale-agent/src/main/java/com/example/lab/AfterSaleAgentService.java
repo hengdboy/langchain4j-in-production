@@ -13,6 +13,7 @@ import dev.langchain4j.service.UserMessage;
  * <p>系统提示里写死业务规则（先查订单再查政策、500 元上限直接转人工、食品特殊），
  * 模型负责"怎么走流程"，工具负责"能不能做"——护栏在工具层兜底，
  * 模型被注入也得撞在 {@link RefundGuard} 上。
+ * @author hengdboy
  */
 public final class AfterSaleAgentService {
 

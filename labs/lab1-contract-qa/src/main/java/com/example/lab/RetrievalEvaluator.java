@@ -13,6 +13,7 @@ import java.util.List;
  * <p>判分规则：在前 k 个块里找第一个包含 needle 的块，其名次取倒数（第 1 名记 1.0，
  * 第 3 名记 1/3）；整个前 k 都没有记 0。needle 是原文里必须被检回的短句——
  * 取自语料原文，保证"答对"有客观定义。
+ * @author hengdboy
  */
 public final class RetrievalEvaluator {
 

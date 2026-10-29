@@ -22,6 +22,7 @@ import java.util.List;
  * 本服务保留 /api/search/semantic 接口行为不变，检索内容从硬编码文档变为真实入库文档。
  *
  * <p>注入的是 EmbeddingModel 接口，local（本地 ONNX）/ bailian（阿里百炼）切换对业务无感。
+ * @author hengdboy
  */
 @Slf4j
 @Service

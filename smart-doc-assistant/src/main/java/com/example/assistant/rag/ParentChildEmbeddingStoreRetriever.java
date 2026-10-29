@@ -20,6 +20,7 @@ import java.util.Set;
  *
  * <p>未启用父子分块（段上无 {@code parentId}/{@code parentText}）时自动退化为"原样返回"，
  * 因此扁平模式也能正常工作。
+ * @author hengdboy
  */
 public class ParentChildEmbeddingStoreRetriever implements ContentRetriever {
 

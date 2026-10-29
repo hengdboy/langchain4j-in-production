@@ -35,7 +35,7 @@ import java.util.Optional;
  * 类型（number/bool/string/object）传入，不再 {@code asText()} 强转字符串——MCP
  * 客户端可以用布尔开关、数字阈值等结构化参数。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @Slf4j

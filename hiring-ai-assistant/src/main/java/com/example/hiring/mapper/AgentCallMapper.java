@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * v0.29 Observability：agent_call 表 MyBatis-Plus Mapper。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29
  */
 @Mapper

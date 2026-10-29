@@ -28,6 +28,7 @@ import java.util.List;
  *
  * <p>这里复用了 Ch06 已有的 {@code timeTools} / {@code calculatorTools} Bean，
  * 并新增 {@code ragLookupTool}（注入 RetrievalAugmentor）。
+ * @author hengdboy
  */
 @Configuration
 @RequiredArgsConstructor

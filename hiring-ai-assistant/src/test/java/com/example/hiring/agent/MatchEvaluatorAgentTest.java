@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
  * <p>验证 AgentBuilder 挂载的 discriminationGuardrail 真的会拦截
  * "理由里引用受保护特征"的产出——这是  的核心机制。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

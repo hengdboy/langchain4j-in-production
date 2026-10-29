@@ -14,6 +14,9 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT,
         chatModel = "openAiChatModel",              // ← 多 ChatModel Bean 时显式指定默认对话模型
         chatMemoryProvider = "chatMemoryProvider")  // ← EXPLICIT 模式需显式声明记忆
+/**
+ * @author hengdboy
+ */
 public interface ChatAssistant {
 
     /**

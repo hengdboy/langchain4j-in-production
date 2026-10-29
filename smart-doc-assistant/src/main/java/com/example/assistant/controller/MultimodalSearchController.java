@@ -23,6 +23,7 @@ import java.util.Map;
  * { "mode": "image", "imageUrl": "https://.../query.jpg", "topK": 3 }
  * </pre>
  * 响应：{"success": true, "mode": "...", "hits": [{score, id, imageUrl, description}, ...]}
+ * @author hengdboy
  */
 @RestController
 @RequiredArgsConstructor

@@ -37,6 +37,7 @@ import java.util.List;
  * </ol>
  *
  * <p>所有组件离线可跑、零新依赖：向量与重排共用现有 EmbeddingModel，关键词路用进程内 {@link LexicalSegmentIndex}。
+ * @author hengdboy
  */
 @Configuration
 public class AdvancedRagConfig {

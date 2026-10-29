@@ -28,7 +28,7 @@ import java.util.Set;
  * <p>输入不是 JSON 时原文返回（canned 模式由 pipeline 保证输入是 JSON；
  * 真实模式解析 Agent 产出 JSON——两路都在这里收口）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

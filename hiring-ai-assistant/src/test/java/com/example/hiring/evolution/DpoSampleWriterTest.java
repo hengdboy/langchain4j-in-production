@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * DpoSampleWriter 集成测试（需要 MySQL）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.28
  */
 @Slf4j

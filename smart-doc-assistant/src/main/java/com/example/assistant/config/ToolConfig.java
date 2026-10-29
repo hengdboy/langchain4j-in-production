@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
  * - 工具类是普通 POJO（不需要 @Component）
  * - 在 Config 里集中注册 + 注入到 AiService
  * - maxSequentialToolsInvocations 防 LLM 无限循环
+ * @author hengdboy
  */
 @Configuration
 @RequiredArgsConstructor

@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * v0.29 AuditService 集成测试（audit_log 表落库 + 事件监听）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29
  */
 @Slf4j

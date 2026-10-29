@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * <p>关键语义：整表为空 = 全放行；列了角色 = 白名单逐个匹配，没列的工具一律拒绝；
  * {@code admin: []} 是"零权限"不是"不限制"；角色键大小写敏感。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @DisplayName("ToolGuard：黑名单 + 角色白名单 + 限流")

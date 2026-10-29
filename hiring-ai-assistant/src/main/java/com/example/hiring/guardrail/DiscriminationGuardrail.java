@@ -24,7 +24,7 @@ import java.util.Locale;
  * 评价停在原地等人工修订。理由：合规违规场景下自动重试等于让模型再赌一次，
  * 停下来交给人才是正确姿势。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

@@ -17,6 +17,7 @@ import java.util.List;
  * - enum 分类
  * - List 嵌套
  * - 找不到字段填 null 而非编造
+ * @author hengdboy
  */
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "jsonModel")   // ← 指定低温度 JSON 模型，多模型 Bean 需 EXPLICIT
 public interface DocExtractionAssistant {

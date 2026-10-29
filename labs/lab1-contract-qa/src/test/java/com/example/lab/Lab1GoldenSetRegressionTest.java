@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>这就是 Ch13 说的"CI 阈值门禁"在 lab 里的样子：检索质量退化时，测试先红。
  * 阈值来自 2026-10-29 的实测基线（默认切块 450/80，MRR 0.66 附近）——
  * 你改了切块策略跑不过时，先看是退化了还是真的更好了，更好就改阈值并写明原因。
+ * @author hengdboy
  */
 @DisplayName("Lab1 合同检索金标集回归")
 class Lab1GoldenSetRegressionTest {

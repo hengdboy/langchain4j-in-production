@@ -27,6 +27,7 @@ import java.util.Map;
  * curl -X POST 'http://localhost:8090/api/docs/ingest?dir=/tmp/docs&amp;rebuild=false'
  * curl -X POST -F "file=@report.pdf" http://localhost:8090/api/docs/upload
  * </pre>
+ * @author hengdboy
  */
 @Slf4j
 @RestController

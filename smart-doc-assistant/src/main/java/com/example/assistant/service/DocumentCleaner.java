@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
  *
  * <p>核心原则：清洗要"保守"——只去除确定是噪声的内容，
  * 不要误删正文语义（比如代码缩进、表格对齐空格）。
+ * @author hengdboy
  */
 @Component
 public class DocumentCleaner implements DocumentTransformer {

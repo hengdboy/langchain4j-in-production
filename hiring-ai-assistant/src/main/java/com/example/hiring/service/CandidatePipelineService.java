@@ -74,6 +74,7 @@ import java.util.regex.Pattern;
  *
  * <p>每个 Agent 调用先看 {@code hiring.demo.use-real-agent}（或请求级覆盖）：
  * true 调真实 LLM、失败兜底 canned；false 直接走确定性规则（无 key 可跑）。
+ * @author hengdboy
  */
 @Slf4j
 @Service

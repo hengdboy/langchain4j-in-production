@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
  * <li>URL：{@code ImageContent.from(url)}，图片必须是公网可访问的 URL</li>
  * <li>Base64：{@code ImageContent.from(base64Data, "image/png")}，适合用户本地上传</li>
  * </ul>
+ * @author hengdboy
  */
 @Slf4j
 @Service

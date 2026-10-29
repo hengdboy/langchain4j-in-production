@@ -30,6 +30,7 @@ import java.util.List;
  *
  * <p>refund-policy 技能绑定了 {@code RagLookupTool}（skill-scoped tool）：只有该技能被激活后，
  * 工具才对模型可见——"技能激活 = 工具解锁"，保持工具列表精简。
+ * @author hengdboy
  */
 @Configuration
 @Slf4j

@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
  * <p><b>策略</b>：命中则 redact（{@code successWith(redacted)}），不是 fail —
  * 因为 PII 不该阻断业务流程（教学版），但必须脱敏后再落 DPO / 日志。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29
  */
 @Slf4j

@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Ch21：OutputGuard PII 脱敏 + 误杀率实测（2026-10-28 数据的固化版，数字随实现走）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @DisplayName("OutputGuard：真 PII 漏杀为 0，长数字误杀有边界")

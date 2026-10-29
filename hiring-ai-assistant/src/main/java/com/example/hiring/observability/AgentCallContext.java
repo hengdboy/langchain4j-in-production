@@ -7,7 +7,7 @@ package com.example.hiring.observability;
  * ThreadLocal 是因为 LangChain4j 的 ChatModelListener 回调发生在调用线程，
  * 而我们的 Agent 是阻塞同步调用，线程不会切换。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29
  */
 public final class AgentCallContext {

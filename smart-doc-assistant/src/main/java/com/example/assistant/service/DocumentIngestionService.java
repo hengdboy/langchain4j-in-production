@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>解析器按扩展名自动选择：pdf → PDFBox，txt/md/html → 纯文本。
  * 分块使用 DocumentSplitters.recursive（段落→行→句子→词 逐级递归），
  * chunk-size / overlap 由 application.yml 配置，可环境变量覆盖。
+ * @author hengdboy
  */
 @Slf4j
 @Service

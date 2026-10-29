@@ -20,7 +20,7 @@ import jakarta.validation.constraints.NotBlank;
  * @param evalOutcome   评价结论
  * @param offerDecision offer 答复
  * @param humanApproved HR 复核结果
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public record SendEventRequest(

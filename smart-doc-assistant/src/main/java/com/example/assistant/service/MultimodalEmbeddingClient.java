@@ -34,6 +34,7 @@ import java.util.Map;
  * <li>融合向量：text 与 image 放在同一个 content 对象里，融合为一个向量（type=fused）</li>
  * <li>所有向量处于同一个语义空间，因此可以直接做跨模态检索（文本搜图 / 图搜图）</li>
  * </ul>
+ * @author hengdboy
  */
 @Slf4j
 @Component

@@ -18,7 +18,7 @@ import jakarta.validation.constraints.NotNull;
  * @param phone      电话（可选，缺省由简历解析回填）
  * @param jobId      应聘职位 ID（必填）
  * @param resumeText 简历原文（必填）
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public record CreateCandidateRequest(

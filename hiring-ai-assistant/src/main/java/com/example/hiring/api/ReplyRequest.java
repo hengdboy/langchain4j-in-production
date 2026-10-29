@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotBlank;
  * OFFER_SENT → 分类 offer 答复（accepted → HIRED / declined → WITHDRAWN）。
  *
  * @param text 回复正文
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public record ReplyRequest(

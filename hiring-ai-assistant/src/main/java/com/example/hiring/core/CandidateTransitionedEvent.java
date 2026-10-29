@@ -16,7 +16,7 @@ package com.example.hiring.core;
  * @param from      迁移前状态
  * @param to        迁移后状态
  * @param event     触发迁移的事件
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.26
  */
 public record CandidateTransitionedEvent(Long candidateId, CandidateStatus from, CandidateStatus to, FsmEvent event) {

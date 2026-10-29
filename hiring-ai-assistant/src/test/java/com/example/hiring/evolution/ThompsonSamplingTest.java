@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * ThompsonSampling 单元测试（纯算法，无 DB）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.28
  */
 @Slf4j

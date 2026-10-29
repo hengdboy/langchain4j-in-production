@@ -22,6 +22,7 @@ import java.util.List;
  * <li>运行时把查询（文本 or 图片）嵌入，与图片向量逐个算余弦相似度，取 Top-K</li>
  * <li>小规模用内存暴力扫描即可（与 InMemoryEmbeddingStore 同思路）</li>
  * </ul>
+ * @author hengdboy
  */
 @Slf4j
 @Service

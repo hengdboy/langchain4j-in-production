@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
  * 零代码重复——MCP Server 只是这些能力的一个新出口。构造逻辑统一走
  * {@link McpServerFactory#create}，stdio 启动器与 HTTP 模式行为完全一致。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @Configuration

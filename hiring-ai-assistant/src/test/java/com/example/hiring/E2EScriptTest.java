@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p>不启动 App，仅验证脚本可被 bash 解析且覆盖关键步骤与断言。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v1.0
  */
 @Slf4j

@@ -26,7 +26,7 @@ import java.util.Map;
  * <li>{@code GET /api/audit/summary} — 聚合：各动作类型 + 各资源类型 计数</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v1.0
  */
 @RestController

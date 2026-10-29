@@ -27,7 +27,7 @@ import java.util.Optional;
  * <p>PDF / 图片等二进制内容用 MCP 标准的 blob 格式返回：{@code {"_meta":..., "blob": "<base64>"}}，
  * 文本文件用 {@code {"text": "..."}}。客户端按 mimeType 决定如何解析。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @Slf4j

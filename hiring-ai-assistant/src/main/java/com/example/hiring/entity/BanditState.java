@@ -14,7 +14,7 @@ import java.time.Instant;
  *
  * <p>arm_id 格式：{@code tone:cta:channel}，如 {@code warm:calendar-link:email}。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

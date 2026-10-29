@@ -23,7 +23,7 @@ import java.util.List;
  * <li>{@link #findByStatus(CandidateStatus)} —— 找指定状态的所有 lead</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.23
  */
 @Mapper

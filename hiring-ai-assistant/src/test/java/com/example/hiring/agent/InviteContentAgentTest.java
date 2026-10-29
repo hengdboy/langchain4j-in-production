@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
  * InviteContentAgent / ReplyClassifierAgent / InterviewQuestionAgent /
  * EvaluationAgent 单元测试（mock ChatModel，合并一个文件省样板）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Slf4j

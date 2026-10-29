@@ -13,7 +13,7 @@ import java.util.List;
  * @param jdText         JD 全文
  * @param requiredSkills 必备技能（决策白名单字段，进评估画像）
  * @param headcount      招聘人数
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public record CreateJobRequest(

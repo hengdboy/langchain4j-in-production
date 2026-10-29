@@ -10,6 +10,7 @@ import java.util.List;
  *
  * <p>业务异常（{@link MeetingRoomService.BookingException}）直接往上抛——
  * SDK 的 McpServer 会把它包成 isError:true 的结果返回给客户端（Ch19 踩坑清单 #17 的同款行为）。
+ * @author hengdboy
  */
 public class MeetingRoomMcpTools {
 

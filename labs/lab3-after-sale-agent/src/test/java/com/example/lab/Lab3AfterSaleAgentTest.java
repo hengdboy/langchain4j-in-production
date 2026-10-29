@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Lab3 离线全链路测试：桩模型按剧本表演模型的三轮决策，
  * AiServices 真实驱动工具循环、异常转 isError、回喂、再决策——整条链路不需要真 LLM。
+ * @author hengdboy
  */
 @DisplayName("Lab3 售后 Agent：工具循环 + 护栏 + 注入拦截")
 class Lab3AfterSaleAgentTest {

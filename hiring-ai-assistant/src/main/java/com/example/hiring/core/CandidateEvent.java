@@ -13,7 +13,7 @@ import java.time.Instant;
  * <p>每次 accepted 状态转换写入一条，用于审计与回溯（v0.25 起落库，
  * 此前只打日志）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.25
  */
 @Data

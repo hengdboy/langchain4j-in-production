@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * <p> 1.19.0 API 变化：LangChain4j starter 已移除 `langchain4j.open-ai-chat-models.*`
  * 多模型自动配置，jsonModel / creativeModel 不再自动生成 Bean。
  * 这里改为手动创建，配置值仍从 application.yml 的同名 key 读取（键名不变）。
+ * @author hengdboy
  */
 @Configuration
 public class MultiModelConfig {

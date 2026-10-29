@@ -12,7 +12,7 @@ package com.example.hiring.core;
  * <li><b>流失（3 个）</b>：WITHDRAWN / CLOSED_NO_RESPONSE / EXPIRED（终态）</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public enum CandidateStatus {

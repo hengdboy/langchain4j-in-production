@@ -24,7 +24,7 @@ import java.time.Instant;
  * <p>必须记录：谁（actor）、做了什么（action）、涉及哪个资源（resourceType+resourceId）、
  * 何时（created_at）、为何（detail JSON，可选 GDPR legal basis）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.29
  */
 @Slf4j

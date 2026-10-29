@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 维度聚合，才能"按租户查调用、按用户追责、按会话排障"。单用 sessionId 无法做租户级合规排查。
  * 复合 key 在记录时由 {@link #auditKey(Object)} 从 {@link RequestContext} 拼出
  * （tool 执行与主调用同线程，{@code RequestContext} 可读到当前租户/用户）。
+ * @author hengdboy
  */
 @Service
 @Slf4j

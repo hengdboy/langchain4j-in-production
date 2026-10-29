@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * 模型可能在输出里"复述"——这就是把用户的 Key 暴露给下一个访问者。
  * 必须在输出后再次 redact 并计数。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.18
  */
 @Slf4j

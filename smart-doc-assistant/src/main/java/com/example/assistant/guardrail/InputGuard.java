@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * Controller 返回响应
  * </pre>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.18
  */
 @Slf4j

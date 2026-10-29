@@ -14,7 +14,7 @@ import java.time.Instant;
  *
  * <p>round 语义：1=首发邀请、2=追发、0=确认函/催办函等事务邮件。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Data

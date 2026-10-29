@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>生产接法：MCP Server 与主应用共享数据要走 HTTP MCP + 鉴权，
  * 或把只读查询收敛到一个内部 API。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 @Component

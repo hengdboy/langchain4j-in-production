@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
  * {"jsonrpc":"2.0","id":1,"result":{...}}
  * </pre>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @Slf4j

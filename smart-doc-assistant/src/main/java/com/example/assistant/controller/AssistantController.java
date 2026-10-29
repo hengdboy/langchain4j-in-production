@@ -40,6 +40,7 @@ import java.util.Map;
  * - POST /api/tools/chat              工具调用对话（TimeTools+Calculator+OrderTools）
  * <p>
  * 重点：/api/tools/chat 演示 ToolAssistant 如何自动调用 3 类工具
+ * @author hengdboy
  */
 @RestController
 @RequiredArgsConstructor

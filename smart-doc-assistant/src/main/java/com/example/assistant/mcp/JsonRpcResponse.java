@@ -22,7 +22,7 @@ import java.util.Map;
  * <li>{@link #error(Object, int, String)}：错误响应（{@code error.code} + {@code error.message}）</li>
  * </ul>
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.17
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

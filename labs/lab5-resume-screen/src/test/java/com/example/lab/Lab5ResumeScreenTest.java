@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Lab5 离线测试：脱敏质量、等级归一化、以及"模型只见打码版"的证据链。
  * 桩模型的 fallback 钩子能抓到真实发出去的请求——这是"脱敏在 LLM 之前"的实证方式。
+ * @author hengdboy
  */
 @DisplayName("Lab5 简历初筛：PII 脱敏 + 等级归一化")
 class Lab5ResumeScreenTest {

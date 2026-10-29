@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code deepseek-v4-flash} 归一化成 {@code deepseek-flash} 回传，别名必须进表，
  * 否则成本恒 0（Ch22 踩坑清单 #10）。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.19
  */
 @DisplayName("ModelPricing / TokenCostCalculator：成本换算")

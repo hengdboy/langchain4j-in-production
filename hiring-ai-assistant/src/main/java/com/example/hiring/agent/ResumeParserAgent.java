@@ -18,7 +18,7 @@ import java.util.List;
  * <p>产出的画像仍含姓名/邮箱/电话（后续约面要用），但进入评估前会被
  * {@code DecisionFieldFilter} 过一遍决策白名单。
  *
- * @author langchain4j-tutorial
+ * @author hengdboy
  * @since v0.30
  */
 public interface ResumeParserAgent {
