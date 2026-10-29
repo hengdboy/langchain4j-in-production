@@ -93,11 +93,11 @@ private List<TextSegment> splitIntoParentChild(List<Document> cleaned) {
     for (Document doc : cleaned) {
         String docId = doc.metadata().getString("docId");
         String category = doc.metadata().getString("category");
-        List<TextSegment> parents = parentSplitter.split(doc);   // ① 切父块
+        List<TextSegment> parents = parentSplitter.split(doc);
         int p = 0;
         for (TextSegment parent : parents) {
             String parentId = (docId == null ? "doc" + docSeq : docId) + "#P" + p;
-            // ② 父块包成 Document 再切子块，父块 metadata（docId/category）会遗传给子块
+            // 把父块包成 Document 再切子块，父块 metadata（docId/category）会遗传给子块
             List<TextSegment> kids = childSplitter.split(Document.from(parent.text(), parent.metadata()));
             int c = 0;
             for (TextSegment kid : kids) {
@@ -105,7 +105,7 @@ private List<TextSegment> splitIntoParentChild(List<Document> cleaned) {
                         .put("docId", docId == null ? "" : docId)
                         .put("category", category == null ? "" : category)
                         .put("parentId", parentId)
-                        .put("parentText", parent.text())   // ③ 关键：带上父块全文
+                        .put("parentText", parent.text())
                         .put("childIndex", String.valueOf(c));
                 children.add(TextSegment.from(kid.text(), kidMeta));
                 c++;
@@ -122,7 +122,7 @@ private List<TextSegment> splitIntoParentChild(List<Document> cleaned) {
 
 > ⚠️ **参数单位是字符，不是 token**。`DocumentSplitters.recursive(int, int)` 的两个参数是**字符**（不传 `TokenCountEstimator` 时）。本项目 `child-chunk-size: 400` 一直是 400 **字符**——按 token 估算调参，中文场景下会偏差一倍以上（一个汉字 ≈ 0.6~1 token，看模型）。
 >
-> ⚠️ **`DocumentSplitter.split` 接收 `Document` 不是 `TextSegment`**（源码：`List<TextSegment> split(Document)`）。所以"父块→子块"要把父块用 `Document.from(parent.text(), parent.metadata())` 包回去再切，这就是代码里第 ② 步那行的原因。
+> ⚠️ **`DocumentSplitter.split` 接收 `Document` 不是 `TextSegment`**（源码：`List<TextSegment> split(Document)`）。所以"父块→子块"要把父块用 `Document.from(parent.text(), parent.metadata())` 包回去再切，这就是代码里那行的原因。
 >
 > ✅ **`parentText` 存进每个子块的 metadata，是拿存储换简单的取舍**。4 个子块的父块各存一份全文，本项目 26 个子块无感；文档量上去后向量库体积随子块数线性膨胀，应改成"内存/独立表维护 parentId→parentText 映射"，检索时查表展开（12.7 的升级路径之一）。
 
@@ -342,7 +342,7 @@ public class KeywordContentRetriever implements ContentRetriever {
             return List.of();
         }
 
-        // ① 预计算 DF 与平均长度（索引很小，教学可接受每次重算）
+        // 用本机索引预计算 DF 与平均长度（索引很小，教学可接受每次重算）
         List<List<String>> docs = new ArrayList<>();
         for (TextSegment seg : index.all()) {
             docs.add(tokenize(seg.text()));
@@ -356,7 +356,7 @@ public class KeywordContentRetriever implements ContentRetriever {
             }
         }
 
-        // ② 全量打分，取分数 > 0 的段
+        // 全量打分，取分数 > 0 的段
         List<ScoredSegment> scored = new ArrayList<>();
         for (TextSegment seg : index.all()) {
             double score = bm25(tokenize(seg.text()), queryTerms, df, n, avgdl);
@@ -366,7 +366,7 @@ public class KeywordContentRetriever implements ContentRetriever {
         }
         scored.sort(Comparator.<ScoredSegment>comparingDouble(s -> s.score).reversed());
 
-        // ③ 展开为父块（按 parentId 去重），截断到 topK
+        // 展开为父块（按 parentId 去重），截断到 topK
         Set<String> seenParent = new LinkedHashSet<>();
         List<Content> result = new ArrayList<>();
         for (ScoredSegment s : scored) {
@@ -545,7 +545,7 @@ public class AdvancedRagConfig {
             @Value("${chat.rag.reranker.min-score:0.0}") Double rerankMinScore,
             @Value("${chat.rag.reranker.max-results:5}") int rerankMaxResults) {
 
-        // ① 向量一路（父子展开）
+        // 向量一路（父子展开）
         EmbeddingStoreContentRetriever vector = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
@@ -554,7 +554,7 @@ public class AdvancedRagConfig {
                 .build();
         ContentRetriever vectorRetriever = new ParentChildEmbeddingStoreRetriever(vector);
 
-        // ② 混合一路：关键词（可关闭）；两路一起进路由器
+        // 混合一路：关键词（可关闭）；两路一起进路由器
         List<ContentRetriever> retrievers = new ArrayList<>();
         retrievers.add(vectorRetriever);
         if (keywordEnabled) {
@@ -562,7 +562,7 @@ public class AdvancedRagConfig {
         }
         QueryRouter router = query -> retrievers;
 
-        // ③ 融合（RRF）+ 重排；外层包去重，消掉向量/关键词两路的重复父块
+        // 融合（RRF）+ 重排；外层包去重，消掉向量/关键词两路的重复父块
         ReRankingContentAggregator rerankingAggregator = ReRankingContentAggregator.builder()
                 .scoringModel(embeddingScoringModel)
                 .minScore(rerankMinScore)

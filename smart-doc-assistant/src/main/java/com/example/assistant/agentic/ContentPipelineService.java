@@ -24,7 +24,7 @@ public class ContentPipelineService {
     private final UntypedAgent pipeline;
 
     public ContentPipelineService(@Qualifier("openAiChatModel") ChatModel chatModel) {
-        // ① 撰写员：主题 → 3 句产品介绍初稿
+        // 撰写员：主题 → 3 句产品介绍初稿
         UntypedAgent writer = AgenticServices.agentBuilder()
                 .chatModel(chatModel)
                 .name("writer")
@@ -34,7 +34,7 @@ public class ContentPipelineService {
                 .outputKey("draft")                   // 结果写入 draft 变量
                 .build();
 
-        // ② 精简员：初稿 → 一句话卖点
+        // 精简员：初稿 → 一句话卖点
         UntypedAgent editor = AgenticServices.agentBuilder()
                 .chatModel(chatModel)
                 .name("editor")
@@ -45,7 +45,7 @@ public class ContentPipelineService {
                 .outputKey("final")
                 .build();
 
-        // ③ 顺序流水线：writer → editor，最终取 final 变量
+        // 顺序流水线：writer → editor，最终取 final 变量
         pipeline = AgenticServices.sequenceBuilder()
                 .subAgents(writer, editor)
                 .outputKey("final")

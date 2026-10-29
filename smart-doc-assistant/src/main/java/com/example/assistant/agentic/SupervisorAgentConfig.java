@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SupervisorAgentConfig {
 
-    /** ① 退款专家：只认知识库，防编造。outputKey 让主管拿到"带键的结论"，便于判断该问题是否已回答、避免重复派活 */
+    /** 退款专家：只认知识库，防编造。outputKey 让主管拿到"带键的结论"，便于判断该问题是否已回答、避免重复派活 */
     @Bean
     public UntypedAgent refundAgent(@Qualifier("openAiChatModel") ChatModel chatModel,
                                     RagLookupTool ragLookupTool) {
@@ -50,7 +50,7 @@ public class SupervisorAgentConfig {
                 .build();
     }
 
-    /** ② 物流专家：查时间、算时效 */
+    /** 物流专家：查时间、算时效 */
     @Bean
     public UntypedAgent logisticsAgent(@Qualifier("openAiChatModel") ChatModel chatModel,
                                        TimeTools timeTools) {
@@ -63,7 +63,7 @@ public class SupervisorAgentConfig {
                 .build();
     }
 
-    /** ③ 技术专家：算数、百分比 */
+    /** 技术专家：算数、百分比 */
     @Bean
     public UntypedAgent techAgent(@Qualifier("openAiChatModel") ChatModel chatModel,
                                   CalculatorTools calculatorTools) {
@@ -76,7 +76,7 @@ public class SupervisorAgentConfig {
                 .build();
     }
 
-    /** ④ 主管：自主决定派活。maxAgentsInvocations(3) 为派发子 Agent 的总次数硬上限（agentic 模块默认=10，过大易重复派活），简单客服问题 3 次足够 */
+    /** 主管：自主决定派活。maxAgentsInvocations(3) 为派发子 Agent 的总次数硬上限（agentic 模块默认=10，过大易重复派活），简单客服问题 3 次足够 */
     @Bean
     public SupervisorAgent serviceSupervisor(@Qualifier("openAiChatModel") ChatModel chatModel,
                                                     ChatMemoryProvider chatMemoryProvider,

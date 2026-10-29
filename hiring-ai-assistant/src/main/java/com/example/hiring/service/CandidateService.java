@@ -78,33 +78,33 @@ public class CandidateService {
             return handleOfferTimeout(candidateId);
         }
 
-        // 1. 读候选人（MySQL）
+        // 读候选人（MySQL）
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null) {
             throw new IllegalArgumentException("Candidate not found: " + candidateId);
         }
         CandidateStatus oldStatus = candidate.getStatus();
 
-        // 2. 应用覆盖字段（verdict / matchScore 等持久化字段）
+        // 应用覆盖字段（verdict / matchScore 等持久化字段）
         applyOverrides(candidate, overrides);
 
-        // 3. 状态机处理（同机 ExtendedState + DB 状态重置，返回新状态或 null）
+        // 状态机处理（同机 ExtendedState + DB 状态重置，返回新状态或 null）
         CandidateStatus newStatus = fsmService.sendEvent(candidate, event, overrides);
 
-        // 4. 拒绝则原样返回（不改库）
+        // 拒绝则原样返回（不改库）
         if (newStatus == null) {
             log.warn("[CandidateService] event {} rejected by StateMachine, candidate unchanged", event);
             return candidate;
         }
 
-        // 5. 更新状态 + 副作用（轮次/延迟事件/审计）
+        // 更新状态 + 副作用（轮次/延迟事件/审计）
         candidate.setStatus(newStatus);
         handleSideEffects(event, candidate, oldStatus, newStatus);
         candidate.setUpdatedAt(Instant.now());
         candidateMapper.updateById(candidate);
         recordEvent(candidate, event, oldStatus, newStatus);
 
-        // 6. 发布状态迁移事件（事件驱动编排：CandidatePipelineService 监听并触发下一个 Agent）
+        // 发布状态迁移事件（事件驱动编排：CandidatePipelineService 监听并触发下一个 Agent）
         eventPublisher.publishEvent(new CandidateTransitionedEvent(candidateId, oldStatus, newStatus, event));
 
         log.info("[CandidateService] candidateId={} {} → {}", candidateId, oldStatus, newStatus);

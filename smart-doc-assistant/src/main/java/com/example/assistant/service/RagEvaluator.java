@@ -83,13 +83,13 @@ public class RagEvaluator {
         int faithfulCount = 0, correctCount = 0;
 
         for (GoldenCase c : goldenSet.cases()) {
-            // ① 检索：直接跑 Ch12 装配好的 RetrievalAugmentor（向量+关键词→RRF 融合→重排）
+            // 检索：直接跑 Ch12 装配好的 RetrievalAugmentor（向量+关键词→RRF 融合→重排）
             UserMessage um = UserMessage.from(c.question());
             AugmentationResult aug = retrievalAugmentor.augment(
                     new AugmentationRequest(um, Metadata.from(um, "eval", List.of())));
             List<Content> contents = aug.contents();
 
-            // ② 取文本 + 分数，构造片段列表
+            // 取文本 + 分数，构造片段列表
             List<RetrievedChunk> chunks = new ArrayList<>();
             List<String> texts = new ArrayList<>();
             int rank = 0;
@@ -100,7 +100,7 @@ public class RagEvaluator {
                 texts.add(text);
             }
 
-            // ③ 检索指标：Recall@K + MRR
+            // 检索指标：Recall@K + MRR
             String needle = c.expectedContextContains().toLowerCase();
             boolean h1 = containsAt(texts, needle, 1);
             boolean h3 = containsAt(texts, needle, 3);
@@ -111,7 +111,7 @@ public class RagEvaluator {
             hit5 += h5 ? 1 : 0;
             mrrSum += mrr;
 
-            // ④ 答案评估（可选）：端到端回答 + 忠实度 / 正确性 LLM-as-Judge
+            // 答案评估（可选）：端到端回答 + 忠实度 / 正确性 LLM-as-Judge
             String answer = null;
             Boolean faithful = null;
             Boolean correct = null;

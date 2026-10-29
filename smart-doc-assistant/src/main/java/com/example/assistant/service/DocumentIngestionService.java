@@ -185,27 +185,27 @@ public class DocumentIngestionService implements ApplicationRunner {
      * 所有数据源最终都汇聚到这里。
      */
     private void ingest(List<Document> documents) {
-        // 0. 盖元数据章：docId/category 此前只有读侧没有写侧，检索结果里永远是 null
+        // 盖元数据章：docId/category 此前只有读侧没有写侧，检索结果里永远是 null
         stampMetadata(documents);
 
-        // 1. 清洗：去 BOM/零宽/多余空白/分隔线，统一换行
+        // 清洗：去 BOM/零宽/多余空白/分隔线，统一换行
         List<Document> cleaned = documentCleaner.transformAll(documents);
         log.info("清洗完成（{} → {} 文档）", documents.size(), cleaned.size());
 
-        // 2. 分块：父子分块（Ch12，默认开）或扁平分块（Ch10 旧行为）
+        // 分块：父子分块（Ch12，默认开）或扁平分块（Ch10 旧行为）
         List<TextSegment> segments = parentChild
                 ? splitIntoParentChild(cleaned)
                 : DocumentSplitters.recursive(chunkSize, chunkOverlap).splitAll(cleaned);
         log.info("分块完成：{} 个文档 → {} 个块（parent-child={}）",
                 cleaned.size(), segments.size(), parentChild);
 
-        // 2.5 填充关键词检索索引（混合检索的"全文"一路）
+        // 填充关键词检索索引（混合检索的"全文"一路）
         lexicalSegmentIndex.addAll(segments);
 
-        // 3. 嵌入
+        // 嵌入
         List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
 
-        // 4. 入库
+        // 入库
         embeddingStore.addAll(embeddings, segments);
 
         documentCount.addAndGet(cleaned.size());

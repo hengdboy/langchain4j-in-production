@@ -16,9 +16,9 @@ import java.util.Map;
  * FSM 状态机服务：以 MySQL 为事实源封装 sendEvent / persist。
  *
  * <p>三个集成 bug 的教训（上一版项目实测，本项目同样适用）：
- * ① ExtendedState 必须与事件在同一台状态机实例上构建，写到 A 台、发到 B 台，
- * Guard 永远读不到值；② 每次事件前用 DB 的 candidate.status resetStateMachine，
- * MySQL 是唯一事实源，否则机器从初始态出发；③ 新状态以 sendEvent 返回值为准、
+ * ExtendedState 必须与事件在同一台状态机实例上构建，写到 A 台、发到 B 台，
+ * Guard 永远读不到值；每次事件前用 DB 的 candidate.status resetStateMachine，
+ * MySQL 是唯一事实源，否则机器从初始态出发；新状态以 sendEvent 返回值为准、
  * 由调用方落库——事后从 DB 回读发生在更新之前，永远读到旧值。
  *
  * <p>sendEvent 转换成功返回新状态；Guard 拒绝或状态不匹配返回 null，
@@ -45,11 +45,11 @@ public class CandidateStateMachineService {
                                      Map<String, Object> overrides) {
         Long candidateId = candidate.getId();
 
-        // 1. 从工厂按 machineId 获取 StateMachine 实例
+        // 从工厂按 machineId 获取 StateMachine 实例
         StateMachine<CandidateStatus, FsmEvent> sm =
                 stateMachineFactory.getStateMachine(candidateId.toString());
 
-        // 2. 构建 ExtendedState（同一机器；来自 candidate 字段 + overrides）
+        // 构建 ExtendedState（同一机器；来自 candidate 字段 + overrides）
         // 不能有 null 值：resetStateMachine 拷进 ConcurrentHashMap 时 null 值抛 NPE
         Map<String, Object> extended = buildExtendedState(candidate);
         if (overrides != null) {
@@ -58,23 +58,23 @@ public class CandidateStateMachineService {
             });
         }
 
-        // 3. 以 DB 状态为事实源重置（修复 bug 2）
+        // 以 DB 状态为事实源重置（修复 bug 2）
         DefaultStateMachineContext<CandidateStatus, FsmEvent> ctx =
                 new DefaultStateMachineContext<>(candidate.getStatus(), null, new HashMap<>(),
                         new DefaultExtendedState(new HashMap<>(extended)));
         sm.getStateMachineAccessor().doWithAllRegions(access -> access.resetStateMachine(ctx));
 
-        // 4. 启动（幂等）+ 把业务上下文写入同一机器的 ExtendedState
+        // 启动（幂等）+ 把业务上下文写入同一机器的 ExtendedState
         sm.startReactively().block();
         sm.getExtendedState().getVariables().put("candidateId", candidateId);
         sm.getExtendedState().getVariables().putAll(extended);
 
-        // 5. 发送事件（同步）
+        // 发送事件（同步）
         CandidateStatus before = sm.getState().getId();
         sm.sendEvent(MessageBuilder.withPayload(event).build());
         CandidateStatus after = sm.getState().getId();
 
-        // 6. 判定是否真正发生状态迁移
+        // 判定是否真正发生状态迁移
         // Spring StateMachine 的 sendEvent 布尔返回值在 Guard 拒绝时仍返回 true，
         // 唯一可靠信号是状态前后是否变化；超时类自循环已移出 FSM。
         if (before == after) {
@@ -85,7 +85,7 @@ public class CandidateStateMachineService {
 
         CandidateStatus newStatus = after;
 
-        // 7. 写透 Redis 快照（非事实源，审计/观测用）
+        // 写透 Redis 快照（非事实源，审计/观测用）
         persist.save(newStatus, extended, candidateId);
 
         log.info("[FSM Service] candidateId={} event={} → {} (state: {})",

@@ -71,7 +71,7 @@ public class AdvancedRagConfig {
             @Value("${chat.rag.reranker.min-score:0.0}") Double rerankMinScore,
             @Value("${chat.rag.reranker.max-results:5}") int rerankMaxResults) {
 
-        // ① 向量一路（父子展开）
+        // 向量一路（父子展开）
         EmbeddingStoreContentRetriever vector = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
@@ -80,7 +80,7 @@ public class AdvancedRagConfig {
                 .build();
         ContentRetriever vectorRetriever = new ParentChildEmbeddingStoreRetriever(vector);
 
-        // ② 混合一路：关键词（可关闭）；两路一起进路由器
+        // 混合一路：关键词（可关闭）；两路一起进路由器
         List<ContentRetriever> retrievers = new ArrayList<>();
         retrievers.add(vectorRetriever);
         if (keywordEnabled) {
@@ -88,7 +88,7 @@ public class AdvancedRagConfig {
         }
         QueryRouter router = query -> retrievers;
 
-        // ③ 融合（RRF）+ 重排；外层包去重，消掉向量/关键词两路的重复父块
+        // 融合（RRF）+ 重排；外层包去重，消掉向量/关键词两路的重复父块
         ReRankingContentAggregator rerankingAggregator = ReRankingContentAggregator.builder()
                 .scoringModel(embeddingScoringModel)
                 .minScore(rerankMinScore)

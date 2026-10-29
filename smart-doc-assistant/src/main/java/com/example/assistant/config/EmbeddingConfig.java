@@ -34,7 +34,7 @@ import redis.clients.jedis.UnifiedJedis;
 @Configuration
 public class EmbeddingConfig {
 
-    /** ① 本地 ONNX 模型：All-MiniLM-L6-v2，384 维，多语言（含中文） */
+    /** 本地 ONNX 模型：All-MiniLM-L6-v2，384 维，多语言（含中文） */
     @Bean
     @ConditionalOnProperty(name = "chat.embedding.provider",
             havingValue = "local", matchIfMissing = true)
@@ -42,7 +42,7 @@ public class EmbeddingConfig {
         return new AllMiniLmL6V2EmbeddingModel();
     }
 
-    /** ② 阿里百炼模型：text-embedding-v4，1024 维（OpenAI 兼容接口） */
+    /** 阿里百炼模型：text-embedding-v4，1024 维（OpenAI 兼容接口） */
     @Bean
     @ConditionalOnProperty(name = "chat.embedding.provider", havingValue = "bailian")
     public EmbeddingModel bailianEmbeddingModel(

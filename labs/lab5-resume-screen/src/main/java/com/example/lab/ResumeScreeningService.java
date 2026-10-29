@@ -61,9 +61,9 @@ public final class ResumeScreeningService {
     }
 
     public ScreeningResult screen(String jd, String resumeText) {
-        String masked = PiiRedactor.redact(resumeText);   // ① 模型只见打码版
-        ScreeningResult raw = assistant.screen(jd, masked);  // ② 结构化打分
-        raw.normalizedGrade = normalizeGrade(raw.grade);  // ③ 口径归一（原始字符串保留在 grade 字段）
+        String masked = PiiRedactor.redact(resumeText);   // 模型只见打码版
+        ScreeningResult raw = assistant.screen(jd, masked);  // 结构化打分
+        raw.normalizedGrade = normalizeGrade(raw.grade);  // 口径归一（原始字符串保留在 grade 字段）
         if (raw.matchScore < 0) raw.matchScore = 0;
         if (raw.matchScore > 100) raw.matchScore = 100;
         if (!PiiRedactor.isClean(raw.strengthsSummary + raw.risksSummary)) {

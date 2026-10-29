@@ -43,14 +43,14 @@ public class SkillConfig {
     @Bean
     public Skills appSkills(RagLookupTool ragLookupTool,
                             ObjectProvider<McpToolProvider> mcpToolProvider) {
-        // ① 从 classpath 加载 skills/ 下的所有 SKILL.md
+        // 从 classpath 加载 skills/ 下的所有 SKILL.md
         List<Skill> loaded = ClassPathSkillLoader.loadSkills("skills");
         log.info("加载到 {} 个技能: {}", loaded.size(),
                 loaded.stream().map(Skill::name).toList());
 
         McpToolProvider mcp = mcpToolProvider.getIfAvailable();
 
-        // ② 给技能绑定 skill-scoped 工具（编程式重建，源码核实 Skill.builder()）
+        // 给技能绑定 skill-scoped 工具（编程式重建，源码核实 Skill.builder()）
         List<Skill> enhanced = loaded.stream().map(s -> {
             if ("refund-policy".equals(s.name())) {
                 return Skill.builder()

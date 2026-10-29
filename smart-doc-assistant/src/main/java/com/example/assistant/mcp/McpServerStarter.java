@@ -75,14 +75,14 @@ public final class McpServerStarter {
     private McpServerStarter() {}
 
     public static void main(String[] args) throws Exception {
-        // 1. 禁用 Spring Boot logging system（避免 Spring Boot 自动配置接管 Logback）
+        // 禁用 Spring Boot logging system（避免 Spring Boot 自动配置接管 Logback）
         System.setProperty("org.springframework.boot.logging.LoggingSystem", "none");
-        // 2. 编程式把 Logback root logger 重定向到 System.err（P0-5 修复）
+        // 编程式把 Logback root logger 重定向到 System.err（P0-5 修复）
         redirectLogbackToStderr();
 
         System.err.println("[smart-doc-assistant MCP Server] starting stdio transport...");
 
-        // 3. 精准加载 Spring 上下文：跳过 Spring Boot 全套自动装配
+        // 精准加载 Spring 上下文：跳过 Spring Boot 全套自动装配
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
         StdioMcpServerTransport transport = null;
         try {
@@ -92,24 +92,24 @@ public final class McpServerStarter {
             loadClasspathYaml(ctx);
             ctx.refresh();
 
-            // 4. 取出核心 Bean
+            // 取出核心 Bean
             EmbeddingModel embeddingModel = ctx.getBean(EmbeddingModel.class);
             EmbeddingStore<TextSegment> embeddingStore = ctx.getBean(EmbeddingStore.class);
             RetrievalAugmentor retrievalAugmentor = ctx.getBean(RetrievalAugmentor.class);
 
-            // 5. 通过工厂方法构造 MCP Server（避免与 McpServerConfig 重复装配代码——P2-4）
+            // 通过工厂方法构造 MCP Server（避免与 McpServerConfig 重复装配代码——P2-4）
             McpServer server = McpServerFactory.create(embeddingModel, embeddingStore, retrievalAugmentor);
             transport = new StdioMcpServerTransport(server);
 
             System.err.println("MCP Server ready on stdio: smart-doc-assistant v0.17.0 (tools="
                     + KnowledgeBaseMcpTools.TOOL_NAMES + ")");
 
-            // 6. 阻塞主线程直到客户端断开；不再 try-with-resources 包 ctx，
+            // 阻塞主线程直到客户端断开；不再 try-with-resources 包 ctx，
             // 否则 awaitClose() 抛异常时 ctx.close() 可能不执行（P0-4 修复）
             transport.awaitClose();
             System.err.println("MCP Server shutdown complete.");
         } finally {
-            // 7. 显式按反顺序释放：先停 transport，再关 Spring ctx
+            // 显式按反顺序释放：先停 transport，再关 Spring ctx
             try {
                 if (transport != null) {
                     transport.close();

@@ -61,7 +61,7 @@ flowchart LR
 
 ### 14.3.1 ReAct 是什么
 
-ReAct（Yao et al., 2022）提出的范式：让 LLM 交替进行**推理（Thought）**和**行动（Action）**，每次行动后观察结果（Observation），再决定下一步——而不是一次性拍板答案：
+ReAct（Yao et al., 2022）提出的范式：让 LLM 交替进行**推理**（Thought）和**行动**（Action），每次行动后观察结果（Observation），再决定下一步——而不是一次性拍板答案：
 
 ```text
 Question: 退款审核要多久？3 个工作日等于多少小时？

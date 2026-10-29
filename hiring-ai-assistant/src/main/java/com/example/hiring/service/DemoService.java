@@ -57,11 +57,11 @@ public class DemoService {
                 : true;
 
         List<String> steps = new ArrayList<>();
-        // 1. 职位（幂等：已存在直接用）
+        // 职位（幂等：已存在直接用）
         JobPosition job = ensureJob();
         steps.add("job: id=" + job.getId() + " title=" + job.getTitle());
 
-        // 2. c1 强匹配 → HIRED 全链路
+        // c1 强匹配 → HIRED 全链路
         Long c1 = pipeline.submit(new CreateCandidateRequest(
                 demoEmail("star"), null, null, job.getId(), STRONG_RESUME), useRealAgent).getId();
         steps.add("c1(强匹配): APPLIED → " + statusOf(c1));
@@ -72,17 +72,17 @@ public class DemoService {
         pipeline.reply(c1, "接受 offer，期待入职", useRealAgent);
         steps.add("c1: 接受 offer → " + statusOf(c1));
 
-        // 3. c2 弱匹配 → REJECTED
+        // c2 弱匹配 → REJECTED
         Long c2 = pipeline.submit(new CreateCandidateRequest(
                 demoEmail("weak"), null, null, job.getId(), WEAK_RESUME), useRealAgent).getId();
         steps.add("c2(弱匹配): APPLIED → " + statusOf(c2));
 
-        // 4. c3 注入简历 → 冷处理
+        // c3 注入简历 → 冷处理
         Long c3 = pipeline.submit(new CreateCandidateRequest(
                 demoEmail("inject"), null, null, job.getId(), INJECTION_RESUME), useRealAgent).getId();
         steps.add("c3(注入): APPLIED → " + statusOf(c3));
 
-        // 5. c4 歧视字段简历 → 入围但画像干净
+        // c4 歧视字段简历 → 入围但画像干净
         CandidateContext c4 = pipeline.submit(new CreateCandidateRequest(
                 demoEmail("pii"), null, null, job.getId(), PII_RESUME), useRealAgent);
         steps.add("c4(歧视字段): APPLIED → " + statusOf(c4.getId())

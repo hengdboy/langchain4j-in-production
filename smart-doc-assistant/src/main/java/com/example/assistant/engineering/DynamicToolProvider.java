@@ -29,12 +29,12 @@ import java.util.Set;
  * <pre>
  * provideTools(request)
  * │
- * ├─① 意图路由 IntentRouter  ：用户问题 → 候选业务域（refund/logistics/calc）
+ * ├─意图路由 IntentRouter  ：用户问题 → 候选业务域（refund/logistics/calc）
  * │                              （轻量 LLM 分类，关键词兜底，解决漏召回）
  * │
- * ├─② 域→工具映射 ToolCatalog ：业务域 → 该域下全部工具 Entry
+ * ├─域→工具映射 ToolCatalog ：业务域 → 该域下全部工具 Entry
  * │
- * └─③ 租户/角色闸门 TenantToolFilter：按 RequestContext 的 tenantId/role 过滤
+ * └─租户/角色闸门 TenantToolFilter：按 RequestContext 的 tenantId/role 过滤
  * （安全红线，防越权）
  * </pre>
  *
@@ -114,16 +114,16 @@ public class DynamicToolProvider implements ToolProvider {
         String userId = RequestContext.userId();
         requestContexts.put(request.chatMemoryId(), new String[]{tenantId, userId, role});
 
-        // ① 意图路由：问题 → 候选业务域
+        // 意图路由：问题 → 候选业务域
         List<String> domains = intentRouter.route(text);
 
-        // ② 域 → 候选工具
+        // 域 → 候选工具
         List<ToolCatalog.Entry> candidates = new ArrayList<>();
         for (String d : domains) {
             candidates.addAll(catalog.byDomain(d));
         }
 
-        // ③ 租户/角色闸门（暴露时筛选）
+        // 租户/角色闸门（暴露时筛选）
         List<ToolCatalog.Entry> allowed = tenantFilter.filter(candidates, tenantId, role);
 
         Map<ToolSpecification, ToolExecutor> selected = new HashMap<>();

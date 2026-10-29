@@ -64,10 +64,10 @@ public class EngineeringAgentConfig {
         return AiServices.builder(EngineeringAgent.class)
                 .chatModel(chatModel)
                 .chatMemoryProvider(chatMemoryProvider)
-                .toolProvider(dynamicToolProvider)                 // ① 动态工具
+                .toolProvider(dynamicToolProvider)                 // 动态工具
                 .beforeToolExecution(bte -> log.debug("即将执行工具 [{}]", bte.request().name()))
                 .afterToolExecution(te -> {
-                    // ② 审计：回调可能跑在并发执行的虚拟线程上，ThreadLocal 无请求上下文，
+                    // 审计：回调可能跑在并发执行的虚拟线程上，ThreadLocal 无请求上下文，
                     // 租户/用户从 provideTools 在请求线程捕获的快照里取（DynamicToolProvider.contextFor）
                     Object memoryId = te.invocationContext().chatMemoryId();
                     String[] ctx = dynamicToolProvider.contextFor(memoryId);
@@ -81,9 +81,9 @@ public class EngineeringAgentConfig {
                                 te.result(), te.hasFailed(), te.startTime());
                     }
                 })
-                .executeToolsConcurrently()                        // ③ 并发执行
+                .executeToolsConcurrently()                        // 并发执行
                 .maxToolCallingRoundTrips(10)
-                // ⑤ 错误处理三件套：工具异常 / 参数解析失败 / 幻觉工具名，都兜底成友好文本引导模型纠正
+                // 错误处理三件套：工具异常 / 参数解析失败 / 幻觉工具名，都兜底成友好文本引导模型纠正
                 .toolExecutionErrorHandler((throwable, context) -> {
                     String tool = context.toolExecutionRequest().name();
                     log.warn("[错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
@@ -99,7 +99,7 @@ public class EngineeringAgentConfig {
                 .hallucinatedToolNameStrategy(request ->
                         ToolExecutionResultMessage.from(request,
                                 "工具 [" + request.name() + "] 不存在，请只使用系统提供的工具。"))
-                .registerListener(completedListener())             // ④ 可观测性
+                .registerListener(completedListener())             // 可观测性
                 .build();
     }
 

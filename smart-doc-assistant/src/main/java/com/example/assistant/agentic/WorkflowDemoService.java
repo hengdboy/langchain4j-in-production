@@ -50,7 +50,7 @@ public class WorkflowDemoService {
         buildMapper();
     }
 
-    // ===== ① 并行：查知识库 + 算折扣 同时进行，结果合并 =====
+    // ===== 并行：查知识库 + 算折扣 同时进行，结果合并 =====
 
     private void buildParallel() {
         UntypedAgent faqAgent = AgenticServices.agentBuilder()
@@ -86,7 +86,7 @@ public class WorkflowDemoService {
         return result == null ? "（无输出）" : String.valueOf(result);
     }
 
-    // ===== ② 循环：评分 → 修改 → 再评分，直到 score≥8 或最多 3 轮 =====
+    // ===== 循环：评分 → 修改 → 再评分，直到 score≥8 或最多 3 轮 =====
 
     private void buildLoop() {
         UntypedAgent reviewer = AgenticServices.agentBuilder()
@@ -129,7 +129,7 @@ public class WorkflowDemoService {
         return result == null ? "（无输出）" : String.valueOf(result);
     }
 
-    // ===== ③ 条件：按问题关键词选专家 =====
+    // ===== 条件：按问题关键词选专家 =====
 
     private void buildConditional() {
         UntypedAgent refundExpert = AgenticServices.agentBuilder()
@@ -173,7 +173,7 @@ public class WorkflowDemoService {
         return false;
     }
 
-    // ===== ④ 并行映射：对一组主题并行生成卖点 =====
+    // ===== 并行映射：对一组主题并行生成卖点 =====
 
     private void buildMapper() {
         // 子 Agent 与顶层都必须用 typed 接口（UntypedAgent 在 beta29 报 argument type mismatch）

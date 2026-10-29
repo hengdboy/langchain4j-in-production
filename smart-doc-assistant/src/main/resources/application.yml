@@ -15,7 +15,7 @@ langchain4j:
   open-ai:
     chat-model:
       # ---------- 默认模型：DashScope qwen3.7-flash（中文生产推荐；走 OpenAI 兼容端点） ----------
-      # ⚠️ 安全说明：真实 key 必须放在 application-local.yml（已被 .gitignore 排除）
+      # 安全说明：真实 key 必须放在 application-local.yml（已被 .gitignore 排除）
       api-key: ${DASHSCOPE_API_KEY:sk-replace-me}
       model-name: qwen3.7-flash-2026-07-15
       base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
@@ -30,7 +30,7 @@ langchain4j:
       log-responses: false
       # Ch07 注：默认模型用 text 格式，保证普通对话不会被 JSON 格式约束
       response-format: text
-      # ⚠️ listeners 不要在这里配——ObservabilityConfig 的 @Bean 已经注入，
+      # listeners 不要在这里配——ObservabilityConfig 的 @Bean 已经注入，
       # yml 属性 + @Bean 两路同时配 = 同一 listener 注册两次 = CostTracker token 翻倍（Ch22 坑点 9）
 
     # ---------- 流式对话模型（Ch04 SSE）----------

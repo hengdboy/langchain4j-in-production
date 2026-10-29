@@ -23,7 +23,7 @@
 | 项目内工具 | 无法分享给其他 AI 应用（换框架全重写） |
 | 工具清单散落 | 模型不知道"这台机器上到底有哪些工具可用" |
 
-**MCP（Model Context Protocol，模型上下文协议）**是 Anthropic 在 2024 年底提出的**开放标准**：定义"AI 应用 ↔ 工具/数据源"的统一协议，让任何 MCP 服务器（文件系统、GitHub、数据库……）都能被任何 MCP 客户端（LangChain4j、Claude、Cursor……）即插即用。业界把它比作**"工具的 USB-C 接口"**。
+**MCP（Model Context Protocol，模型上下文协议）** 是 Anthropic 在 2024 年底提出的**开放标准**：定义"AI 应用 ↔ 工具/数据源"的统一协议，让任何 MCP 服务器（文件系统、GitHub、数据库……）都能被任何 MCP 客户端（LangChain4j、Claude、Cursor……）即插即用。业界把它比作 **"工具的 USB-C 接口"**。
 
 ```mermaid
 flowchart TB

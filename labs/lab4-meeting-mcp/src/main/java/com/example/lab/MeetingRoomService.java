@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Lab4 会议室领域服务：预订/取消/冲突检测——MCP 只是"怎么暴露"，业务在这里。
  *
  * <p>三条业务规则（也是护栏的落点）：
- * ① 单次预订 ≤ 4 小时；② 同一房间同时段冲突直接拒绝；③ 过去日期/已开始的预订不可操作。
+ * 单次预订 ≤ 4 小时；同一房间同时段冲突直接拒绝；过去日期/已开始的预订不可操作。
  */
 public final class MeetingRoomService {
 

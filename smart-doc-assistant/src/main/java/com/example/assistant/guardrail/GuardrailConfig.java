@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
  * <h2>官方 Guardrail 的 AiServices 集成</h2>
  * <p>本项目的 {@link InputGuard} / {@link OutputGuard} 是 <strong>Application 层</strong> 防护；
  * 官方 {@code PatternBasedPromptInjectionGuardrail} / {@code JsonExtractorOutputGuardrail}
- * 是 <strong>AiServices 层</strong> 防护——两者叠加使用，详见 。
+ * 是 <strong>AiServices 层</strong> 防护——两者叠加使用，详见 Ch21.3。
  *
  * @author langchain4j-tutorial
  * @since v0.18

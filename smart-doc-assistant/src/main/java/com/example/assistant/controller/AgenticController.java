@@ -17,27 +17,27 @@ import java.util.Map;
  *
  * <p>用法：
  * <pre>
- * # ① 顺序工作流：主题 → 撰写初稿 → 精简成一句卖点
+ * 顺序工作流：主题 → 撰写初稿 → 精简成一句卖点
  * curl -X POST http://localhost:8090/api/agentic/workflow \
  * -H "Content-Type: application/json" -d '{"topic":"智能咖啡机"}'
  *
- * # ② Supervisor 自主编排：主管分派给退款/物流/技术专家
+ * Supervisor 自主编排：主管分派给退款/物流/技术专家
  * curl -X POST http://localhost:8090/api/agentic/supervisor \
  * -H "Content-Type: application/json" -d '{"question":"七天无理由退货怎么退？运费谁出？"}'
  *
- * # ③ 并行工作流：查政策 + 算价格 同时执行
+ * 并行工作流：查政策 + 算价格 同时执行
  * curl -X POST http://localhost:8090/api/agentic/parallel \
  * -H "Content-Type: application/json" -d '{"q1":"七天无理由退货的条件？","q2":"500 元打 8 折是多少"}'
  *
- * # ④ 循环工作流：初稿反复"评分→修改"直到 ≥8 分或 3 轮
+ * 循环工作流：初稿反复"评分→修改"直到 ≥8 分或 3 轮
  * curl -X POST http://localhost:8090/api/agentic/loop \
  * -H "Content-Type: application/json" -d '{"text":"我们的咖啡机很厉害"}'
  *
- * # ⑤ 条件工作流：按关键词选专家
+ * 条件工作流：按关键词选专家
  * curl -X POST http://localhost:8090/api/agentic/conditional \
  * -H "Content-Type: application/json" -d '{"q":"退货运费谁出"}'
  *
- * # ⑥ 并行映射：一组主题并行生成卖点
+ * 并行映射：一组主题并行生成卖点
  * curl -X POST http://localhost:8090/api/agentic/mapper \
  * -H "Content-Type: application/json" -d '{"topics":["咖啡机","空气炸锅","扫地机器人"]}'
  * </pre>

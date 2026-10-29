@@ -50,7 +50,7 @@ private static final List<Map<String, String>> DOCUMENTS = List.of(
 
 ### 10.1.3 流水线在 RAG 中的位置
 
-RAG 有两条链路，文档处理流水线属于**索引链路（Indexing Pipeline）**的前半段：
+RAG 有两条链路，文档处理流水线属于**索引链路**（Indexing Pipeline）的前半段：
 
 ![文档处理流水线：索引链路决定查询链路的召回上限](../assets/ch10-ingestion-pipeline.png)
 
@@ -540,10 +540,10 @@ private final EmbeddingStore<TextSegment> embeddingStore;
 ### 10.7.2 批量嵌入与入库
 
 ```java
-// 3. 嵌入
+// 嵌入
 List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
 
-// 4. 入库
+// 入库
 embeddingStore.addAll(embeddings, segments);
 ```
 
@@ -599,24 +599,24 @@ flowchart TB
  * 所有数据源最终都汇聚到这里。
  */
 private void ingest(List<Document> documents) {
-    // 1. 清洗：去 BOM/零宽/多余空白/分隔线，统一换行
+    // 清洗：去 BOM/零宽/多余空白/分隔线，统一换行
     List<Document> cleaned = documentCleaner.transformAll(documents);
     log.info(" 清洗完成（{} → {} 文档）", documents.size(), cleaned.size());
 
-    // 2. 分块：父子分块（Ch12，默认开）或扁平分块（Ch10 旧行为）
+    // 分块：父子分块（Ch12，默认开）或扁平分块（Ch10 旧行为）
     List<TextSegment> segments = parentChild
             ? splitIntoParentChild(cleaned)
             : DocumentSplitters.recursive(chunkSize, chunkOverlap).splitAll(cleaned);
             log.info(" 分块完成：{} 个文档 → {} 个块（parent-child={}）",
             cleaned.size(), segments.size(), parentChild);
 
-    // 2.5 填充关键词检索索引（混合检索的"全文"一路，Ch12）
+    // 填充关键词检索索引（混合检索的"全文"一路，Ch12）
     lexicalSegmentIndex.addAll(segments);
 
-    // 3. 嵌入
+    // 嵌入
     List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
 
-    // 4. 入库
+    // 入库
     embeddingStore.addAll(embeddings, segments);
 
     documentCount.addAndGet(cleaned.size());

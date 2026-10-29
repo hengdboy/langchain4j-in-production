@@ -23,14 +23,14 @@ import java.util.Map;
  *
  * <p>用法：
  * <pre>
- * # ① 工具原语：问 Agent，让它调用 MCP 服务器暴露的工具
+ * 工具原语：问 Agent，让它调用 MCP 服务器暴露的工具
  * curl -X POST http://localhost:8090/api/mcp/ask \
  * -H "Content-Type: application/json" -d '{"question":"3 加 4 等于多少？"}'
  *
- * # ② 资源原语：列出 MCP 服务器上的资源
+ * 资源原语：列出 MCP 服务器上的资源
  * curl http://localhost:8090/api/mcp/resources
  *
- * # ③ 资源原语：读取指定资源内容
+ * 资源原语：读取指定资源内容
  * curl "http://localhost:8090/api/mcp/resource?uri=docs://demo/protocol-notes"
  * </pre>
  *

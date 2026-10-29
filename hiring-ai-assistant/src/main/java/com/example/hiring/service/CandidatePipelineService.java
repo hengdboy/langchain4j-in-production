@@ -161,9 +161,9 @@ public class CandidatePipelineService {
         log.info("[Pipeline] submit candidateId={} email={} jobId={} realAgent={}",
                 candidate.getId(), candidate.getEmail(), req.jobId(), realAgentEnabled());
 
-        // 2. 注入检测（确定性预检，对象是简历原文——不可信第三方文本，不依赖 LLM 在场）
+        // 注入检测（确定性预检，对象是简历原文——不可信第三方文本，不依赖 LLM 在场）
         // 直接调 validate() 只会返回 FATAL 结果、不抛异常（抛异常是 AiServices 接线后的行为），
-        // 所以这里必须检查返回值——这是"护栏裸用"与"挂 Agent 上"的行为差异，见 。
+        // 所以这里必须检查返回值——这是"护栏裸用"与"挂 Agent 上"的行为差异，见 Ch25 §25.3。
         var injectionResult = injectionGuardrail.validate(
                 UserMessage.from(candidate.getResumeText()));
         if (!injectionResult.result().name().startsWith("SUCCESS")) {
@@ -175,13 +175,13 @@ public class CandidatePipelineService {
             return candidateMapper.selectById(candidate.getId());
         }
 
-        // 3. 简历解析（只提取，不评估）
+        // 简历解析（只提取，不评估）
         ResumeParserAgent.ParsedProfile profile = doParse(candidate);
         if (candidate.getName() == null && profile.name() != null) candidate.setName(profile.name());
         if (candidate.getPhone() == null && profile.phone() != null) candidate.setPhone(profile.phone());
         candidateMapper.updateById(candidate);
 
-        // 4. 决策脱敏（白名单过滤：年龄/性别/婚育/籍贯/联系方式根本进不了评估 prompt）
+        // 决策脱敏（白名单过滤：年龄/性别/婚育/籍贯/联系方式根本进不了评估 prompt）
         String fullProfileJson = toJson(profile);
         String redactedJson = decisionFieldFilter.redact(fullProfileJson);
         candidate.setRedactedProfile(redactedJson);
@@ -189,7 +189,7 @@ public class CandidatePipelineService {
         log.info("[Pipeline] candidateId={} decision profile redacted: {} chars → {} chars",
                 candidate.getId(), fullProfileJson.length(), redactedJson.length());
 
-        // 5. 匹配评估
+        // 匹配评估
         MatchEvaluatorAgent.MatchVerdict verdict = doEvaluate(candidate, job);
         String normalized = normalizeVerdict(verdict.verdict());
         String reasonsJson = toJson(verdict.reasons() == null ? List.of() : verdict.reasons());
