@@ -58,7 +58,7 @@ public class McpAuditService {
         writeIndex = (writeIndex + 1) % MAX_ENTRIES;
         if (size < MAX_ENTRIES) size++;
         if (failed) {
-            log.warn(" [MCP Audit] tool={} failed duration={}ms args={}", toolName, durationMs, safeArgs);
+            log.warn("[MCP Audit] tool={} failed duration={}ms args={}", toolName, durationMs, safeArgs);
         } else {
             log.info("[MCP Audit] tool={} duration={}ms", toolName, durationMs);
         }

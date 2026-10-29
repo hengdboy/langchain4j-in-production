@@ -95,7 +95,7 @@ public class DelayedEventQueue {
             try {
                 events.add(decode(m));
             } catch (Exception e) {
-                log.warn(" [DelayedEvent] skip malformed member={}", m, e);
+                log.warn("[DelayedEvent] skip malformed member={}", m, e);
             }
         }
         return events;

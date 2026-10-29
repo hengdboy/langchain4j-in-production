@@ -15,7 +15,7 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.UnifiedJedis;
 
 /**
- * /：Embedding 组件配置。
+ * Ch08/Ch11：Embedding 组件配置。
  *
  * <p>chat.embedding.provider 决定用哪个 Embedding 模型：
  * <ul>
@@ -23,7 +23,7 @@ import redis.clients.jedis.UnifiedJedis;
  * <li>bailian：阿里百炼 text-embedding-v4（OpenAI 兼容接口），1024 维，中文生产推荐</li>
  * </ul>
  *
- * <p>chat.embedding.store（ 新增）决定用哪个向量库：
+ * <p>chat.embedding.store（Ch11 新增）决定用哪个向量库：
  * <ul>
  * <li>inmemory（默认）：进程内存储，重启即失，零依赖</li>
  * <li>redis：Redis Stack（含 RediSearch 模块），可持久化， dimension 必须与模型匹配</li>

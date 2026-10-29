@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ：高级 RAG 管线装配（v0.10）。
+ * Ch12：高级 RAG 管线装配（v0.10）。
  *
  * <p>把三件"提升检索质量"的武器组装进一个 {@link RetrievalAugmentor}：
  * <ol>

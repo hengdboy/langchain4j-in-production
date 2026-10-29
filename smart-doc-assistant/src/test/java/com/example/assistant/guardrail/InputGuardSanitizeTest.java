@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * ：InputGuard 输入清洗（Application 层第一道）。
+ * Ch21：InputGuard 输入清洗（Application 层第一道）。
  *
  * @author langchain4j-tutorial
  * @since v0.19

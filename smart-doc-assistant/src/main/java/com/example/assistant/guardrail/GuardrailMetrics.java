@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </ul>
  *
  * <h2>为什么不用 Micrometer Counter</h2>
- * <p>{@link Counter} 依赖 {@link MeterRegistry}，但  教学版不想强绑 actuator。
+ * <p>{@link Counter} 依赖 {@link MeterRegistry}，但 Ch21 教学版不想强绑 actuator。
  * 本类用 {@link AtomicLong} 自维护 + {@link PostConstruct} 注册到全局 MeterRegistry（如果有）。
  * 既能 standalone 跑，又能接 Micrometer / Prometheus。
  *

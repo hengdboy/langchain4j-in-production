@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * / Prompt 注入检测输入护栏（招聘版增强）。
+ * Ch21/Ch25 Prompt 注入检测输入护栏（招聘版增强）。
  *
  * <h2>为什么招聘场景是注入重灾区</h2>
  * <p>简历是<b>不受信任的第三方文本</b>，却会被直接拼进 prompt。攻击者（或"聪明"的

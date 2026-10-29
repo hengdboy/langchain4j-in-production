@@ -359,17 +359,14 @@ public class DocumentCleaner implements DocumentTransformer {
     public Document transform(Document document) {
         String text = document.text();
 
-        // 1. 去 BOM 与零宽字符
         text = BOM.matcher(text).replaceFirst("");
         text = ZERO_WIDTH.matcher(text).replaceAll("");
 
-        // 2. 统一换行符（\r\n / \r → \n）
         text = text.replace("\r\n", "\n").replace('\r', '\n');
 
-        // 3. 压缩多余空白（保留单个空格与换行）
-        text = MULTI_BLANK.matcher(text).replaceAll("");
+        text = MULTI_BLANK.matcher(text).replaceAll(" ");
 
-        // 4. 过滤纯分隔线行
+        // Markdown 的 --- 分隔行不是正文，按整行匹配过滤
         StringBuilder sb = new StringBuilder();
         for (String line : text.split("\n", -1)) {
             if (!SEPARATOR_LINE.matcher(line).matches()) {
@@ -377,7 +374,6 @@ public class DocumentCleaner implements DocumentTransformer {
             }
         }
 
-        // 5. 压缩连续空行
         String cleaned = MULTI_EMPTY_LINE.matcher(sb.toString()).replaceAll("\n\n").trim();
 
         return Document.from(cleaned, document.metadata().copy());
@@ -611,7 +607,7 @@ private void ingest(List<Document> documents) {
     List<TextSegment> segments = parentChild
             ? splitIntoParentChild(cleaned)
             : DocumentSplitters.recursive(chunkSize, chunkOverlap).splitAll(cleaned);
- log.info("️ 分块完成：{} 个文档 → {} 个块（parent-child={}）",
+            log.info(" 分块完成：{} 个文档 → {} 个块（parent-child={}）",
             cleaned.size(), segments.size(), parentChild);
 
     // 2.5 填充关键词检索索引（混合检索的"全文"一路，Ch12）
@@ -625,7 +621,7 @@ private void ingest(List<Document> documents) {
 
     documentCount.addAndGet(cleaned.size());
     segmentCount.addAndGet(segments.size());
- log.info("入库完成：累计 {} 文档 / {} 块（embedding 维度={}）",
+    log.info("入库完成：累计 {} 文档 / {} 块（embedding 维度={}）",
             documentCount.get(), segmentCount.get(), embeddingModel.dimension());
 }
 ```
@@ -648,7 +644,7 @@ public void run(ApplicationArguments args) {
     try {
         ingestClasspathDocs();
     } catch (Exception e) {
- log.error("启动建库失败", e);
+    log.error("启动建库失败", e);
     }
 }
 
@@ -656,10 +652,10 @@ public void run(ApplicationArguments args) {
 public synchronized void ingestClasspathDocs() {
     List<Document> documents = ClassPathDocumentLoader.loadDocuments(docsClasspath, new TextDocumentParser());
     if (documents.isEmpty()) {
- log.warn("️ classpath:{} 下没有发现文档", docsClasspath);
+    log.warn(" classpath:{} 下没有发现文档", docsClasspath);
         return;
     }
- log.info("从 classpath:{} 加载到 {} 个文档", docsClasspath, documents.size());
+    log.info("从 classpath:{} 加载到 {} 个文档", docsClasspath, documents.size());
     ingest(documents);
 }
 ```
@@ -686,7 +682,7 @@ public synchronized void ingestFromDirectory(String directoryPath) {
         throw new RuntimeException("读取目录失败: " + directoryPath, e);
     }
     if (documents.isEmpty()) {
- log.warn("️ 目录 {} 下没有发现文档", directoryPath);
+    log.warn(" 目录 {} 下没有发现文档", directoryPath);
         return;
     }
     log.info("从目录 {} 加载到 {} 个文档", directoryPath, documents.size());
@@ -724,7 +720,7 @@ public synchronized void clearStore() {
     lexicalSegmentIndex.clear();
     documentCount.set(0);
     segmentCount.set(0);
- log.info("向量库已清空");
+    log.info("向量库已清空");
 }
 ```
 

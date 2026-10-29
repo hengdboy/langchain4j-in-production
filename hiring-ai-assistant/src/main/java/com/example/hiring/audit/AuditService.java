@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 
 /**
- * v0.29  Audit：GDPR 合规审计 service。
+ * v0.29 Ch16 Audit：GDPR 合规审计 service。
  *
  * <h2>职责</h2>
  * <ul>
@@ -72,7 +72,7 @@ public class AuditService {
             auditLogMapper.insert(log);
         } catch (Exception e) {
             // 审计失败不阻塞主流程，但必须记录到日志（合规要求）
-            AuditService.log.error(" [Audit] persist audit_log failed: {}", e.getMessage());
+            AuditService.log.error("[Audit] persist audit_log failed: {}", e.getMessage());
         }
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
  * Lab4 MCP 工具层：把领域服务包成 4 个 @Tool，由官方社区 SDK 暴露给 MCP 客户端。
  *
  * <p>业务异常（{@link MeetingRoomService.BookingException}）直接往上抛——
- * SDK 的 McpServer 会把它包成 isError:true 的结果返回给客户端（ 踩坑清单 #17 的同款行为）。
+ * SDK 的 McpServer 会把它包成 isError:true 的结果返回给客户端（Ch19 踩坑清单 #17 的同款行为）。
  */
 public class MeetingRoomMcpTools {
 

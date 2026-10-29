@@ -244,7 +244,7 @@ public class KnowledgeBaseMcpTools {
     /** P2-5 修复：question null/blank 校验，避免 embeddingModel.embed(null) 抛 NPE */
     private String requireQuestion(String question) {
         if (question == null || question.isBlank()) {
- log.warn("️ [MCP] tool called with empty/null question");
+        log.warn(" [MCP] tool called with empty/null question");
             return "";
         }
         return question;
@@ -676,7 +676,7 @@ public class McpSecurityService {
                     + MIN_API_KEY_LENGTH + " characters (current length=" + (apiKey == null ? 0 : apiKey.length()) + ")");
         }
         if ("dev-mcp-key-replace-in-production".equals(apiKey)) {
- log.warn("️ [MCP Security] Using default API key — change chat.mcp.api-key for production!");
+        log.warn(" [MCP Security] Using default API key — change chat.mcp.api-key for production!");
         }
     }
 

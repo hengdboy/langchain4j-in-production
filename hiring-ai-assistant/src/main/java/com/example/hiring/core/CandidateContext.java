@@ -20,7 +20,7 @@ import java.time.Instant;
  * {@link #inviteRounds} / {@link #offerReminderSent} 支撑延迟事件前置判断</li>
  * <li><b>双画像</b>：{@link #resumeText} 是含 PII 的简历原文（只进库不出决策）；
  * {@link #redactedProfile} 是经 {@code DecisionFieldFilter} 剔除受保护特征后的
- * 决策画像——评估 Agent 只看得见后者（ 歧视防护核心）</li>
+ * 决策画像——评估 Agent 只看得见后者（Ch25 歧视防护核心）</li>
  * <li><b>Agent 共享</b>：{@link #extras}（JSON 字段）跨 Agent 传临时数据</li>
  * </ul>
  *

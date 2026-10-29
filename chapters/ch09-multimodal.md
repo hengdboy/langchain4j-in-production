@@ -565,7 +565,7 @@ public class MultimodalSearchService implements ApplicationRunner {
             float[] vector = embeddingClient.embedImage(doc.imageUrl());
             imageVectors.add(vector);
         }
- log.info("已索引 {} 张图片到多模态向量库（embedding 维度={}）",
+        log.info("已索引 {} 张图片到多模态向量库（embedding 维度={}）",
                 IMAGE_LIBRARY.size(), embeddingClient.dimension());
     }
 

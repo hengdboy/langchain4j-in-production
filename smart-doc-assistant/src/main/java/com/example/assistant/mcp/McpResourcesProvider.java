@@ -15,7 +15,7 @@ import java.util.Optional;
 /**
  * MCP 深度开发：Resource 原语提供者，把 classpath:docs/* 暴露为 MCP resources。
  *
- * <p>MCP Resources 原语（ 节讲过协议、 端到端用过）让服务器暴露"只读数据"——
+ * <p>MCP Resources 原语（Ch17.5 节讲过协议、Ch17.7 端到端用过）让服务器暴露"只读数据"——
  * 文档、图片、配置。客户端通过 {@code resources/list} 发现 URI 清单，{@code resources/read}
  * 按 URI 读取内容。
  *
@@ -51,7 +51,7 @@ public class McpResourcesProvider {
             String uri = URI_SCHEME + name;
             try (InputStream in = getClass().getClassLoader().getResourceAsStream(DOCS_PATH + name)) {
                 if (in == null) {
-                    log.warn(" Resource not found: {}", DOCS_PATH + name);
+                    log.warn("Resource not found: {}", DOCS_PATH + name);
                     continue;
                 }
                 byte[] bytes = in.readAllBytes();

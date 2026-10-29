@@ -78,7 +78,7 @@ public class CandidateStateMachineService {
         // Spring StateMachine 的 sendEvent 布尔返回值在 Guard 拒绝时仍返回 true，
         // 唯一可靠信号是状态前后是否变化；超时类自循环已移出 FSM。
         if (before == after) {
-            log.warn(" [FSM Service] candidateId={} event={} → 未发生状态迁移 (state: {}，Guard 拒绝或无匹配事件)",
+            log.warn("[FSM Service] candidateId={} event={} → 未发生状态迁移 (state: {}，Guard 拒绝或无匹配事件)",
                     candidateId, event, candidate.getStatus());
             return null;
         }

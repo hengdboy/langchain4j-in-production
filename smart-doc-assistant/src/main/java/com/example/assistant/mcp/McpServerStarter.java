@@ -115,12 +115,12 @@ public final class McpServerStarter {
                     transport.close();
                 }
             } catch (Exception e) {
-                System.err.println(" Transport close failed: " + e.getMessage());
+                System.err.println("Transport close failed: " + e.getMessage());
             }
             try {
                 ctx.close();
             } catch (Exception e) {
-                System.err.println(" Context close failed: " + e.getMessage());
+                System.err.println("Context close failed: " + e.getMessage());
             }
         }
     }
@@ -158,7 +158,7 @@ public final class McpServerStarter {
             rootLogger.addAppender(appender);
         } catch (Throwable t) {
             // 日志配置失败不应阻止 MCP Server 启动；降级到 System.err.println
-            System.err.println(" Logback redirect failed, falling back to stderr println: " + t.getMessage());
+            System.err.println("Logback redirect failed, falling back to stderr println: " + t.getMessage());
         }
     }
 
@@ -173,14 +173,14 @@ public final class McpServerStarter {
     private static void loadClasspathYaml(AnnotationConfigApplicationContext ctx) {
         ClassPathResource resource = new ClassPathResource("application.yml");
         if (!resource.exists()) {
-            System.err.println(" application.yml not found on classpath, using @Value defaults");
+            System.err.println("application.yml not found on classpath, using @Value defaults");
             return;
         }
         try {
             List<PropertySource<?>> sources = new YamlPropertySourceLoader().load("application.yml", resource);
             sources.forEach(source -> ctx.getEnvironment().getPropertySources().addLast(source));
         } catch (Exception e) {
-            System.err.println(" Failed to load application.yml, using @Value defaults: " + e.getMessage());
+            System.err.println("Failed to load application.yml, using @Value defaults: " + e.getMessage());
         }
     }
 

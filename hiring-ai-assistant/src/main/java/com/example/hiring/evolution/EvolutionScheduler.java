@@ -53,7 +53,7 @@ public class EvolutionScheduler {
         for (BanditOutcome o : unsettled) {
             CandidateContext candidate = candidateMapper.selectById(o.getCandidateId());
             if (candidate == null) {
-                log.warn(" [EvolutionScheduler] outcome id={} candidateId={} missing, skip",
+                log.warn("[EvolutionScheduler] outcome id={} candidateId={} missing, skip",
                         o.getId(), o.getCandidateId());
                 o.setProcessedAt(java.time.Instant.now());
                 o.setReward(0.0);

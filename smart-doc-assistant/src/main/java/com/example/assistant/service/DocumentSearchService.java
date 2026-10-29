@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * /：文档语义检索服务。
+ * Ch08/Ch10：文档语义检索服务。
  *
- * <p> 起职责收窄为"只做检索"：建库完全移交 {@link DocumentIngestionService}
+ * <p>Ch10 起职责收窄为"只做检索"：建库完全移交 {@link DocumentIngestionService}
  * （启动时从 classpath 加载示例文档 / 手动从目录加载 / 上传文件流式入库）。
  * 本服务保留 /api/search/semantic 接口行为不变，检索内容从硬编码文档变为真实入库文档。
  *

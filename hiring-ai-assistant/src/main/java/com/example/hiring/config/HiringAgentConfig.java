@@ -32,7 +32,7 @@ import java.util.List;
  * <p>Agent 是"叶子"，不做全局自主编排——由
  * {@link com.example.hiring.service.CandidatePipelineService} 按 FSM 状态确定性触发。
  *
- * <h2>护栏分工（ 主题）</h2>
+ * <h2>护栏分工（Ch25 §25.3 主题）</h2>
  * <table border="1">
  * <tr><th>Agent</th><th>输入护栏</th><th>输出护栏</th></tr>
  * <tr><td>ResumeParser</td><td>注入</td><td>—</td></tr>

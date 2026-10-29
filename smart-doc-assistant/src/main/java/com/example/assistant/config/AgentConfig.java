@@ -19,14 +19,14 @@ import java.util.List;
 /**
  * 新增：研究助手 Agent 配置
  *
- * <p>关键设计（与  ToolConfig 同源）：
+ * <p>关键设计（与 Ch06 ToolConfig 同源）：
  * <ul>
  * <li>工具是普通 POJO，集中在此注册为 Bean；</li>
  * <li>{@code maxToolCallingRoundTrips(10)} 限制"模型↔工具"循环轮次，防 LLM 无限循环；</li>
  * <li>{@code chatMemoryProvider} 提供多会话记忆隔离（@MemoryId）。</li>
  * </ul>
  *
- * <p>这里复用了  已有的 {@code timeTools} / {@code calculatorTools} Bean，
+ * <p>这里复用了 Ch06 已有的 {@code timeTools} / {@code calculatorTools} Bean，
  * 并新增 {@code ragLookupTool}（注入 RetrievalAugmentor）。
  */
 @Configuration

@@ -62,7 +62,7 @@ public class SkillConfig {
             }
             if ("mcp-tools".equals(s.name())) {
                 if (mcp == null) {
-                    log.warn("  MCP 已禁用（chat.mcp.enabled=false），技能 [mcp-tools] 降级为纯文本技能（不挂载工具）");
+                    log.warn("MCP 已禁用（chat.mcp.enabled=false），技能 [mcp-tools] 降级为纯文本技能（不挂载工具）");
                     return s;
                 }
                 return Skill.builder()

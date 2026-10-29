@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * ：视觉对话模型配置。
+ * Ch09：视觉对话模型配置。
  *
  * <p>qwen3.7-flash 原生支持图像 / 视频 / 文本输入（官方确认），且走阿里百炼的 OpenAI
  * 兼容接口（base-url = compatible-mode/v1），所以直接用 {@link OpenAiChatModel} 即可，

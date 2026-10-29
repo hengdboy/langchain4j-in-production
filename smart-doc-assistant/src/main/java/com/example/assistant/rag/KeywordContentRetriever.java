@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * ：混合检索的"关键词 / 全文"一路（简化 BM25）。
+ * Ch12：混合检索的"关键词 / 全文"一路（简化 BM25）。
  *
  * <p>向量检索擅长语义召回，但精确关键词（型号、专有名词、数字）常常漏。这一路对
  * {@link LexicalSegmentIndex} 做轻量词重叠打分，与向量路互补，召回结果交由
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  *
  * <p> 这是<b>教学用</b>的简化实现：分词对中文做"字 unigram + 相邻 bigram"、对拉丁做单词；
  * 打分是 BM25 的简化版（IDF 用本机索引的文档频率近似）。生产应把这一路换成
- * Postgres tsvector + zhparser（中文分词专业、可下推到 SQL），见  末。
+ * Postgres tsvector + zhparser（中文分词专业、可下推到 SQL），见 Ch12 末。
  */
 public class KeywordContentRetriever implements ContentRetriever {
 

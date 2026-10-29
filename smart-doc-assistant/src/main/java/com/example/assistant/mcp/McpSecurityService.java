@@ -62,7 +62,7 @@ public class McpSecurityService {
                             + "). Set 'chat.mcp.api-key' in application.yml to a strong secret.");
         }
         if ("dev-mcp-key-replace-in-production".equals(apiKey)) {
-            log.warn(" [MCP Security] Using default API key — change chat.mcp.api-key for production!");
+            log.warn("[MCP Security] Using default API key — change chat.mcp.api-key for production!");
         }
         log.info("[MCP Security] API key validated (length={}), {} tools whitelisted",
                 apiKey.length(), allowedTools.size());

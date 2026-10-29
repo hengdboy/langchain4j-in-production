@@ -30,7 +30,7 @@ public enum ModelPricing {
     DEEPSEEK_V4_FLASH("deepseek-v4-flash", 1.0, 2.0, "CNY"),
     // 2026-10-28 实测：请求 model-name=deepseek-v4-flash，DeepSeek 服务端在响应的
     // model 字段里归一化回传 "deepseek-flash"——listener 读的是响应名，别名不进表
-    // 成本就永远是 0（ 踩坑清单 #10）
+    // 成本就永远是 0（Ch22 踩坑清单 #10）
     DEEPSEEK_V4_FLASH_ALIAS("deepseek-flash", 1.0, 2.0, "CNY"),
     UNKNOWN("unknown", 0.0, 0.0, "CNY");
 

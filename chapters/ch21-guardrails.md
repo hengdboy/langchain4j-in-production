@@ -134,7 +134,7 @@ public class InputGuard {
         int maxLen = properties.getInput().getMaxLength();
         if (s.length() > maxLen) {
             s = s.substring(0, maxLen) + "...[truncated]";
- log.warn("️ [Guardrail] input truncated to {} chars", maxLen);
+            log.warn(" [Guardrail] input truncated to {} chars", maxLen);
         }
         return s.strip();
     }
@@ -279,7 +279,7 @@ public class OutputGuard {
         if (!properties.getOutput().isBlockApiKey()) return text;
         Matcher m = API_KEY.matcher(text);
         if (m.find()) {
- log.error("[Guardrail] API Key leak detected: {}", redactForLog(m.group()));
+        log.error("[Guardrail] API Key leak detected: {}", redactForLog(m.group()));
             metrics.incrementApiKeyBlock();
             throw new GuardrailViolation("output.api_key_leaked",
                     "输出检测到 API Key 泄露，已被拦截");
@@ -298,7 +298,7 @@ public class OutputGuard {
         m.appendTail(sb);
         if (count > 0) {
             metrics.incrementPiiRedacted(metricKey, count);
- log.info("[Guardrail] {} redacted: {} occurrences", metricKey, count);
+            log.info("[Guardrail] {} redacted: {} occurrences", metricKey, count);
         }
         return sb.toString();
     }
@@ -580,7 +580,7 @@ public Snapshot snapshot() {
 mvn spring-boot:run
 
 # 日志应该看到：
-# ️ [Guardrail] GuardrailProperties bound (input/output/tool all enabled)
+#  [Guardrail] GuardrailProperties bound (input/output/tool all enabled)
 # [Guardrail] 输出层 PII redactor armed (phone/email/idcard/bankcard)
 # 🚫 [ToolGuard] rate limiter armed (60 calls/min/session)
 

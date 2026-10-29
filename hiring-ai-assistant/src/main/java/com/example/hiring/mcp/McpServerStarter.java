@@ -82,9 +82,9 @@ public final class McpServerStarter {
             System.err.println("MCP Server shutdown complete.");
         } finally {
             try { if (transport != null) transport.close(); }
-            catch (Exception e) { System.err.println(" Transport close failed: " + e.getMessage()); }
+            catch (Exception e) { System.err.println("Transport close failed: " + e.getMessage()); }
             try { ctx.close(); }
-            catch (Exception e) { System.err.println(" Context close failed: " + e.getMessage()); }
+            catch (Exception e) { System.err.println("Context close failed: " + e.getMessage()); }
         }
     }
 
@@ -107,7 +107,7 @@ public final class McpServerStarter {
             rootLogger.setLevel(Level.WARN);
             rootLogger.addAppender(appender);
         } catch (Throwable t) {
-            System.err.println(" Logback redirect failed: " + t.getMessage());
+            System.err.println("Logback redirect failed: " + t.getMessage());
         }
     }
 

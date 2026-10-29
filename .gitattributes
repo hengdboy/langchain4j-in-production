@@ -1,0 +1,21 @@
+# 默认：文本文件入库统一 LF，checkout 时按平台转换
+* text=auto eol=lf
+
+# 脚本必须保持 LF —— CRLF 会让 bash 直接报 "syntax error near unexpected token `$'in\r'"
+*.sh text eol=lf
+*.bash text eol=lf
+
+# 二进制，禁止行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.jar binary
+*.zip binary
+
+# Windows 批处理与 PowerShell 必须 CRLF，否则在 Windows 上打不开
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

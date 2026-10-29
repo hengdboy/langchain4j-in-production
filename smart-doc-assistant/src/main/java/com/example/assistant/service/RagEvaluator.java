@@ -83,7 +83,7 @@ public class RagEvaluator {
         int faithfulCount = 0, correctCount = 0;
 
         for (GoldenCase c : goldenSet.cases()) {
-            // ① 检索：直接跑  装配好的 RetrievalAugmentor（向量+关键词→RRF 融合→重排）
+            // ① 检索：直接跑 Ch12 装配好的 RetrievalAugmentor（向量+关键词→RRF 融合→重排）
             UserMessage um = UserMessage.from(c.question());
             AugmentationResult aug = retrievalAugmentor.augment(
                     new AugmentationRequest(um, Metadata.from(um, "eval", List.of())));
@@ -219,7 +219,7 @@ public class RagEvaluator {
         try {
             return s.get();
         } catch (Exception e) {
-            log.warn(" 评估调用异常：{}", e.getMessage());
+            log.warn("评估调用异常：{}", e.getMessage());
             return "（评估调用异常：" + e.getMessage() + "）";
         }
     }

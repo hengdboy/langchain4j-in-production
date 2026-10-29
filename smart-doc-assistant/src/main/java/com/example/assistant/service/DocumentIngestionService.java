@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * ：文档处理流水线核心（Ingestion Pipeline）。
+ * Ch10：文档处理流水线核心（Ingestion Pipeline）。
  *
  * <p>完整流水线：加载(Load) → 解析(Parse) → 清洗(Transform) → 分块(Split) → 嵌入(Embed) → 入库(Store)。
  *
@@ -107,7 +107,7 @@ public class DocumentIngestionService implements ApplicationRunner {
     /**
      * 数据源一：classpath 目录（示例文档，随 jar 打包）。
      *
-     * <p>按扩展名分拨选解析器：PDF 二进制绝不能进 TextDocumentParser（ 10.4.4 事故——
+     * <p>按扩展名分拨选解析器：PDF 二进制绝不能进 TextDocumentParser（Ch10 10.4.4 事故——
      * UTF-8 硬转会把它转成乱码块静默入库，检索相似度还能到 0.5+）。
      */
     public synchronized void ingestClasspathDocs() {
@@ -122,7 +122,7 @@ public class DocumentIngestionService implements ApplicationRunner {
                 docsClasspath, fs.getPathMatcher("glob:**.{txt,md}"),
                 new TextDocumentParser()));
         if (documents.isEmpty()) {
-            log.warn(" classpath:{} 下没有发现文档", docsClasspath);
+            log.warn("classpath:{} 下没有发现文档", docsClasspath);
             return;
         }
         log.info("从 classpath:{} 加载到 {} 个文档", docsClasspath, documents.size());
@@ -143,7 +143,7 @@ public class DocumentIngestionService implements ApplicationRunner {
             throw new RuntimeException("读取目录失败: " + directoryPath, e);
         }
         if (documents.isEmpty()) {
-            log.warn(" 目录 {} 下没有发现文档", directoryPath);
+            log.warn("目录 {} 下没有发现文档", directoryPath);
             return;
         }
         log.info("从目录 {} 加载到 {} 个文档", directoryPath, documents.size());
@@ -192,11 +192,11 @@ public class DocumentIngestionService implements ApplicationRunner {
         List<Document> cleaned = documentCleaner.transformAll(documents);
         log.info("清洗完成（{} → {} 文档）", documents.size(), cleaned.size());
 
-        // 2. 分块：父子分块（默认开）或扁平分块（ 旧行为）
+        // 2. 分块：父子分块（Ch12，默认开）或扁平分块（Ch10 旧行为）
         List<TextSegment> segments = parentChild
                 ? splitIntoParentChild(cleaned)
                 : DocumentSplitters.recursive(chunkSize, chunkOverlap).splitAll(cleaned);
-        log.info("  分块完成：{} 个文档 → {} 个块（parent-child={}）",
+        log.info("分块完成：{} 个文档 → {} 个块（parent-child={}）",
                 cleaned.size(), segments.size(), parentChild);
 
         // 2.5 填充关键词检索索引（混合检索的"全文"一路）

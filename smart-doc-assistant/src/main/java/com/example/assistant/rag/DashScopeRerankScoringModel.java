@@ -85,7 +85,7 @@ public class DashScopeRerankScoringModel implements ScoringModel {
             throw new IllegalArgumentException("Query must not be empty for reranking");
         }
         try {
-            // 1. 构造请求体（OpenAI 兼容 rerank 扁平格式）
+            // 百炼 rerank 用 OpenAI 兼容的扁平请求体
             List<String> documents = segments.stream()
                     .map(TextSegment::text)
                     .toList();
@@ -93,7 +93,6 @@ public class DashScopeRerankScoringModel implements ScoringModel {
             String requestBody = buildRequestBody(query, documents);
             log.info("[Rerank] request: model={}, docs={}, top_n={}", MODEL, documents.size(), topN);
 
-            // 2. 发送 HTTP 请求
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl))
                     .header("Content-Type", "application/json")
@@ -111,7 +110,7 @@ public class DashScopeRerankScoringModel implements ScoringModel {
                         "DashScope rerank API returned HTTP " + response.statusCode() + ": " + response.body());
             }
 
-            // 3. 解析返回：按 index 映射回原始顺序，未命中的文档给 0 分
+            // 按 index 映射回原始顺序，未命中的文档给 0 分
             return parseRerankResponse(response.body(), segments.size());
 
         } catch (InterruptedException e) {

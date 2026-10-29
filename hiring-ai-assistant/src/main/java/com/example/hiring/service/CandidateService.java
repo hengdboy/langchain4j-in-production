@@ -93,7 +93,7 @@ public class CandidateService {
 
         // 4. 拒绝则原样返回（不改库）
         if (newStatus == null) {
-            log.warn(" [CandidateService] event {} rejected by StateMachine, candidate unchanged", event);
+            log.warn("[CandidateService] event {} rejected by StateMachine, candidate unchanged", event);
             return candidate;
         }
 
@@ -240,7 +240,7 @@ public class CandidateService {
                 .eq("candidate_id", candidate.getId()).orderByDesc("id").last("LIMIT 1"))
                 .stream().findFirst().orElse(null);
         if (latest == null) {
-            log.warn(" [CandidateService] candidateId={} no invite email to resend", candidate.getId());
+            log.warn("[CandidateService] candidateId={} no invite email to resend", candidate.getId());
             return;
         }
         String messageId = mailGateway.send(candidate.getEmail(), "Re: " + latest.getSubject(),

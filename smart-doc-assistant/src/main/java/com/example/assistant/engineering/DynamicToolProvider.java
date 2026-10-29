@@ -53,7 +53,7 @@ public class DynamicToolProvider implements ToolProvider {
     /**
      * chatMemoryId → [tenantId, userId, role]。
      *
-     * <p>修复记录（ 16.9）：{@code executeToolsConcurrently()} 把工具执行与回调调度到虚拟线程，
+     * <p>修复记录（Ch16 16.9）：{@code executeToolsConcurrently()} 把工具执行与回调调度到虚拟线程，
      * {@link RequestContext} 的 ThreadLocal 在那些线程上是默认值——护栏读到默认角色、审计落到
      * default:anonymous。{@code provideTools} 跑在请求线程上、上下文是准的，所以在那一刻把上下文
      * 捕获进本表；工具执行与审计回调按 chatMemoryId 取捕获值。表随会话数增长（教学版可接受，
@@ -86,7 +86,7 @@ public class DynamicToolProvider implements ToolProvider {
                 // propagate=true：工具异常上抛给 AiServices 的 toolExecutionErrorHandler 兜底
                 // （与框架 ToolService 自建执行器的选择一致）。裸构造默认 propagate=false，
                 // 异常就地转成 isError=true 文本——配在 AiServices 上的错误处理器
-                // 对 provider 供给的工具就收不到异常了（ 修复实录）。
+                // 对 provider 供给的工具就收不到异常了（Ch16 修复实录）。
                 ToolExecutor executor = DefaultToolExecutor.builder()
                         .object(tool)
                         .originalMethod(m)

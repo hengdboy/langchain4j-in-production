@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.regex.Pattern;
 
 /**
- * v0.29  Guardrails：PII 脱敏输出 guardrail。
+ * v0.29 Ch21 Guardrails：PII 脱敏输出 guardrail。
  *
  * <p>检测并替换 LLM 输出中的邮箱 / 手机号 / 银行卡号。覆盖：
  * <ul>

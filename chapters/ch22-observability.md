@@ -132,7 +132,7 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         // 记录开始时间——attributes 跨方法传递（streaming 跨线程安全）
         ctx.attributes().put(ATTR_START_NANOS, System.nanoTime());
         ChatRequest req = ctx.chatRequest();
- log.info("[ChatModel] → onRequest model={} messages={} tools={}",
+        log.info("[ChatModel] → onRequest model={} messages={} tools={}",
                 ctx.modelProvider(),
                 req.messages() != null ? req.messages().size() : 0,
                 req.parameters() != null && req.parameters().toolSpecifications() != null
@@ -149,16 +149,13 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         String modelName = resp.metadata() != null ? resp.metadata().modelName() : null;
         TokenUsage usage = resp.metadata() != null ? resp.metadata().tokenUsage() : null;
 
-        // 1. 成本核算（官方 TokenUsage → 业务 CostSnapshot）
         TokenCostCalculator.CostSnapshot cost = costCalculator.fromResponse(modelName, usage);
 
-        // 2. 写入 CostTracker（按维度聚合）
         String userId = (String) ctx.attributes().get(ATTR_USER_ID);
         String toolName = (String) ctx.attributes().get(ATTR_TOOL_NAME);
         costTracker.record(cost, userId, toolName);
 
-        // 3. 结构化日志
- log.info("[ChatModel] ← onResponse model={} elapsedMs={} in={} out={} cost={}{}",
+        log.info("[ChatModel] ← onResponse model={} elapsedMs={} in={} out={} cost={}{}",
                 modelName, elapsedMs,
                 cost.inputTokens(), cost.outputTokens(),
                 String.format("%.6f", cost.totalCost()), cost.currency());
@@ -169,7 +166,7 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         Long startNanos = (Long) ctx.attributes().get(ATTR_START_NANOS);
         long elapsedMs = startNanos != null
                 ? (System.nanoTime() - startNanos) / 1_000_000 : -1;
- log.warn("[ChatModel] onError model={} elapsedMs={} error={}",
+                log.warn("[ChatModel] onError model={} elapsedMs={} error={}",
                 ctx.modelProvider(), elapsedMs,
                 ctx.error().getClass().getSimpleName() + ": " + ctx.error().getMessage());
     }

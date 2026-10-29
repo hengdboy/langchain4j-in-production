@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 /**
  * Lab3 注入检测器（Application 层，进 Agent 之前跑）：命中确定性模式即拦截。
  *
- * <p>与主教程  的口径一致：第一道用正则而不是 LLM——便宜、快、自己不会被劫持。
+ * <p>与主教程 Ch21 的口径一致：第一道用正则而不是 LLM——便宜、快、自己不会被劫持。
  * 规则来自真实注入攻击的高频句式；教学版宁误报不漏报。
  */
 public final class InjectionDetector {

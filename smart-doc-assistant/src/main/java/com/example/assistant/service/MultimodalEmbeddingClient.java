@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ：DashScope 原生多模态 Embedding 客户端。
+ * Ch09：DashScope 原生多模态 Embedding 客户端。
  *
  * <p>为什么不用 OpenAI 兼容接口？官方文档明确：多模态向量化（tongyi-embedding-vision 系列）
  * 只支持 DashScope 原生 API，OpenAI 兼容接口与控制台均不可用。所以这里用 Java 21 自带的

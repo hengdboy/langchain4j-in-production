@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * 结果：<strong>每次调用的 token 被记录两次</strong>（2026-10-28 实测：单次 121 tokens，
  * CostTracker 记 242）。修复：删掉 @Bean 方法，只保留监听器上的 @Component 单通道。
  *
- * <p>教训（ 踩坑清单 #9）：listener 只允许一个注册通道——
+ * <p>教训（Ch22 踩坑清单 #9）：listener 只允许一个注册通道——
  * <ul>
  * <li>要么 {@code @Component} 组件扫描（本项目的最终做法），
  * starter 自动收集容器里所有 {@code ChatModelListener} bean；</li>

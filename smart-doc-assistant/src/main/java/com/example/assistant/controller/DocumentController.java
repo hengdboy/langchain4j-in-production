@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Map;
 
 /**
- * ：文档处理流水线端点。
+ * Ch10：文档处理流水线端点。
  *
  * <ul>
  * <li>GET  /api/docs/stats            —— 流水线统计（文档数/分块数/维度/分块参数）</li>

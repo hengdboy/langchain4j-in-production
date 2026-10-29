@@ -126,7 +126,7 @@ public class KnowledgeBaseMcpTools {
 
     /**
      * 完整 RAG 检索：复用 {@link RetrievalAugmentor}（向量+关键词混合 + rerank），
-     * 返回融合+重排后的文档片段。同  的检索层评估管线。
+     * 返回融合+重排后的文档片段。同 Ch13 的检索层评估管线。
      *
      * <p>注意：本工具<strong>只返回检索结果</strong>，不调 LLM 做答案生成——把"检索"和"生成"
      * 解耦，让调用方（外部 MCP 客户端的 LLM）自己拼 Prompt 与作答，避免跨进程调用 LLM 的复杂度。
@@ -152,7 +152,7 @@ public class KnowledgeBaseMcpTools {
         // RetrievalAugmentor 内部用 queryRouter → ContentRetriever → ContentAggregator
         // RagEvaluator 已验证这套管线的输出顺序 = 最终排名（融合 + 重排已完成）
         UserMessage userMessage = UserMessage.from(q);
-        // memoryId 占位为 "mcp-tool"（与  RagLookupTool 一致），保证与现有管线行为相同
+        // memoryId 占位为 "mcp-tool"（与 Ch14 RagLookupTool 一致），保证与现有管线行为相同
         AugmentationResult result = retrievalAugmentor.augment(
                 new AugmentationRequest(userMessage, Metadata.from(userMessage, "mcp-tool", java.util.List.of()))
         );
@@ -195,7 +195,7 @@ public class KnowledgeBaseMcpTools {
      */
     private String requireQuestion(String question) {
         if (question == null || question.isBlank()) {
-            log.warn(" [MCP] tool called with empty/null question");
+            log.warn("[MCP] tool called with empty/null question");
             return ""; // sentinel；本工具不返回结果给 caller，调用方拿到 "（问题不能为空）" 后续会改
         }
         return question;

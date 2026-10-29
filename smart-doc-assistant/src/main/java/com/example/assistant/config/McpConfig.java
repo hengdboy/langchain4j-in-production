@@ -105,7 +105,7 @@ public class McpConfig {
             if (Files.isRegularFile(candidate)) {
                 if (!candidate.equals(workingDir.resolve(configured).normalize())) {
                     // 命中回退目录：说明启动目录不是模块根，提示一下但不阻断
-                    log.warn("  MCP 脚本未在当前工作目录找到，已回退定位到: {}（当前工作目录: {}）",
+                    log.warn("MCP 脚本未在当前工作目录找到，已回退定位到: {}（当前工作目录: {}）",
                             candidate, workingDir);
                 }
                 return candidate.toString();

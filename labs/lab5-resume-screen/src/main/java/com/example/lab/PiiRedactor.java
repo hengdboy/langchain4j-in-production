@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 /**
  * Lab5 PII 脱敏器：简历进 LLM 之前先打码——模型只需要"这个人行不行"，
- * 不需要"这个人是谁"。三条正则与主教程  OutputGuard 同构（手机/邮箱/身份证）。
+ * 不需要"这个人是谁"。三条正则与主教程 Ch21 OutputGuard 同构（手机/邮箱/身份证）。
  */
 public final class PiiRedactor {
 

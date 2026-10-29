@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <li><strong>速率限制</strong>：每会话每分钟最多 N 次（避免恶意调用 / 烧 token）</li>
  * </ol>
  *
- * <h2>与  的工具白名单区别</h2>
+ * <h2>与 Ch19 的工具白名单区别</h2>
  * <ul>
  * <li> 的白名单：MCP 服务端控制哪些工具暴露给所有客户端（粗粒度）</li>
  * <li>本类的角色白名单：单个会话内控制哪些角色能用哪些工具（细粒度 RBAC）</li>

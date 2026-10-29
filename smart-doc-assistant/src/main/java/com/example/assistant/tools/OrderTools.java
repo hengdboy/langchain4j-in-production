@@ -18,7 +18,7 @@ import java.util.Map;
  * <p>
  * 注意：LangChain4j 1.x 没有内置 ToolExecutionMode.MANUAL。
  * 高风险操作的审批流需要自己实现——这里用"金额阈值 + 抛自定义异常"演示思路，
- * 实际项目中配合 ToolExecutionErrorHandler 统一处理（详见  6.7 节）。
+ * 实际项目中配合 ToolExecutionErrorHandler 统一处理（详见 Ch06 6.7 节）。
  */
 @Slf4j
 public class OrderTools {

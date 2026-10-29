@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * ：文档清洗器（DocumentTransformer 实现）。
+ * Ch10：文档清洗器（DocumentTransformer 实现）。
  *
  * <p>文档解析出来是"原始文本"，往往带各种噪声：BOM、零宽字符、\r\n、
  * 制表符、多余空白、分隔线等。清洗器在分块之前做规范化，让切出来的块更干净。
@@ -38,17 +38,14 @@ public class DocumentCleaner implements DocumentTransformer {
     public Document transform(Document document) {
         String text = document.text();
 
-        // 1. 去 BOM 与零宽字符
         text = BOM.matcher(text).replaceFirst("");
         text = ZERO_WIDTH.matcher(text).replaceAll("");
 
-        // 2. 统一换行符（\r\n / \r → \n）
         text = text.replace("\r\n", "\n").replace('\r', '\n');
 
-        // 3. 压缩多余空白（保留单个空格与换行）
         text = MULTI_BLANK.matcher(text).replaceAll(" ");
 
-        // 4. 过滤纯分隔线行
+        // Markdown 的 --- 分隔行不是正文，按整行匹配过滤
         StringBuilder sb = new StringBuilder();
         for (String line : text.split("\n", -1)) {
             if (!SEPARATOR_LINE.matcher(line).matches()) {
@@ -56,7 +53,6 @@ public class DocumentCleaner implements DocumentTransformer {
             }
         }
 
-        // 5. 压缩连续空行
         String cleaned = MULTI_EMPTY_LINE.matcher(sb.toString()).replaceAll("\n\n").trim();
 
         return Document.from(cleaned, document.metadata().copy());

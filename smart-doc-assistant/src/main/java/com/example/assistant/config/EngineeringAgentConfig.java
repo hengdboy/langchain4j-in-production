@@ -86,13 +86,13 @@ public class EngineeringAgentConfig {
                 // ⑤ 错误处理三件套：工具异常 / 参数解析失败 / 幻觉工具名，都兜底成友好文本引导模型纠正
                 .toolExecutionErrorHandler((throwable, context) -> {
                     String tool = context.toolExecutionRequest().name();
-                    log.warn(" [错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
+                    log.warn("[错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
                     return ToolErrorHandlerResult.text(
                             "工具 [" + tool + "] 执行失败：" + throwable.getMessage()
                                     + "。请修正参数后重试，或换一种方式回答。");
                 })
                 .toolArgumentsErrorHandler((throwable, context) -> {
-                    log.warn(" [错误处理] 工具参数解析失败: {}", throwable.getMessage());
+                    log.warn("[错误处理] 工具参数解析失败: {}", throwable.getMessage());
                     return ToolErrorHandlerResult.text(
                             "工具参数格式不正确：" + throwable.getMessage() + "。请重新生成参数。");
                 })

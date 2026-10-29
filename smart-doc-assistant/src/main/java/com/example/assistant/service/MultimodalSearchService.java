@@ -10,7 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * ：多模态（跨模态）语义检索服务。
+ * Ch09：多模态（跨模态）语义检索服务。
  *
  * <p>核心思路：图片和文本被多模态 Embedding 模型映射到<b>同一个语义空间</b>，
  * 于是可以直接比较——用文本向量去撞图片向量（文本搜图），或用一张图的向量
@@ -55,7 +55,7 @@ public class MultimodalSearchService implements ApplicationRunner {
         this.embeddingClient = embeddingClient;
     }
 
-    /** 启动时：把预置图片库全部嵌入（一次性建库）——建库失败不阻断启动（ 最佳实践） */
+    /** 启动时：把预置图片库全部嵌入（一次性建库）——建库失败不阻断启动（Ch10 最佳实践） */
     @Override
     public void run(ApplicationArguments args) {
         try {

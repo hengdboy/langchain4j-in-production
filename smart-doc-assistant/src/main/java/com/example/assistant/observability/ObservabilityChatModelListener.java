@@ -17,7 +17,7 @@ import java.util.Map;
  * 把 LangChain4j 每次模型调用的 request/response/error 全量数据
  * + TokenUsage 成本核算 串联起来。
  *
- * <p>这是  全部逻辑的"心脏"——其他类（{@link CostTracker}、{@link TokenCostCalculator}、
+ * <p>这是 Ch22 全部逻辑的"心脏"——其他类（{@link CostTracker}、{@link TokenCostCalculator}、
  * {@link MetricsController}）都是它的下游。
  *
  * <h2>attributes 跨方法传数据</h2>
@@ -78,15 +78,12 @@ public class ObservabilityChatModelListener implements ChatModelListener {
         String modelName = resp.metadata() != null ? resp.metadata().modelName() : null;
         TokenUsage usage = resp.metadata() != null ? resp.metadata().tokenUsage() : null;
 
-        // 1. 成本核算（官方 TokenUsage → 业务 CostSnapshot）
         TokenCostCalculator.CostSnapshot cost = costCalculator.fromResponse(modelName, usage);
 
-        // 2. 写入 CostTracker（按维度聚合）
         String userId = (String) ctx.attributes().get(ATTR_USER_ID);
         String toolName = (String) ctx.attributes().get(ATTR_TOOL_NAME);
         costTracker.record(cost, userId, toolName);
 
-        // 3. 结构化日志
         log.info("[ChatModel] ← onResponse model={} elapsedMs={} in={} out={} cost={}{}",
                 modelName, elapsedMs,
                 cost.inputTokens(), cost.outputTokens(),

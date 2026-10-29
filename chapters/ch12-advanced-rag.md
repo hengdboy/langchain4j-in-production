@@ -627,7 +627,7 @@ mvn -DskipTests package
 java -jar target/smart-doc-assistant-0.16.0-SNAPSHOT.jar
 
 # 启动日志（2026-10-28 实测，Ch10 解析修复后）：
-# ️ 分块完成：4 个文档 → 10 个块（parent-child=true） ← 干净库（扁平模式 7 块；修复前曾是 26 / 20，见 Ch10 10.4.4）
+#  分块完成：4 个文档 → 10 个块（parent-child=true） ← 干净库（扁平模式 7 块；修复前曾是 26 / 20，见 Ch10 10.4.4）
 
 # 检索链路量化评估（不含 LLM，离线可跑，11 题 golden set）
 curl "http://localhost:8090/api/rag/evaluate?includeAnswer=false"

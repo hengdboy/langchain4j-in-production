@@ -339,7 +339,7 @@ public class CandidatePipelineService {
     private void generateInviteAndSend(Long candidateId) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.SHORTLISTED) return;
-        log.info(" [Pipeline] candidateId={} SHORTLISTED → generating invite", candidateId);
+        log.info("[Pipeline] candidateId={} SHORTLISTED → generating invite", candidateId);
 
         JobPosition job = jobPositionMapper.selectById(candidate.getJobId());
         String jobTitle = job == null ? "本职位" : job.getTitle();
@@ -382,7 +382,7 @@ public class CandidatePipelineService {
 
         List<LocalDateTime> slots = calendarTool.availableSlots();
         if (slots.isEmpty()) {
-            log.warn(" [Pipeline] candidateId={} no available slots, interview NOT booked", candidateId);
+            log.warn("[Pipeline] candidateId={} no available slots, interview NOT booked", candidateId);
             return;
         }
         CalendarTool.Booking booking = calendarTool.book(slots.get(0), 90, candidateId);
@@ -453,7 +453,7 @@ public class CandidatePipelineService {
                         p.name(), p.yearsOfExperience(), p.skills());
                 return p;
             } catch (Exception e) {
-                log.warn(" [Pipeline] parse agent failed, fallback to canned: {}", e.getMessage());
+                log.warn("[Pipeline] parse agent failed, fallback to canned: {}", e.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -467,10 +467,10 @@ public class CandidatePipelineService {
                 AgentCallContext.set(candidate.getId(), "MatchEvaluatorAgent");
                 MatchEvaluatorAgent.MatchVerdict v = matchEvaluatorAgent.evaluate(
                         job.getTitle(), job.getJdText(), candidate.getRedactedProfile());
-                log.info(" [Pipeline] evaluate (real): score={} verdict={}", v.score(), v.verdict());
+                log.info("[Pipeline] evaluate (real): score={} verdict={}", v.score(), v.verdict());
                 return v;
             } catch (Exception e) {
-                log.warn(" [Pipeline] evaluate agent failed, fallback to canned: {}", e.getMessage());
+                log.warn("[Pipeline] evaluate agent failed, fallback to canned: {}", e.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -485,10 +485,10 @@ public class CandidatePipelineService {
                 AgentCallContext.set(candidate.getId(), "InviteContentAgent");
                 InviteContentAgent.InviteEmail e = inviteContentAgent.generate(
                         orDefault(candidate.getName(), "候选人"), jobTitle, tone, cta);
-                log.info(" [Pipeline] invite (real): arm={} subject=[{}]", tone + ":" + cta, e.subject());
+                log.info("[Pipeline] invite (real): arm={} subject=[{}]", tone + ":" + cta, e.subject());
                 return e;
             } catch (Exception ex) {
-                log.warn(" [Pipeline] invite agent failed, fallback to canned: {}", ex.getMessage());
+                log.warn("[Pipeline] invite agent failed, fallback to canned: {}", ex.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -505,7 +505,7 @@ public class CandidatePipelineService {
                 log.info("[Pipeline] classify (real): {}", a);
                 return a;
             } catch (Exception e) {
-                log.warn(" [Pipeline] classify agent failed, fallback to canned: {}", e.getMessage());
+                log.warn("[Pipeline] classify agent failed, fallback to canned: {}", e.getMessage());
             } finally {
                 AgentCallContext.clear();
             }
@@ -523,7 +523,7 @@ public class CandidatePipelineService {
                 log.info("[Pipeline] questions (real): {} 题", q.questions().size());
                 return q;
             } catch (Exception e) {
-                log.warn(" [Pipeline] question agent failed, fallback to canned: {}", e.getMessage());
+                log.warn("[Pipeline] question agent failed, fallback to canned: {}", e.getMessage());
             } finally {
                 AgentCallContext.clear();
             }

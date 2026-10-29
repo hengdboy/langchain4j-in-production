@@ -157,7 +157,7 @@ public void record(Object memoryId, String toolName, String arguments, String re
             result != null && result.length() > 200 ? result.substring(0, 200) + "…" : result,
             failed, startTime, LocalDateTime.now());
     auditLog.computeIfAbsent(key, k -> new ArrayList<>()).add(entry);   // key 已含租户/用户
- log.info("[审计] 租户={} 用户={} 会话={} 工具[{}] failed={} 耗时{}ms",
+    log.info("[审计] 租户={} 用户={} 会话={} 工具[{}] failed={} 耗时{}ms",
             RequestContext.tenantId(), RequestContext.userId(), memoryId, toolName, failed, ...);
 }
 ```
@@ -202,7 +202,7 @@ private AiServiceListener<AiServiceCompletedEvent> completedListener() {
                 tokenInfo = String.format("tokens: in=%s out=%s total=%s",
                         tu.inputTokenCount(), tu.outputTokenCount(), tu.totalTokenCount());
             }
- log.info("[可观测] AiService 调用完成{} result={}", tokenInfo, result);
+            log.info("[可观测] AiService 调用完成{} result={}", tokenInfo, result);
         }
     };
 }
@@ -237,13 +237,13 @@ Agent 跑在生产，**工具不可能永远成功**：参数格式错、服务�
 // ⑤ 错误处理三件套：工具异常 / 参数解析失败 / 幻觉工具名，都兜底成友好文本引导模型纠正
 .toolExecutionErrorHandler((throwable, context) -> {
     String tool = context.toolExecutionRequest().name();
- log.warn("️ [错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
+    log.warn(" [错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
     return ToolErrorHandlerResult.text(
             "工具 [" + tool + "] 执行失败：" + throwable.getMessage()
                     + "。请修正参数后重试，或换一种方式回答。");
 })
 .toolArgumentsErrorHandler((throwable, context) -> {
- log.warn("️ [错误处理] 工具参数解析失败: {}", throwable.getMessage());
+ log.warn(" [错误处理] 工具参数解析失败: {}", throwable.getMessage());
     return ToolErrorHandlerResult.text(
             "工具参数格式不正确：" + throwable.getMessage() + "。请重新生成参数。");
 })
@@ -453,7 +453,7 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
   -H "Content-Type: application/json" \
   -d '{"sessionId":"19","question":"帮我算一下 5 除以 0 等于多少","tenantId":"tenantA","userId":"u1001","role":"admin"}'
 # → HTTP 200，模型引着工具报错原文给出"5 ÷ 0 没有定义"的完整解释
-# 日志：️ [错误处理] 工具[calculate]执行异常: 除数不能为零…
+# 日志： [错误处理] 工具[calculate]执行异常: 除数不能为零…
 # [审计] … failed=true 耗时3ms tokens: in=1166 out=370 total=1536
 
 # ⑤ 上下文传播（16.9.1 修复验证）：多工具轮的审计归属

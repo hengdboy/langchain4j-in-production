@@ -78,7 +78,7 @@ public class InputGuard {
         int maxLen = properties.getInput().getMaxLength();
         if (s.length() > maxLen) {
             s = s.substring(0, maxLen) + "...[truncated]";
-            log.warn(" [Guardrail] input truncated to {} chars", maxLen);
+            log.warn("[Guardrail] input truncated to {} chars", maxLen);
         }
         return s.strip();
     }

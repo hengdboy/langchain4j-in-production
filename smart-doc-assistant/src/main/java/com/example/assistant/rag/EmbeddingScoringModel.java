@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ：用「现有 EmbeddingModel」实现的双编码器重排序器（bi-encoder reranker）。
+ * Ch12：用「现有 EmbeddingModel」实现的双编码器重排序器（bi-encoder reranker）。
  *
  * <p>{@link ScoringModel} 接口要求对每个 (query, segment) 对打分。最朴素也最稳的实现就是
  * 把 query 与 segment 各自嵌入、算余弦相似度——这正是"向量召回后再精排"的常见思路。

@@ -17,7 +17,7 @@ import java.util.List;
  *
  * <h2>服务器元信息</h2>
  * <p>{@code name} 用 {@code "smart-doc-assistant"}、{@code version} 用 {@code "0.17.0"}，
- * 与 pom.xml 的 {@code <version>} 标签同步（v0.17 在  引入）。
+ * 与 pom.xml 的 {@code <version>} 标签同步（v0.17 在 Ch19 引入）。
  *
  * @author langchain4j-tutorial
  * @since v0.17

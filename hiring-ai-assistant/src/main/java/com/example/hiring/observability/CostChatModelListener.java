@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * v0.29  Observability：Cost / Latency / Error 计量 listener。
+ * v0.29 Ch22 Observability：Cost / Latency / Error 计量 listener。
  *
  * <h2>职责</h2>
  * <ul>
@@ -73,7 +73,7 @@ public class CostChatModelListener implements ChatModelListener {
                     agentName, candidateId, usage != null ? usage.totalTokenCount() : 0, call.getDurationMs());
         } catch (Exception e) {
             // 埋点失败不能阻塞主流程
-            log.warn(" [Cost] persist agent_call failed: {}", e.getMessage());
+            log.warn("[Cost] persist agent_call failed: {}", e.getMessage());
         }
     }
 
@@ -92,9 +92,9 @@ public class CostChatModelListener implements ChatModelListener {
         try {
             agentCallMapper.insert(call);
         } catch (Exception e) {
-            log.warn(" [Cost] persist error agent_call failed: {}", e.getMessage());
+            log.warn("[Cost] persist error agent_call failed: {}", e.getMessage());
         }
-        log.warn(" [Cost] agent={} candidateId={} error={}", agentName, candidateId, ctx.error().getMessage());
+        log.warn("[Cost] agent={} candidateId={} error={}", agentName, candidateId, ctx.error().getMessage());
     }
 
     /** Agent 名从 attributes（高优） / ThreadLocal（兜底）取 */
