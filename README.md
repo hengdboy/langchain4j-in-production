@@ -61,6 +61,10 @@
 
 ## 快速开始
 
+两个配套项目二选一（可同时跑，端口 8090 / 8091 互不冲突）。
+
+**路线 A：智能文档问答**（smart-doc-assistant——RAG 全管线）
+
 ```bash
 git clone https://github.com/hengdboy/langchain4j-in-production.git
 cd langchain4j-in-production/smart-doc-assistant
@@ -81,6 +85,19 @@ curl -s -X POST http://localhost:8090/api/chat \
   -H "Content-Type: application/json" \
   -d '{"sessionId":"first","message":"七天无理由退货的条件是什么？"}'
 ```
+
+**路线 B：AI 招聘官**（hiring-ai-assistant——FSM + 多 Agent 总装，Ch24/25 配套）
+
+```bash
+cd langchain4j-in-production/hiring-ai-assistant
+cd docker && docker-compose up -d && cd ..
+mvn spring-boot:run
+curl -X POST http://localhost:8091/api/demo/run \
+     -H "Content-Type: application/json" -d '{"useRealAgent": false}'
+```
+
+无 key 可跑（canned 模式）；本地 MySQL/Redis 替代方案、四条路线的预期输出与
+MCP 接入见 [hiring-ai-assistant/README.md](hiring-ai-assistant/README.md)。
 
 详细环境要求、按章可选组件（Node / MySQL / Redis）、常见报错速查表见 [Ch00](chapters/ch00-preflight.md)。
 

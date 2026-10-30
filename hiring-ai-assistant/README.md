@@ -12,7 +12,20 @@
 3. **Bandit 演化 + DPO 样本**：约面话术 6 臂 Thompson Sampling 按回复率自迭代，
    HR 修正 AI 产出沉淀为偏好样本。
 
+![系统架构总览](../assets/ch24-architecture.png)
+
 详细设计见 [ARCHITECTURE.md](ARCHITECTURE.md)，配套章节 Ch24（编排）、Ch25（护栏与演化）。
+
+## 业务流程
+
+全部编排由状态机驱动（12 状态 / 13 事件 / 15 条转换，其中 11 条带 Guard 闸门），
+Agent 只在叶子节点产出结构化结果：
+
+![FSM 状态全景](../assets/ch24-fsm-panorama.png)
+
+主线是 APPLIED → SHORTLISTED → INVITE_SENT → INTERVIEW_SCHEDULED → INTERVIEWED
+→ OFFER_SENT → HIRED；弱匹配与注入简历在入口被拒，歧义风险进 ON_HOLD 池等 HR 复核，
+邀请 48 小时无回复自动追发、offer 5 天未响应自动催办（教学档压缩为 2h / 5min，可配）。
 
 ## 快速开始
 
@@ -33,6 +46,48 @@ curl -X POST http://localhost:8091/api/demo/run \
 # 无 key 环境（canned 确定性规则，流程完全一致）：
 curl -X POST http://localhost:8091/api/demo/run \
      -H "Content-Type: application/json" -d '{"useRealAgent": false}'
+```
+
+本地已有 MySQL 8+ 和 Redis 的话可以不依赖 Docker，手动初始化一次（账号密码与
+`application.yml` 中的数据源一致）：
+
+```bash
+mysql -uroot -e "CREATE DATABASE IF NOT EXISTS hiringdb CHARACTER SET utf8mb4;
+CREATE USER IF NOT EXISTS 'hiring'@'localhost' IDENTIFIED BY 'hiring_pass';
+GRANT ALL ON hiringdb.* TO 'hiring'@'localhost';"
+mysql -uhiring -phiring_pass hiringdb < src/main/resources/db/schema.sql
+redis-server --daemonize yes   # 或 brew services start redis
+```
+
+## 预期输出（canned 模式实测）
+
+demo 创建 1 个职位、4 个候选人，四条路线一次看全（响应中的 id 每次运行递增）：
+
+```json
+{
+  "jobId": 41, "strongId": 157, "weakId": 158, "injectionId": 159, "piiId": 160,
+  "steps": [
+    "job: id=41 title=资深 Java 后端工程师（AI 方向）",
+    "c1(强匹配): APPLIED → INVITE_SENT",
+    "c1: 回复确认 → INTERVIEW_SCHEDULED",
+    "c1: 面试通过 → OFFER_SENT",
+    "c1: 接受 offer → HIRED",
+    "c2(弱匹配): APPLIED → REJECTED",
+    "c3(注入): APPLIED → REJECTED",
+    "c4(歧视字段): APPLIED → INVITE_SENT | 决策画像含受保护字段? false"
+  ],
+  "useRealAgent": false
+}
+```
+
+分别验证四件事：强匹配走完全流程直到入职；弱匹配被评估拦在门口；注入简历被护栏
+识别拒绝；简历里埋了性别/年龄，但决策画像里查无此物（最后那个 `false`）。
+
+后续查看两条路径（id 以你的响应为准）：
+
+```bash
+curl -s http://localhost:8091/api/candidates/157        # 状态/匹配分/脱敏后的决策画像
+curl -s http://localhost:8091/api/candidates/157/events # 逐次状态变更流水（事件+角色+时间）
 ```
 
 ## API 一览
