@@ -1,6 +1,8 @@
-# LangChain4j 生产实战——12 章 + 2 个可运行项目
+# LangChain4j 生产实战——13 章 + 2 个可运行项目
 
 面向 Java / Spring Boot 开发者的 LangChain4j 教程。不讲 Hello World 罗列 API，每一章都围绕两个**真实可运行**的 Spring Boot 项目展开，正文里的关键数字（检索 MRR、单次调用成本、护栏误杀率、64 个测试）都是标注了验证日期的实跑结果。
+
+> 本仓库收录实战篇 13 章；基础篇（Ch01–09）与全部 25 章的完整连载在博客「技术沉淀」分类：[blog.qianyecube.cn/categories/tech-notes](https://blog.qianyecube.cn/categories/tech-notes)
 
 - **教程口径**：LangChain4j `1.22.0` + 实验模块 `1.22.0-beta32` ｜ JDK 21（pom 强制）｜ 最后验证 2026-10-28
 - **读前必看**：[Ch00 前置速查](chapters/ch00-preflight.md)——环境、学习路径图、全系列约定，15 分钟
