@@ -121,21 +121,18 @@ invoke(proxy, method, args):
 ### 2.3.1 基本用法：直接写在注解里
 
 ```java
-@AiService
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT,
+        chatModel = "openAiChatModel",              // ← 多 ChatModel Bean 时显式指定默认对话模型
+        chatMemoryProvider = "chatMemoryProvider")  // ← EXPLICIT 模式需显式声明记忆
 public interface ChatAssistant {
 
-    @SystemMessage("""
-        你是一名资深Java技术专家，名叫"Java老王"。
-        回答要求：
-        1. 用中文回答，专业但通俗
-        2. 给出代码示例时使用Java 21语法
-        3. 对于不确定的内容，明确说明"我不确定"
-        4. 不要胡编不存在的API或框架
-        """)
+    @SystemMessage("你是一个友好的AI助手，请用简洁的中文回答用户的问题。")
     @UserMessage("{{it}}")
-    String chat(String question);
+    Result<String> chat(@MemoryId String sessionId, @V("it") String message);
 }
 ```
+
+> 💡 **三个细节**：`@UserMessage("{{it}}")` 把用户消息原样传入（`{{it}}` 是单参数模板的默认占位符，2.4 节展开）；`@MemoryId` 做会话记忆隔离（Ch05 主题）；`wiringMode = EXPLICIT` 是因为项目里有多个 ChatModel Bean，必须指名用哪个（2.9 节）。
 
 ### 2.3.2 外部模板文件（生产推荐）
 
@@ -201,6 +198,8 @@ public class AiServiceConfig {
     }
 }
 ```
+
+> 💡 **教学示意**：多租户动态人设是 `systemMessageProvider` 的典型场景；本例为独立演示，仓库现行 `AiServiceConfig` 只保留 `chatMemoryProvider` Bean（见 5.6.3）。
 
 > ⚠️ **注意**：一旦你手动 `@Bean` 了一个 AiService，Spring Boot 就不会再自动扫描创建同名的代理——两者只能选其一。需要混合使用时注意命名。
 

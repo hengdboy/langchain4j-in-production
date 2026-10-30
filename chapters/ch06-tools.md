@@ -46,13 +46,13 @@ sequenceDiagram
     participant L as LLM
     participant T as Tools
 
-    U->>L: "上海今天天气怎么样？"
-    L->>L: 思考: 需要查天气
-    L->>T: getWeather(city="上海")
-    T->>T: 调用天气API
-    T-->>L: {"temp":28,"condition":"晴"}
+    U->>L: "从 2026-01-01 到 2026-08-20 有多少天？"
+    L->>L: 思考: 需要算日期差
+    L->>T: daysBetween(start="2026-01-01", end="2026-08-20")
+    T->>T: LocalDate.parse + ChronoUnit.DAYS.between
+    T-->>L: "231"
     L->>L: 思考: 数据有了，可以回答
-    L-->>U: "上海今天 28 度，晴。"
+    L-->>U: "一共 231 天。"
 ```
 
 **本质**：LLM 不会自己"做"事，它只决定"什么时候调什么工具"——执行由你写的 Java 代码完成。
@@ -60,40 +60,55 @@ sequenceDiagram
 ### 6.1.3 一个完整的 Tool Call 示例
 
 ```java
-// 工具类
-public class WeatherTools {
+// 工具类（tools/TimeTools.java）——普通 POJO，只有 @Tool / @P 两个注解
+public class TimeTools {
 
-    @Tool("查询指定城市的实时天气")
-    public String getWeather(@P("城市名称，如：上海") String city) {
-        // 实际调用天气 API（这里是模拟）
-        return "{\"temp\":28,\"condition\":\"晴\",\"city\":\"" + city + "\"}";
+    @Tool("获取当前日期和时间，返回 ISO 8601 格式字符串")
+    public String currentTime() {
+        return LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    }
+
+    @Tool("计算两个日期之间相差的天数")
+    public long daysBetween(
+            @P("开始日期，格式 yyyy-MM-dd，如 2026-01-01") String start,
+            @P("结束日期，格式 yyyy-MM-dd，如 2026-08-20") String end
+    ) {
+        try {
+            return ChronoUnit.DAYS.between(
+                java.time.LocalDate.parse(start),
+                java.time.LocalDate.parse(end)
+            );
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                "日期格式错误：" + e.getMessage() + "。请使用 yyyy-MM-dd 格式。"
+            );
+        }
     }
 }
 
-// AiService 自动接入工具
-@AiService
-public interface WeatherAssistant {
-    String chat(@UserMessage String question);
+// 调工具的 AiService 接口（assistant/ToolAssistant.java）
+// 注意：这里不能加 @AiService——工具注册要手动装配（加了解释见 6.4）
+public interface ToolAssistant {
+
+    Result<String> chat(@MemoryId Long userId, @UserMessage String question, InvocationParameters parameters);
 }
 
-// Spring 配置
-@Configuration
-class AiServiceConfig {
-    @Bean
-    public WeatherAssistant weatherAssistant(ChatModel chatModel) {
-        return AiServices.builder(WeatherAssistant.class)
+// Spring 装配（config/ToolConfig.java）——工具在这里注入循环
+@Bean
+public ToolAssistant toolAssistant(@Qualifier("openAiChatModel") ChatModel chatModel) {
+    return AiServices.builder(ToolAssistant.class)
             .chatModel(chatModel)
-            .tools(new WeatherTools())  // ← 注入工具
+            .chatMemoryProvider(chatMemoryProvider)
+            .tools(timeTools(), calculatorTools(), orderTools()).maxToolCallingRoundTrips(10)  // ← 防循环
             .build();
-    }
 }
 
 // 用户问
-weatherAssistant.chat("上海今天天气怎么样？");
-// 模型自动决定：调 getWeather("上海") → 拿到结果 → 总结回复
+toolAssistant.chat(1L, "从 2026-01-01 到 2026-08-20 有多少天？", new InvocationParameters());
+// 模型自动决定：调 daysBetween("2026-01-01", "2026-08-20") → 拿到 231 → 总结回复
 ```
 
-**3 行代码就接入了一个工具**，这就是 LangChain4j 的优雅之处。
+一个 `.tools(...)` 就把工具接进了 Agent 循环——工具类是普通 POJO，接口是普通接口，这就是 LangChain4j 的优雅之处。
 
 ---
 
@@ -212,6 +227,8 @@ public class OrderTools {
 ```
 
 **LLM 怎么知道枚举值**：框架自动从 enum 反射出 `["PENDING","PAID",...]` 传给模型，模型只能选这些值。
+
+> 💡 **教学示意**：枚举参数是框架通用能力，本例为独立示例；仓库现行 `OrderTools` 的真实工具是 `getOrder` / `createOrder`（演示副作用与审批，见 6.7），未用枚举参数。
 
 ### 6.3.3 POJO 参数示例
 

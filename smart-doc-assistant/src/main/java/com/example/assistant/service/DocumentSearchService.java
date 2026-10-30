@@ -37,13 +37,13 @@ public class DocumentSearchService {
      */
     public List<SearchHit> search(String query, int topK, double minScore) {
         Embedding queryEmbedding = embeddingModel.embed(query).content();
-        // 做业务过滤更精准效率更高
-       // Filter filter = MetadataFilterBuilder.metadataKey("bizId").isEqualTo("customer");
+        // 业务过滤挂载点（Filter 用法见 Ch11）
+        // Filter filter = MetadataFilterBuilder.metadataKey("bizId").isEqualTo("customer");
         EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
                 .queryEmbedding(queryEmbedding)
                 .maxResults(topK)
                 .minScore(minScore)
-             // .filter(filter)
+                // .filter(filter)
                 .build();
         return embeddingStore.search(request).matches().stream()
                 .map(this::toHit)

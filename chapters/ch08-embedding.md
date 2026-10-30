@@ -756,7 +756,7 @@ InMemoryEmbeddingStore 的实现是**遍历所有向量逐个算余弦相似度*
 
 ```mermaid
 flowchart LR
-    subgraph "启动时（一次）"
+    subgraph "建库（一次性；Ch10 起由 DocumentIngestionService 执行）"
         DOC[预置中文文档库] --> SEG[切分为 TextSegment] --> EMB[Embedding 模型] --> ST[(InMemoryEmbeddingStore)]
     end
     subgraph "请求时（每次）"
@@ -777,71 +777,43 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.filter.Filter;
+import dev.langchain4j.store.embedding.filter.MetadataFilterBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 /**
- * Ch08：文档语义搜索服务。
- * 启动时把预置文档嵌入到内存向量库；运行时用同一个模型嵌入查询并检索。
- * 注入的是 EmbeddingModel 接口，local / bailian 切换对业务无感。
+ * Ch08/Ch10：文档语义检索服务。
+ *
+ * <p>Ch10 起职责收窄为"只做检索"：建库完全移交 DocumentIngestionService
+ * （启动时从 classpath 加载示例文档 / 手动从目录加载 / 上传文件流式入库）。
+ * 本服务保留 /api/search/semantic 接口行为不变，检索内容从硬编码文档变为真实入库文档。
+ *
+ * <p>注入的是 EmbeddingModel 接口，local（本地 ONNX）/ bailian（阿里百炼）切换对业务无感。
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DocumentSearchService implements ApplicationRunner {
+public class DocumentSearchService {
 
     private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
 
-    /** 预置知识库：产品 FAQ / 政策片段（模拟生产环境从数据库加载的文档） */
-    private static final List<Map<String, String>> DOCUMENTS = List.of(
-            Map.of("id", "faq-001", "category", "退换货",
-                   "content", "支持 7 天无理由退货，商品需保持完好，不影响二次销售。"),
-            Map.of("id", "faq-002", "category", "退换货",
-                   "content", "商品存在质量问题的，消费者有权要求退款或换货，运费由商家承担。"),
-            Map.of("id", "faq-003", "category", "售后",
-                   "content", "退款将在审核通过后 3 个工作日内原路退回您的支付账户。"),
-            Map.of("id", "faq-004", "category", "支付",
-                   "content", "支持支付宝、微信支付、银行卡等多种支付方式。"),
-            Map.of("id", "faq-005", "category", "物流",
-                   "content", "默认使用顺丰速运，下单后 24 小时内发货。"),
-            Map.of("id", "doc-001", "category", "技术文档",
-                   "content", "Spring Boot 基于 Java 构建，提供自动配置能力，简化微服务开发。"),
-            Map.of("id", "doc-002", "category", "技术文档",
-                   "content", "pgvector 是 PostgreSQL 的向量检索扩展，支持 HNSW 索引。"),
-            Map.of("id", "doc-003", "category", "技术文档",
-                   "content", "RAG 检索增强生成通过向量检索召回相关知识，交给大模型生成答案。")
-    );
-
-    /** 启动时：把所有文档片段嵌入并写入向量库（一次性建库） */
-    @Override
-    public void run(org.springframework.boot.ApplicationArguments args) {
-        List<TextSegment> segments = DOCUMENTS.stream()
-                .map(doc -> TextSegment.from(
-                        doc.get("content"),
-                        new dev.langchain4j.data.document.Metadata()
-                                .put("docId", doc.get("id"))
-                                .put("category", doc.get("category"))))
-                .toList();
-
-        List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
-        embeddingStore.addAll(embeddings, segments);
-        log.info("已索引 {} 个文档片段到内存向量库（embedding 维度={}）",
-                segments.size(), embeddingModel.dimension());
-    }
-
-    /** 语义搜索：嵌入查询 → 检索 Top-K */
+    /**
+     * 语义搜索：嵌入查询 → 检索 Top-K
+     */
     public List<SearchHit> search(String query, int topK, double minScore) {
         Embedding queryEmbedding = embeddingModel.embed(query).content();
+        // 业务过滤挂载点（Filter 用法见 Ch11）
+        // Filter filter = MetadataFilterBuilder.metadataKey("bizId").isEqualTo("customer");
         EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
                 .queryEmbedding(queryEmbedding)
                 .maxResults(topK)
                 .minScore(minScore)
+                // .filter(filter)
                 .build();
         return embeddingStore.search(request).matches().stream()
                 .map(this::toHit)
@@ -858,12 +830,15 @@ public class DocumentSearchService implements ApplicationRunner {
         );
     }
 
-    /** 检索结果 DTO（record 可直接序列化为 JSON） */
-    public record SearchHit(double score, String docId, String category, String content) {}
+    /**
+     * 检索结果 DTO（record 可直接序列化为 JSON）
+     */
+    public record SearchHit(double score, String docId, String category, String content) {
+    }
 }
-```
+``````
 
-> ✅ **最佳实践**：`ApplicationRunner` 在 Spring Boot 启动完成后执行一次，适合"建库/预热"这类一次性任务；生产环境文档量大时，应改为**异步任务 + 增量索引**（Ch10 文档处理管线详解）。
+> ✅ **版本注**：v0.6 时代本类自己用 `ApplicationRunner` 启动建库；Ch10 起建库职责移交 `DocumentIngestionService`（classpath 示例文档 / 目录加载 / 上传流式入库三个入口），本类收窄为纯检索——上面即现行版。生产环境文档量大时，建库应改为**异步任务 + 增量索引**（Ch10 详解）。
 
 ### 8.8.3 代码：Controller 端点
 
@@ -1066,7 +1041,7 @@ Embedding 检索能召回"相关片段"，但**片段切得烂，检索神仙也
 | 模块 | 文件 | 说明 |
 |------|------|------|
 | 配置 | `config/EmbeddingConfig.java` | local/bailian 双模式 + InMemoryEmbeddingStore Bean |
-| 服务 | `service/DocumentSearchService.java` | 启动建库 + 语义搜索 |
+| 服务 | `service/DocumentSearchService.java` | 语义搜索（建库移交 `DocumentIngestionService`，Ch10） |
 | 控制器 | `controller/SemanticSearchController.java` | POST /api/search/semantic |
 | 配置 | `application.yml` | `chat.embedding.provider` 切换 + 百炼参数 |
 | 依赖 | `pom.xml` | + `langchain4j-embeddings-all-minilm-l6-v2`，版本 v0.5→v0.6 |
@@ -1077,13 +1052,13 @@ Embedding 检索能召回"相关片段"，但**片段切得烂，检索神仙也
 cd smart-doc-assistant
 # 方式一：本地 ONNX（默认，无需 API Key，直接可跑）
 mvn spring-boot:run
-# 启动日志: 已索引 8 个文档片段到内存向量库（embedding 维度=384）
+# 启动日志: 建库完成——从 classpath 加载示例文档 → 分块 → 入库完成（embedding 维度=384）
 
 # 方式二：切到阿里百炼（你测试的平台）
 export DASHSCOPE_API_KEY=sk-xxx
 export CHAT_EMBEDDING_PROVIDER=bailian
 mvn spring-boot:run
-# 启动日志: 已索引 8 个文档片段到内存向量库（embedding 维度=1024）
+# 启动日志: 建库完成——从 classpath 加载示例文档 → 分块 → 入库完成（embedding 维度=1024）
 
 # 语义搜索
 curl -X POST http://localhost:8090/api/search/semantic \

@@ -291,7 +291,7 @@ langchain4j:
 )
 public interface JsonAssistant {
     @UserMessage("{{it}}")
-    ReviewResult analyze(String review);
+    ReviewAnalysis analyze(String review);
 }
 ```
 
@@ -343,24 +343,47 @@ JSON 抽取:   temperature=0.0, response_format=JSON
 在 AiService 方法参数里直接声明 `ChatRequestParameters`，**该参数会被框架自动识别并合并到请求**：
 
 ```java
-@AiService
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "openAiChatModel")   // ← 多模型 Bean 显式指定默认对话模型
 public interface FlexibleAssistant {
 
     /**
-     * 基础对话：使用全局默认参数
+     * 创意写作：高 temperature + frequency_penalty 抗重复
+     * 典型调用：
+     * params = ChatRequestParameters.builder()
+     * .temperature(1.0)
+     * .topP(0.95)
+     * .frequencyPenalty(0.5)
+     * .maxTokens(2000)
+     * .build();
      */
-    String chat(@MemoryId Long userId, @UserMessage String message);
+    @SystemMessage("你是一位资深品牌文案，擅长写有温度、有故事感的内容。" +
+                   "文风：优雅但不矫情，简洁但有信息密度。")
+    String creativeWrite(@UserMessage String topic, ChatRequestParameters params);
 
     /**
-     * 翻译场景：低温度保证准确
+     * 翻译：低 temperature 保证准确
      */
-    @SystemMessage("你是一名专业翻译，只输出译文，不要任何解释。")
+    @SystemMessage("你是一名专业翻译，只输出译文，不要任何解释或客套话。")
     String translate(@UserMessage String text, ChatRequestParameters params);
 
     /**
-     * JSON 结构化输出：temperature=0 + JSON 模式
+     * JSON 结构化输出：temperature=0 + responseFormat=JSON
      */
-    ReviewResult analyze(@UserMessage String review, ChatRequestParameters params);
+    ReviewAnalysis analyze(@UserMessage String review, ChatRequestParameters params);
+
+    /**
+     * 代码评审：Few-shot + Role Prompting 组合（外部模板）
+     */
+    @SystemMessage(fromResource = "prompts/code-review-system.txt")
+    String reviewCode(@V("language") String language, @V("code") String code);
+
+    /**
+     * 数学题：CoT 触发
+     */
+    @SystemMessage("你是一名数学老师，先一步步推理再给出最终答案。" +
+                   "用中文回答，推理步骤清晰明了。")
+    @UserMessage("题目：{{question}}\n\n请一步步思考后给出答案。")
+    String solveMath(@V("question") String question);
 }
 ```
 
@@ -373,28 +396,49 @@ Controller 里组装参数：
 @RequiredArgsConstructor
 public class AssistantController {
 
-    private final FlexibleAssistant assistant;
+    private final FlexibleAssistant flexibleAssistant;
 
-    @PostMapping("/api/translate")
-    public String translate(@RequestBody TranslateRequest req) {
-        ChatRequestParameters params = ChatRequestParameters.builder()
-            .temperature(0.3)
-            .maxTokens(500)
-            .build();
+    /**
+     * 翻译 v2：低 temperature + seed 保证稳定
+     */
+    @PostMapping("/api/translate-v2")
+    public Map<String, Object> translateV2(@RequestBody TranslateRequest req) {
+        OpenAiChatRequestParameters params = OpenAiChatRequestParameters.builder()
+                .temperature(0.3)
+                .maxOutputTokens(500)
+                .seed(42)
+                .build();
 
-        return assistant.translate(req.getText(), params);
+        String translated = flexibleAssistant.translate(req.text(), params);
+        return Map.of(
+                "text", req.text(),
+                "translated", translated,
+                "temperature", 0.3,
+                "note", "低 temperature + seed=42 让翻译可复现"
+        );
     }
 
-    @PostMapping("/api/review/analyze-v2")
-    public ReviewResult analyzeReview(@RequestBody ReviewRequest req) {
-        ChatRequestParameters params = ChatRequestParameters.builder()
-            .temperature(0.0)
-            .maxTokens(500)
-            .responseFormat(ResponseFormatType.JSON)
-            .seed(42)
-            .build();
+    /**
+     * JSON 输出 v3：temperature=0 + responseFormat=JSON
+     */
+    @PostMapping("/api/review/analyze-v3")
+    public Map<String, Object> analyzeV3(@RequestBody ReviewRequest req) {
+        // 演示 OpenAiChatRequestParameters 子类，可以加 responseFormat
+        OpenAiChatRequestParameters params = OpenAiChatRequestParameters.builder()
+                .temperature(0.0)
+                .maxOutputTokens(500)
+                .responseFormat(ResponseFormat.builder().type(ResponseFormatType.JSON).build())
+                .seed(42)
+                .build();
 
-        return assistant.analyze(req.getReview(), params);
+        ReviewAnalysis result = flexibleAssistant.analyze(req.review(), params);
+        return Map.of(
+                "review", req.review(),
+                "sentiment", result.sentiment(),
+                "score", result.rating(),
+                "keyPoints", result.keyPoints(),
+                "note", "temperature=0 + JSON_OBJECT 让结构化输出 99% 成功"
+        );
     }
 }
 ```
@@ -475,7 +519,7 @@ String explain(@UserMessage String topic);
     现在分析用户的评价，严格按示例的 JSON 格式输出。
     """)
 @UserMessage("评价：{{review}}")
-ReviewResult analyze(@V("review") String review);
+ReviewAnalysis analyze(@V("review") String review);
 ```
 
 **关键技巧**：
@@ -621,7 +665,7 @@ LangChain4j 的 `Agent` 就是 ReAct 模式的产品化实现（详见 Ch14）�
     不要输出 JSON 之外的任何文字。不要使用 Markdown 代码块包裹。
     """)
 @UserMessage("评价：{{review}}")
-ReviewResult analyze(@V("review") String review);
+ReviewAnalysis analyze(@V("review") String review);
 ```
 
 **结合**：`temperature=0` + `responseFormat=JSON` + 上面这种 Prompt = 99%+ 解析成功率。
@@ -999,7 +1043,7 @@ smart-doc-assistant/
     │   │   ├── ReviewAnalysisAssistant.java   (JSON 结构化输出)
     │   │   └── FlexibleAssistant.java         ← 新增：参数动态覆盖
     │   └── controller/
-    │       └── AssistantController.java       (新增 /api/translate-v2, /api/review/analyze-v2)
+    │       └── AssistantController.java       (新增 /api/translate-v2, /api/review/analyze-v3)
     └── resources/
         ├── application.yml                    (加多模型配置)
         └── prompts/
@@ -1014,7 +1058,7 @@ smart-doc-assistant/
 ```java
 package com.example.assistant.assistant;
 
-import com.example.assistant.dto.ReviewResult;
+import com.example.assistant.assistant.ReviewAnalysisAssistant.ReviewAnalysis;
 import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
@@ -1039,7 +1083,7 @@ public interface FlexibleAssistant {
     /**
      * JSON 结构化输出
      */
-    ReviewResult analyze(@UserMessage String review, ChatRequestParameters params);
+    ReviewAnalysis analyze(@UserMessage String review, ChatRequestParameters params);
 
     /**
      * 代码评审：Few-shot 示例
@@ -1096,9 +1140,9 @@ public String creative(@RequestBody CreativeRequest req) {
 
 @PostMapping("/api/translate-v2")
 public String translateV2(@RequestBody TranslateRequest req) {
-    ChatRequestParameters params = ChatRequestParameters.builder()
+    OpenAiChatRequestParameters params = OpenAiChatRequestParameters.builder()
         .temperature(0.3)
-        .maxTokens(500)
+        .maxOutputTokens(500)
         .seed(42)
         .build();
 
@@ -1106,11 +1150,11 @@ public String translateV2(@RequestBody TranslateRequest req) {
 }
 
 @PostMapping("/api/review/analyze-v3")
-public ReviewResult analyzeV3(@RequestBody ReviewRequest req) {
-    ChatRequestParameters params = ChatRequestParameters.builder()
+public ReviewAnalysis analyzeV3(@RequestBody ReviewRequest req) {
+    OpenAiChatRequestParameters params = OpenAiChatRequestParameters.builder()
         .temperature(0.0)
-        .maxTokens(500)
-        .responseFormat(ResponseFormatType.JSON)
+        .maxOutputTokens(500)
+        .responseFormat(ResponseFormat.builder().type(ResponseFormatType.JSON).build())
         .build();
 
     return flexibleAssistant.analyze(req.getReview(), params);

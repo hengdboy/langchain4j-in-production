@@ -80,23 +80,18 @@ LangChain4j 的核心价值一句话：**把 LLM 应用开发中 80% 的通用�
 刚才那个"裸写"的例子，用 LangChain4j 写是什么样？
 
 ```java
-@AiService
-interface ChatAssistant {
-    @SystemMessage("你是友好的AI助手")
-    String chat(String message);
-}
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT,
+        chatModel = "openAiChatModel",              // ← 多 ChatModel Bean 时显式指定默认对话模型
+        chatMemoryProvider = "chatMemoryProvider")  // ← EXPLICIT 模式需显式声明记忆
+public interface ChatAssistant {
 
-@RestController
-@RequiredArgsConstructor
-class ChatController {
-    private final ChatAssistant chatAssistant;
-
-    @PostMapping("/chat")
-    public String chat(@RequestBody String message) {
-        return chatAssistant.chat(message);  // 就这一行
-    }
+    @SystemMessage("你是一个友好的AI助手，请用简洁的中文回答用户的问题。")
+    @UserMessage("{{it}}")
+    Result<String> chat(@MemoryId String sessionId, @V("it") String message);
 }
 ```
+
+调用方就是普通 Spring MVC——仓库的 `AssistantController#chat`（`POST /api/chat`）注入这个接口，业务逻辑核心就一行 `chatAssistant.chat(req.sessionId, req.message)`，返回的 `Result` 里连 token 用量都替你统计好了。`@MemoryId`、`Result`、`EXPLICIT` 装配现在看不懂没关系：分别在 Ch02、Ch05 展开（`EXPLICIT` 是因为项目里有多个 ChatModel Bean，2.9 节讲）。
 
 HTTP 请求、JSON 解析、认证、重试、消息组装——**全部由框架代理完成**。这还只是最简单的场景，后面记忆、工具、RAG、流式输出加上去，差距会指数级拉大。
 

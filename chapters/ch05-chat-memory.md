@@ -465,21 +465,51 @@ public class PgChatMemoryStore implements ChatMemoryStore {
 
 ```java
 @Configuration
+@Slf4j
 public class ChatMemoryStoreConfig {
 
+    /**
+     * Redis 版 ChatMemoryStore
+     */
     @Bean
-    public ChatMemoryStore chatMemoryStore(
-        @Value("${spring.data.redis.host}") String host,
-        @Value("${spring.data.redis.port}") int port
-    ) {
-        return RedisChatMemoryStore.builder()
-            .host(host)
-            .port(port)
-            .ttl(Duration.ofDays(30).toSeconds())   // 注意：1.19 起 ttl 参数是 Long（秒），不是 Duration
-            .build();
+    @ConditionalOnProperty(name = "chat.memory.backend", havingValue = "redis", matchIfMissing = true)
+    public ChatMemoryStore redisChatMemoryStore(
+            @Value("${spring.data.redis.host:localhost}") String host,
+            @Value("${spring.data.redis.port:6379}") int port,
+            @Value("${spring.data.redis.password:}") String password,
+            @Value("${chat.memory.ttl-days:30}") int ttlDays) {
+
+        log.info("Initializing RedisChatMemoryStore at {}:{} (TTL {} days)", host, port, ttlDays);
+
+        RedisChatMemoryStore.Builder builder = RedisChatMemoryStore.builder()
+                .host(host)
+                .port(port)
+                // 命名空间前缀：默认 keyPrefix 为空，chat memory 会以裸 memoryId（如 "3"）作为 Redis key，
+                // 极易与同实例其它数据（计数器/列表/旧 embedding 残留等）撞 key 并触发
+                // "Existing key has wrong Redis type"。加前缀隔离，且历史脏 key 不会误读。
+                .prefix("chat-memory:")
+                .ttl(Duration.ofDays(ttlDays).toSeconds());
+
+        if (password != null && !password.isBlank()) {
+            builder.password(password);
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * 内存版 ChatMemoryStore（fallback）
+     */
+    @Bean
+    @ConditionalOnProperty(name = "chat.memory.backend", havingValue = "memory")
+    public ChatMemoryStore inMemoryChatMemoryStore() {
+        log.warn("Using InMemoryChatMemoryStore — conversations will be lost on restart!");
+        return new dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore();
     }
 }
 ```
+
+> ⚠️ **三个生产细节都在上面代码里**：`ttl` 自 1.19 起是 **Long（秒）**、不是 Duration，传错编译期不报错、运行时语义全变；`prefix` 必须加——裸 memoryId 当 Redis key 极易和同实例其他数据撞类型；`chat.memory.backend=memory` 一键切回内存版（重启即失，只配开发用）。
 
 ### 5.6.3 Provider 引用 Store
 
