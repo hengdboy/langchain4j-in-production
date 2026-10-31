@@ -2,6 +2,7 @@ package com.example.hiring.controller;
 
 import com.example.hiring.api.CorrectionRequest;
 import com.example.hiring.api.CreateCandidateRequest;
+import com.example.hiring.api.EmailTimelineItem;
 import com.example.hiring.api.InterviewFeedbackRequest;
 import com.example.hiring.api.ReplyRequest;
 import com.example.hiring.api.ReviewRequest;
@@ -10,11 +11,15 @@ import com.example.hiring.core.CandidateContext;
 import com.example.hiring.core.CandidateStatus;
 import com.example.hiring.core.FsmEvent;
 import com.example.hiring.evolution.DpoSampleWriter;
+import com.example.hiring.entity.ReceivedEmail;
+import com.example.hiring.entity.SentEmail;
 import com.example.hiring.mapper.CandidateEventMapper;
 import com.example.hiring.mapper.CandidateMapper;
 import com.example.hiring.core.CandidateEvent;
 import com.example.hiring.entity.Interview;
 import com.example.hiring.mapper.InterviewMapper;
+import com.example.hiring.mapper.ReceivedEmailMapper;
+import com.example.hiring.mapper.SentEmailMapper;
 import com.example.hiring.service.CandidatePipelineService;
 import com.example.hiring.service.CandidateService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -30,6 +35,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +48,7 @@ import java.util.Map;
  * GET  /api/candidates/{id}                  查候选人（状态/匹配分/决策画像）
  * GET  /api/candidates/{id}/events           状态变更流水
  * GET  /api/candidates/{id}/interview        面试安排与出题
+ * GET  /api/candidates/{id}/emails           邮件往来时间线（发出+回复）
  * POST /api/candidates/{id}/reply            候选人回复（约面/offer 两阶段同入口）
  * POST /api/candidates/{id}/interview/complete  面试官提交反馈
  * POST /api/candidates/{id}/review           HR 复核 ON_HOLD
@@ -62,6 +70,8 @@ public class CandidateController {
     private final CandidateMapper candidateMapper;
     private final CandidateEventMapper candidateEventMapper;
     private final InterviewMapper interviewMapper;
+    private final SentEmailMapper sentEmailMapper;
+    private final ReceivedEmailMapper receivedEmailMapper;
     private final DpoSampleWriter dpoSampleWriter;
     private final ObjectMapper objectMapper;
 
@@ -86,6 +96,25 @@ public class CandidateController {
         return interviewMapper.selectList(new QueryWrapper<Interview>()
                 .eq("candidate_id", id).orderByDesc("id").last("LIMIT 1"))
                 .stream().findFirst().orElse(null);
+    }
+
+    /** 邮件往来时间线：发出（邀约/offer/事务）与回复合并，按时间升序——演示页过程剧本用 */
+    @GetMapping("/{id}/emails")
+    public List<EmailTimelineItem> emails(@PathVariable Long id) {
+        List<EmailTimelineItem> all = new ArrayList<>();
+        for (SentEmail e : sentEmailMapper.selectList(new QueryWrapper<SentEmail>()
+                .eq("candidate_id", id))) {
+            all.add(new EmailTimelineItem("sent", e.getRoundNo(), e.getSubject(), e.getBody(),
+                    null, e.getStatus(), e.getFromEmail(), e.getToEmail(), e.getSentAt()));
+        }
+        for (ReceivedEmail e : receivedEmailMapper.selectList(new QueryWrapper<ReceivedEmail>()
+                .eq("candidate_id", id))) {
+            all.add(new EmailTimelineItem("received", null, e.getSubject(), e.getBody(),
+                    e.getDecision(), null, e.getFromEmail(), null, e.getReceivedAt()));
+        }
+        all.sort(Comparator.comparing(EmailTimelineItem::occurredAt,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+        return all;
     }
 
     @PostMapping("/{id}/reply")

@@ -19,10 +19,12 @@
 ## 本地演示页
 
 应用启动后浏览器打开 <http://localhost:8091/>：四条演示泳道（强匹配 / 弱匹配 /
-注入简历 / 歧视字段）按 FSM 真实时序逐条回放完整招聘流程；点「详情」可看
-脱敏对照镜（简历原文 vs 决策画像，逐段标注受保护特征是否被拦截）、评估分数
-与逐条理由、全部状态迁移流水。无 key 可跑（确定性回放模式），演示简历为
-虚构人物，页面零依赖单文件（`src/main/resources/static/index.html`）。
+注入简历 / 歧视字段）按 FSM 真实时序展开成「过程剧本」——投递简历 → 决策脱敏
+（决策画像 + 逐项拦截标注）→ 岗位匹配评估（分数与逐条理由）→ 邀约信全文（含
+Bandit 话术臂）→ 回复分类 → 确认函与面试题 → 面评 → Offer 全文，每张步骤卡都
+是后端接口的真实产物，可随时暂停（录演示用）。点「详情」可看脱敏对照镜、评估
+结论与全部状态迁移流水。无 key 可跑（确定性回放模式），演示简历为虚构人物，
+页面零依赖单文件（`src/main/resources/static/index.html`）。
 
 ## 业务流程
 
@@ -107,6 +109,7 @@ curl -s http://localhost:8091/api/candidates/157/events # 逐次状态变更流�
 | GET | `/api/candidates/{id}` | 状态/匹配分/决策画像 |
 | GET | `/api/candidates/{id}/events` | 状态变更流水 |
 | GET | `/api/candidates/{id}/interview` | 排期与出题 |
+| GET | `/api/candidates/{id}/emails` | 邮件往来时间线（发出+回复全文） |
 | POST | `/api/candidates/{id}/reply` | 候选人回复（约面/offer 同入口） |
 | POST | `/api/candidates/{id}/interview/complete` | 面试官提交反馈 |
 | POST | `/api/candidates/{id}/review` | HR 复核 ON_HOLD |
