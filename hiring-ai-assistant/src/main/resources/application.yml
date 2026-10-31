@@ -10,6 +10,12 @@ spring:
   application:
     name: hiring-ai-assistant
 
+  # ============== 本地私有配置（与 smart-doc-assistant 同一口径） ==============
+  # application-local.yml（已 gitignore）只有在 local profile 激活时才会被读，
+  # 这里默认激活——文件不存在时该 profile 只是没有任何额外配置，不影响启动（CI 安全）。
+  profiles:
+    active: local
+
   # ============== MySQL 8.0（业务数据，docker-compose 启） ==============
   datasource:
     url: jdbc:mysql://localhost:3306/hiringdb?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
