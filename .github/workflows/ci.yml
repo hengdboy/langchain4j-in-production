@@ -26,6 +26,8 @@ jobs:
         run: mvn -B verify
       - name: Upload test reports
         if: always()
+        # 存储配额重算期（6-12h）artifact 会被拒传，测试报告只是附带产物，不该拖红 CI
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: surefire-smart-doc-assistant
@@ -92,6 +94,8 @@ jobs:
           mvn -B verify
       - name: Upload test reports
         if: always()
+        # 存储配额重算期（6-12h）artifact 会被拒传，测试报告只是附带产物，不该拖红 CI
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: surefire-hiring-ai-assistant
@@ -117,6 +121,8 @@ jobs:
         run: mvn -B verify
       - name: Upload test reports
         if: always()
+        # 存储配额重算期（6-12h）artifact 会被拒传，测试报告只是附带产物，不该拖红 CI
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: surefire-labs
