@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<!--
+  本地演示页：AI 招聘官全流程可视化（Ch24/25 配套）
+  由 Spring Boot 从 classpath:/static 托管，应用启动后访问 http://localhost:8091/
+  单文件零依赖：vanilla JS + CSS，无构建链。页面不含硬编码业务数据，
+  全部数据来自本机 REST API（/api/demo/run、/api/candidates）；
+  演示简历为 DemoService 中的虚构人物，不含任何真实 PII。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 招聘官 · 本地演示 | LangChain4j 生产实战</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#10141b; --border:#30363d;
+  --text:#e6edf3; --muted:#8b949e;
+  --green:#3fb950; --green-bg:rgba(63,185,80,.12);
+  --blue:#58a6ff; --blue-bg:rgba(88,166,255,.12);
+  --red:#f85149; --red-bg:rgba(248,81,73,.12);
+  --amber:#d29922; --amber-bg:rgba(210,153,34,.12);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 24px 40px}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+
+/* ===== header ===== */
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:6px 0 14px;border-bottom:1px solid var(--border)}
+h1{font-size:19px;font-weight:650;letter-spacing:.2px}
+h1 .sub{color:var(--muted);font-size:12.5px;font-weight:400;margin-left:10px}
+.ctrl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{background:transparent;color:var(--muted);border:0;padding:6px 13px;font-size:12.5px;cursor:pointer}
+.seg button.on{background:var(--blue-bg);color:var(--blue)}
+.btn{background:#238636;color:#fff;border:1px solid #2ea043;border-radius:8px;padding:7px 18px;font-size:13.5px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--muted);border-color:var(--border);font-weight:400}
+.status{width:100%;font-size:12.5px;color:var(--muted);min-height:18px}
+.status .t{color:var(--amber)}
+#offline{display:none;background:var(--red-bg);border:1px solid var(--red);border-radius:8px;padding:10px 14px;margin:14px 0 0;font-size:13px}
+#offline code{background:transparent;border:0;padding:0}
+
+/* ===== job strip ===== */
+.job{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 16px;margin:16px 0 14px;font-size:13px}
+.job b{font-size:14px}
+.job .m{color:var(--muted)}
+.job .id{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-left:auto}
+
+/* ===== lanes ===== */
+.lane{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:10px;padding:12px 16px 13px;margin-bottom:10px}
+.lane.ok{border-left-color:var(--green)} .lane.bad{border-left-color:var(--red)}
+.lane.warn{border-left-color:var(--amber)} .lane.muted{border-left-color:#4d5566}
+.lane-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font-size:11.5px;font-weight:600;border-radius:5px;padding:1px 8px;letter-spacing:.4px}
+.tag.ok{background:var(--green-bg);color:var(--green)} .tag.bad{background:var(--red-bg);color:var(--red)}
+.tag.warn{background:var(--amber-bg);color:var(--amber)} .tag.muted{background:rgba(139,148,158,.15);color:var(--muted)}
+.pname{font-weight:600;font-size:14px}
+.pbrief{color:var(--muted);font-size:12.5px}
+.badges{margin-left:auto;display:flex;align-items:center;gap:8px}
+.score{font-family:var(--mono);font-size:13px;font-weight:700;display:none}
+.verdict{font-size:11px;font-weight:700;border-radius:5px;padding:1px 8px;letter-spacing:.6px;display:none}
+.verdict.SHORTLIST{background:var(--green-bg);color:var(--green)}
+.verdict.REVIEW{background:var(--amber-bg);color:var(--amber)}
+.verdict.REJECT{background:var(--red-bg);color:var(--red)}
+.detail-btn{background:transparent;border:1px solid var(--border);color:var(--blue);border-radius:6px;padding:3px 12px;font-size:12px;cursor:pointer}
+.detail-btn:disabled{color:var(--muted);cursor:not-allowed;opacity:.5}
+.detail-btn:not(:disabled):hover{border-color:var(--blue)}
+.track{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:10px}
+.node{font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:2px 10px;white-space:nowrap;transition:all .25s}
+.node.done{color:var(--green);border-color:rgba(63,185,80,.55);background:var(--green-bg)}
+.node.cur{color:var(--blue);border-color:var(--blue);background:var(--blue-bg);animation:pulse 1.2s ease-in-out infinite}
+.node.term{color:#fff;background:var(--green);border-color:var(--green);animation:none;font-weight:600}
+@keyframes pulse{50%{opacity:.55}}
+.arr{color:#3d444d;font-size:11px}
+.exit{display:none;font-size:11.5px;font-weight:600;color:var(--red);border:1px solid var(--red);background:var(--red-bg);border-radius:999px;padding:2px 10px}
+.exit.show{display:inline-block;animation:pulse 1.2s ease-in-out infinite}
+.exit.hold{color:var(--amber);border-color:var(--amber);background:var(--amber-bg)}
+.alert{display:none;margin-top:9px;font-size:12.5px;border:1px solid var(--red);background:var(--red-bg);color:var(--red);border-radius:7px;padding:6px 11px}
+.alert.show{display:block}
+.alert.amber{border-color:var(--amber);background:var(--amber-bg);color:var(--amber)}
+.expect{margin-top:8px;font-size:11.5px;color:var(--muted)}
+
+/* ===== console ===== */
+.console{background:#0a0d12;border:1px solid var(--border);border-radius:10px;margin-top:14px;font-family:var(--mono);font-size:12.3px;line-height:1.75;max-height:190px;overflow-y:auto;padding:10px 14px}
+.console .cl{white-space:pre-wrap;word-break:break-all}
+.console .dim{color:var(--muted)}
+.console .g{color:var(--green)} .console .r{color:var(--red)} .console .b{color:var(--blue)} .console .y{color:var(--amber)}
+.console .ev{color:var(--blue);font-weight:600}
+
+/* ===== footer ===== */
+footer{margin-top:22px;border-top:1px solid var(--border);padding-top:14px;font-size:12.3px;color:var(--muted)}
+footer .curl{font-family:var(--mono);font-size:11.8px;background:var(--panel2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;margin:8px 0;overflow-x:auto;white-space:nowrap;color:#79c0ff}
+footer .links{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+
+/* ===== drawer ===== */
+#mask{display:none;position:fixed;inset:0;background:rgba(1,4,9,.62);z-index:9}
+#mask.show{display:block}
+#drawer{position:fixed;top:0;right:0;height:100vh;width:min(700px,94vw);background:var(--bg);border-left:1px solid var(--border);z-index:10;transform:translateX(102%);transition:transform .25s ease;overflow-y:auto;padding:20px 24px 40px}
+#drawer.open{transform:translateX(0)}
+#drawer h2{font-size:16px;display:flex;align-items:center;gap:10px}
+#drawer h2 .x{margin-left:auto;cursor:pointer;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:2px 10px;font-size:12px;background:transparent}
+#drawer h3{font-size:13px;color:var(--blue);margin:22px 0 9px;padding-bottom:5px;border-bottom:1px dashed var(--border);font-weight:600}
+.mirror{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.mirror{grid-template-columns:1fr}}
+.mirror .pane{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:10px 12px;min-width:0}
+.mirror .pt{font-size:11.5px;color:var(--muted);margin-bottom:7px;display:flex;gap:8px;align-items:center}
+.mirror .pt i{font-style:normal;font-size:10px;border-radius:4px;padding:0 6px}
+.mirror .pt i.bad{background:var(--red-bg);color:var(--red)} .mirror .pt i.okk{background:var(--green-bg);color:var(--green)}
+.mirror pre{font-family:var(--mono);font-size:11.4px;line-height:1.65;white-space:pre-wrap;word-break:break-all;color:#c9d1d9;max-height:290px;overflow-y:auto}
+mark.pii{background:rgba(248,81,73,.28);color:#ffa198;border-radius:3px;padding:0 2px}
+mark.red{background:rgba(210,153,34,.3);color:var(--amber);border-radius:3px;padding:0 2px;font-weight:600}
+.leaks{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.leak{font-size:11.5px;font-family:var(--mono);border-radius:5px;padding:2px 9px;border:1px solid}
+.leak.blocked{color:var(--green);border-color:rgba(63,185,80,.5);background:var(--green-bg)}
+.leak.leaked{color:var(--red);border-color:var(--red);background:var(--red-bg)}
+.verdictbox{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:12px 16px}
+.verdictbox .big{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--blue)}
+.verdictbox .big small{font-size:12px;color:var(--muted);font-weight:400}
+ul.reasons{margin:9px 0 0 0;list-style:none}
+ul.reasons li{font-size:12.8px;padding:3px 0 3px 16px;position:relative;color:#c9d1d9}
+ul.reasons li::before{content:"";position:absolute;left:2px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--blue)}
+.empty-note{font-size:12.8px;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber);border-radius:8px;padding:8px 12px}
+table.evt{width:100%;border-collapse:collapse;font-size:12.2px}
+table.evt th{color:var(--muted);font-weight:500;text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);font-size:11.5px}
+table.evt td{padding:6px 8px;border-bottom:1px solid rgba(48,54,61,.5);vertical-align:top}
+table.evt .mono{font-family:var(--mono);font-size:11.3px}
+table.evt .tr-g{color:var(--green)} table.evt .tr-r{color:var(--red)}
+.actor{font-size:10.5px;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:0 5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>AI 招聘官 · 本地演示<span class="sub">FSM 状态机 · 多 Agent 编排 · 三层护栏 ｜ Ch24/25 配套</span></h1>
+  <div class="ctrl">
+    <div class="seg" id="modeSeg">
+      <button data-m="canned" class="on">确定性回放（零成本）</button>
+      <button data-m="real">真实 LLM（耗额度）</button>
+    </div>
+    <button class="btn" id="runBtn">运行完整流程</button>
+    <button class="btn ghost" id="resetBtn">重置</button>
+  </div>
+  <div class="status" id="status">后端检测中…</div>
+  <div id="offline">后端未启动。先在 <code>hiring-ai-assistant/</code> 目录运行 <code>mvn spring-boot:run</code>（需先 docker compose up -d 启动 MySQL/Redis），然后刷新本页。</div>
+</header>
+
+<section class="job">
+  <b>招聘岗位</b>
+  <span>资深 Java 后端工程师（AI 方向）</span>
+  <span class="m">AI 平台部 · 招 1 人</span>
+  <span class="m">必备技能：Java / Spring / LangChain4j / RAG</span>
+  <span class="id" id="jobId"></span>
+</section>
+
+<main id="lanes"></main>
+
+<div class="console" id="console"><div class="cl dim">$ 点击右上角「运行完整流程」，按 FSM 真实时序逐条回放状态迁移</div></div>
+
+<footer>
+  <div>复现命令（与本页等效，二选一）：</div>
+  <div class="curl" id="curlRepro"></div>
+  <div class="links">
+    <a href="https://github.com/hengdboy/langchain4j-in-production/blob/main/chapters/ch24-hiring-automation.md" target="_blank">Ch24 综合实战（上）：FSM 编排</a>
+    <a href="https://github.com/hengdboy/langchain4j-in-production/blob/main/chapters/ch25-guardrails-evolution.md" target="_blank">Ch25 综合实战（下）：护栏与演化</a>
+    <a href="https://github.com/hengdboy/langchain4j-in-production/blob/main/hiring-ai-assistant/README.md" target="_blank">项目 README</a>
+  </div>
+  <div style="margin-top:8px">演示简历均为虚构人物，不含真实个人信息；页面数据全部来自本机后端实时接口。</div>
+</footer>
+
+</div>
+
+<div id="mask"></div>
+<aside id="drawer">
+  <h2><span id="dTitle">候选人详情</span><button class="x" id="dClose">关闭 Esc</button></h2>
+  <div id="dBody"></div>
+</aside>
+
+<script>
+"use strict";
+/* ============ 常量 ============ */
+const HIRE_TRACK = ["APPLIED","SHORTLISTED","INVITE_SENT","INTERVIEW_SCHEDULED","INTERVIEWED","OFFER_SENT","HIRED"];
+const STATE_LABEL = {
+  APPLIED:"已投递", SHORTLISTED:"已入围", INVITE_SENT:"已发邀约", INTERVIEW_SCHEDULED:"已约面",
+  INTERVIEWED:"已面试", OFFER_SENT:"已发Offer", HIRED:"已入职", REJECTED:"已淘汰", ON_HOLD:"冷处理",
+  WITHDRAWN:"已撤回", CLOSED_NO_RESPONSE:"无回复关闭", EXPIRED:"已过期"
+};
+const EXIT_STATES = ["REJECTED","ON_HOLD","WITHDRAWN","CLOSED_NO_RESPONSE","EXPIRED"];
+const EVENT_LABEL = { /* 事件名 → 中文说明，未收录的显示原始名 */
+  SCREEN_PASS:"初筛通过", SCREEN_FAIL:"初筛淘汰", INVITE_SENT:"发出邀约", INVITE_REPLIED:"候选人回复",
+  INTERVIEW_DONE:"面试完成", EVAL_PASS:"面试评估通过", EVAL_FAIL:"面试评估未通过",
+  OFFER_SENT:"发出Offer", OFFER_REPLIED:"接受Offer", OFFER_DECLINED:"婉拒Offer"
+};
+const LANES = [
+  {key:"strong",  idKey:"strongId",    tag:"强匹配",  cls:"ok",    person:"张伟", brief:"5 年 Java · LangChain4j/RAG 项目经验", expect:"预期：通过初筛，走完 邀约 → 面试 → Offer → 入职 全链路"},
+  {key:"weak",    idKey:"weakId",      tag:"弱匹配",  cls:"muted", person:"李萍", brief:"1 年前端 · 必备技能不匹配",            expect:"预期：初筛评估淘汰（决策可解释）"},
+  {key:"inject",  idKey:"injectionId", tag:"注入简历", cls:"bad",   person:"王强", brief:"简历内藏「忽略之前的所有指令」",        expect:"预期：注入检测命中，按冷处理策略拦截"},
+  {key:"pii",     idKey:"piiId",       tag:"歧视字段", cls:"warn",  person:"陈静", brief:"性别 / 年龄 / 婚育 / 户籍 写在简历里",   expect:"预期：受保护字段进不了决策画像，正常评估"}
+];
+
+/* ============ 状态 ============ */
+let mode = "canned";
+let busy = false;
+let online = false;
+let runResult = null;          /* DemoResult */
+let laneData = {};             /* key -> {ctx, events} */
+
+/* ============ 工具 ============ */
+const $ = s => document.querySelector(s);
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function hhmmss(iso){
+  try{ const d=new Date(iso); return d.toTimeString().slice(0,8); }catch(e){ return ""; }
+}
+async function jfetch(url, opt){
+  const r = await fetch(url, opt);
+  if(!r.ok){ throw new Error(url+" → HTTP "+r.status); }
+  return r.json();
+}
+
+/* ============ 顶部：模式切换 / 检测 ============ */
+$("#modeSeg").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b || busy) return;
+  mode = b.dataset.m;
+  document.querySelectorAll("#modeSeg button").forEach(x=>x.classList.toggle("on", x===b));
+  renderCurl();
+});
+function renderCurl(){
+  $("#curlRepro").textContent = 'curl -X POST http://localhost:8091/api/demo/run -H "Content-Type: application/json" -d \'{"useRealAgent": '+(mode==="real")+'}\'';
+}
+renderCurl();
+
+(async ()=>{
+  try{ await jfetch("/api/jobs"); online = true; $("#status").textContent = "后端已连接 · 模式：确定性回放（canned，无 key 零成本）· 点击「运行完整流程」开始"; }
+  catch(e){ online = false; $("#status").textContent = ""; $("#offline").style.display = "block"; $("#runBtn").disabled = true; }
+})();
+
+/* ============ 泳道 ============ */
+function buildLanes(){
+  $("#lanes").innerHTML = LANES.map(L=>`
+    <div class="lane ${L.cls}" id="lane-${L.key}">
+      <div class="lane-head">
+        <span class="tag ${L.cls}">${L.tag}</span>
+        <span class="pname">${L.person}</span>
+        <span class="pbrief">${L.brief}</span>
+        <span class="badges">
+          <span class="score" id="score-${L.key}"></span>
+          <span class="verdict" id="verdict-${L.key}"></span>
+          <button class="detail-btn" id="btn-${L.key}" disabled data-key="${L.key}">详情</button>
+        </span>
+      </div>
+      <div class="track" id="track-${L.key}">
+        ${HIRE_TRACK.map((s,i)=>`${i?'<span class="arr">→</span>':''}<span class="node" data-s="${s}">${STATE_LABEL[s]}</span>`).join("")}
+        <span class="exit" id="exit-${L.key}"></span>
+      </div>
+      <div class="alert" id="alert-${L.key}"></div>
+      <div class="expect">${L.expect}</div>
+    </div>`).join("");
+  document.querySelectorAll(".detail-btn").forEach(b=>b.addEventListener("click",()=>openDrawer(b.dataset.key)));
+}
+buildLanes();
+
+function setTrack(key, reached){
+  const track = $("#track-"+key);
+  const last = reached[reached.length-1];
+  track.querySelectorAll(".node").forEach(n=>{
+    n.classList.remove("done","cur","term");
+    if(reached.includes(n.dataset.s)) n.classList.add("done");
+  });
+  const exitEl = $("#exit-"+key);
+  if(EXIT_STATES.includes(last)){
+    exitEl.textContent = STATE_LABEL[last] || last;
+    exitEl.classList.add("show");
+    exitEl.classList.toggle("hold", last==="ON_HOLD");
+  } else {
+    exitEl.classList.remove("show");
+    const cur = track.querySelector('.node[data-s="'+last+'"]');
+    if(cur){ cur.classList.remove("done"); cur.classList.add(last==="HIRED"?"term":"cur"); }
+  }
+}
+
+function setBadges(key, ctx){
+  const sc = $("#score-"+key), vd = $("#verdict-"+key);
+  if(ctx && ctx.matchScore!=null){
+    sc.style.display = "inline";
+    sc.textContent = ctx.matchScore+" 分";
+    sc.style.color = ctx.matchVerdict==="REJECT" ? "var(--red)" : "var(--green)";
+  }
+  if(ctx && ctx.matchVerdict){
+    vd.style.display = "inline";
+    vd.textContent = ctx.matchVerdict;
+  }
+}
+
+function setAlert(key, ctx, events){
+  const el = $("#alert-"+key);
+  if(key==="inject"){
+    const msg = parseReasons(ctx && ctx.matchReasons).join("；") || "检测到简历注入，已拦截";
+    el.innerHTML = "护栏拦截 · "+esc(msg);
+    el.classList.add("show");
+  } else if(key==="pii" && ctx && ctx.redactedProfile){
+    el.className = "alert amber show";
+    el.textContent = "决策画像已生成：性别 / 年龄 / 婚育 / 户籍 均未出现在评估输入中（点「详情」看对照）";
+  }
+}
+
+/* ============ 控制台 ============ */
+function cline(html){
+  const c = $("#console");
+  const d = document.createElement("div");
+  d.className = "cl"; d.innerHTML = html;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+
+/* ============ 运行 ============ */
+$("#runBtn").addEventListener("click", runDemo);
+$("#resetBtn").addEventListener("click", ()=>{
+  if(busy) return;
+  runResult = null; laneData = {};
+  buildLanes();
+  $("#console").innerHTML = '<div class="cl dim">$ 已重置。点击「运行完整流程」开始（每次运行生成新的演示候选人）</div>';
+  $("#jobId").textContent = "";
+  $("#status").textContent = "后端已连接 · 模式："+(mode==="canned"?"确定性回放（canned，无 key 零成本）":"真实 LLM")+" · 点击「运行完整流程」开始";
+});
+
+async function runDemo(){
+  if(busy || !online) return;
+  if(mode==="real" && !confirm("真实 LLM 模式：每一步都会调用模型，产生少量 API 费用，耗时约 1–2 分钟。继续？")) return;
+  busy = true;
+  $("#runBtn").disabled = true;
+  buildLanes();
+  $("#console").innerHTML = "";
+  $("#jobId").textContent = "";
+  const t0 = Date.now();
+  const timer = setInterval(()=>{
+    $("#status").innerHTML = '<span class="t">运行中… '+((Date.now()-t0)/1000).toFixed(1)+'s</span>　模式：'+(mode==="canned"?"确定性回放":"真实 LLM")+(mode==="real"?"（每步一次模型调用，请稍候）":"");
+  }, 100);
+  cline('<span class="dim">$ POST /api/demo/run {"useRealAgent": '+(mode==="real")+'}</span>');
+  try{
+    runResult = await jfetch("/api/demo/run",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({useRealAgent: mode==="real"})
+    });
+    $("#jobId").textContent = "jobId="+runResult.jobId;
+    cline('<span class="g">✓ 流程执行完成</span>，拉取 4 位候选人上下文与事件流水…');
+
+    const keys = LANES.map(L=>L.key), idByKey = {};
+    LANES.forEach(L=>idByKey[L.key]=runResult[L.idKey]);
+    const data = await Promise.all(keys.map(async k=>({
+      k, ctx: await jfetch("/api/candidates/"+idByKey[k]), events: await jfetch("/api/candidates/"+idByKey[k]+"/events")
+    })));
+    laneData = Object.fromEntries(data.map(d=>[d.k,{ctx:d.ctx,events:d.events}]));
+
+    /* 真实时序回放：event id 全局自增，跨泳道按 id 合并排序 */
+    const timeline = [];
+    data.forEach(d=>{ d.events.slice().sort((a,b)=>a.id-b.id).forEach(ev=>timeline.push({key:d.k, ev})); });
+    timeline.sort((a,b)=>a.ev.id-b.ev.id);
+
+    LANES.forEach(L=>setTrack(L.key, ["APPLIED"]));
+    cline('<span class="dim">job: id='+runResult.jobId+' title=资深 Java 后端工程师（AI 方向）</span>');
+
+    const reachedMap = Object.fromEntries(keys.map(k=>[k,["APPLIED"]]));
+    const eventLine = (key, ev) => {
+      const L = LANES.find(x=>x.key===key);
+      const reason = firstReason(key, ev);
+      return '<span class="dim">'+(hhmmss(ev.createdAt))+'</span> '
+        +'['+L.tag+'·'+esc(laneData[key].ctx.name||L.person)+'] '
+        +'<span class="ev">'+esc(ev.event)+'</span> '
+        +'<span class="'+(EXIT_STATES.includes(ev.toStatus)?(ev.toStatus==="ON_HOLD"?"y":"r"):"g")+'">'+esc(stateCn(ev.fromStatus))+' → '+esc(stateCn(ev.toStatus))+'</span>'
+        +(reason?' <span class="dim">· '+esc(reason)+'</span>':'');
+    };
+    const finishLanes = () => {
+      keys.forEach(k=>{ setBadges(k, laneData[k].ctx); setAlert(k, laneData[k].ctx, laneData[k].events); $("#btn-"+k).disabled=false; });
+    };
+
+    if (document.hidden) {
+      /* 后台标签的定时器会被浏览器节流到秒级甚至分钟级，跳过动画直接渲染终态 */
+      keys.forEach(k=>setTrack(k, reachedMap[k].concat(laneData[k].events.map(e=>e.toStatus))));
+      timeline.forEach(({key, ev})=>cline(eventLine(key, ev)));
+      finishLanes();
+    } else {
+      const STEP = Math.max(380, Math.min(700, Math.floor(5200/Math.max(timeline.length,1))));
+      for(let i=0;i<timeline.length;i++){
+        await sleep(STEP);
+        const {key, ev} = timeline[i];
+        reachedMap[key].push(ev.toStatus);
+        setTrack(key, reachedMap[key]);
+        cline(eventLine(key, ev));
+        if(String(ev.event).startsWith("SCREEN")) setBadges(key, laneData[key].ctx);
+      }
+      finishLanes();
+    }
+    const dt = ((Date.now()-t0)/1000).toFixed(1);
+    $("#status").textContent = "完成 · "+timeline.length+" 次状态迁移 · 耗时 "+dt+"s · 模式："+(mode==="canned"?"确定性回放":"真实 LLM")+" · 点任意「详情」查看核心决策链";
+    cline('<span class="g">✓ 回放结束</span> <span class="dim">（'+timeline.length+' 次迁移 / '+dt+'s）— 评估分数与结论为后端真实返回，非前端写死</span>');
+  }catch(e){
+    cline('<span class="r">✗ 运行失败：'+esc(e.message)+'（若为真实模式，请检查 api key 配置）</span>');
+    $("#status").textContent = "运行失败，详见下方控制台";
+  }finally{
+    clearInterval(timer);
+    busy = false;
+    $("#runBtn").disabled = false;
+  }
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function stateCn(s){ return STATE_LABEL[s]||s||"—"; }
+/* matchReasons 在实体里是 JSON 数组字符串，统一在此解析 */
+function parseReasons(s){
+  if(s==null || s==="") return [];
+  try{ const v = JSON.parse(s); return Array.isArray(v)? v : [String(v)]; }catch(e){ return [String(s)]; }
+}
+function firstReason(key, ev){
+  const L = laneData[key];
+  if(!L) return "";
+  if(ev.reason) return ev.reason;
+  if(String(ev.event).startsWith("SCREEN")) return parseReasons(L.ctx.matchReasons)[0] || "";
+  return "";
+}
+
+/* ============ 详情抽屉 ============ */
+const PII_RE = /(1[3-9]\d{9})|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|((?:性别|年龄|婚姻状况|婚育|籍贯|户籍|民族|政治面貌|出生日期|出生年月)\s*[：:]?\s*[^；;，,、\n]{0,12})|(已婚已育|已婚|未婚|离异|丧偶)|(\d{1,2}\s*岁)/g;
+
+function highlightResume(text){
+  let out = "", last = 0, m;
+  PII_RE.lastIndex = 0;
+  while((m = PII_RE.exec(text))!==null){
+    out += esc(text.slice(last, m.index)) + '<mark class="pii">'+esc(m[0])+'</mark>';
+    last = m.index + m[0].length;
+    if(m[0].length===0) PII_RE.lastIndex++;
+  }
+  return out + esc(text.slice(last));
+}
+function prettyProfile(jsonStr){
+  if(!jsonStr || !jsonStr.trim()) return "";
+  try{
+    const pretty = JSON.stringify(JSON.parse(jsonStr), null, 2);
+    return esc(pretty).replace(/\[REDACTED\]/g,'<mark class="red">[REDACTED]</mark>');
+  }catch(e){ return esc(jsonStr); }
+}
+/* 逐段核对：简历里出现的受保护信息，是否泄漏进决策画像 */
+function leakCheck(resumeText, profileJson){
+  const pf = profileJson || "";
+  const out = [];
+  /* 「标签：值」结构只取到下一个空白，避免把整行吞进一个段 */
+  const labeled = /(性别|年龄|婚姻状况|婚育|籍贯|户籍|民族|政治面貌|出生日期|出生年月)\s*[：:]\s*([^\s；;，,、\n]{1,8})/g;
+  let m;
+  while((m = labeled.exec(resumeText))!==null){
+    const val = m[2].trim();
+    if(!val) continue;
+    out.push({seg:m[1]+"："+val, leaked: pf.includes(val)});
+  }
+  [["婚育状态",/已婚已育|已婚|未婚|离异|丧偶/],["联系电话",/1[3-9]\d{9}/],["电子邮箱",/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/]].forEach(([name,re])=>{
+    const mm = resumeText.match(re);
+    if(mm) out.push({seg:name+"（"+mm[0]+"）", leaked: pf.includes(mm[0])});
+  });
+  return out;
+}
+
+async function openDrawer(key){
+  const L = LANES.find(x=>x.key===key);
+  const d = laneData[key];
+  if(!d) return;
+  $("#dTitle").textContent = L.tag+" · "+(d.ctx.name||L.person);
+  const ctx = d.ctx, evs = (d.events||[]).slice().sort((a,b)=>a.id-b.id);
+
+  /* 脱敏对照 */
+  let mirrorHtml;
+  if(ctx.redactedProfile && ctx.redactedProfile.trim()){
+    const leaks = leakCheck(ctx.resumeText||"", ctx.redactedProfile);
+    mirrorHtml = `
+      <div class="mirror">
+        <div class="pane">
+          <div class="pt">简历原文（含 PII，只进库不进决策）<i class="bad">含受保护特征</i></div>
+          <pre>${highlightResume(ctx.resumeText||"（空）")}</pre>
+        </div>
+        <div class="pane">
+          <div class="pt">决策画像（评估 Agent 的唯一输入）<i class="okk">白名单 5 字段</i></div>
+          <pre>${prettyProfile(ctx.redactedProfile)}</pre>
+        </div>
+      </div>
+      <div class="leaks">${leaks.length
+        ? leaks.map(x=>'<span class="leak '+(x.leaked?"leaked":"blocked")+'">'+esc(x.seg)+' · '+(x.leaked?"泄漏":"已拦截")+'</span>').join("")
+        : '<span class="leak blocked">简历中未检出受保护特征 · 无需拦截</span>'}</div>`;
+  } else {
+    mirrorHtml = `
+      <div class="mirror"><div class="pane">
+        <div class="pt">简历原文<i class="bad">触发注入检测</i></div>
+        <pre>${highlightResume(ctx.resumeText||"（空）")}</pre>
+      </div>
+      <div class="pane">
+        <div class="pt">决策画像</div>
+        <div class="empty-note" style="margin-top:6px">画像为空 —— 注入简历未进入解析与评估环节（冷处理策略：不评估、不回应注入指令，直接淘汰）</div>
+      </div></div>`;
+  }
+
+  /* 评估结论 */
+  let verdictHtml;
+  if(ctx.matchScore!=null || ctx.matchVerdict){
+    const reasons = parseReasons(ctx.matchReasons);
+    verdictHtml = `
+      <div class="verdictbox">
+        <div class="big">${ctx.matchScore!=null?ctx.matchScore:"—"}<small> / 100</small></div>
+        <span class="verdict ${esc(ctx.matchVerdict)}" style="display:inline;font-size:13px;padding:3px 12px">${esc(ctx.matchVerdict||"—")}</span>
+      </div>
+      <ul class="reasons">${reasons.map(r=>"<li>"+esc(r)+"</li>").join("")}</ul>
+      <div class="expect" style="margin-top:8px">分数与理由由 MatchEvaluatorAgent 基于「职位要求 × 脱敏画像」产出，评估输入里没有姓名、性别、年龄（Ch25 歧视防护）。</div>`;
+  } else {
+    verdictHtml = '<div class="empty-note">未进入评估：'+esc(parseReasons(ctx.matchReasons).join("；")||"护栏拦截")+'</div>';
+  }
+
+  /* 事件流水 */
+  const evtRows = evs.map(e=>`
+    <tr>
+      <td class="mono dim">${hhmmss(e.createdAt)}</td>
+      <td><span class="ev" style="color:var(--blue);font-weight:600;font-family:var(--mono);font-size:11.5px">${esc(e.event)}</span><div class="dim" style="font-size:11px">${esc(EVENT_LABEL[e.event]||"")}</div></td>
+      <td class="mono ${EXIT_STATES.includes(e.toStatus)?'tr-r':'tr-g'}">${esc(stateCn(e.fromStatus))} → ${esc(stateCn(e.toStatus))}</td>
+      <td><span class="actor">${esc(e.actor||"system")}</span></td>
+      <td class="dim">${e.metadata?esc(briefMeta(e.metadata)):"—"}</td>
+    </tr>`).join("");
+
+  $("#dBody").innerHTML = `
+    <h3>脱敏对照镜 — 白名单过滤 + 值级清洗（DecisionFieldFilter）</h3>
+    ${mirrorHtml}
+    <h3>评估结论</h3>
+    ${verdictHtml}
+    <h3>状态机流水 — ${evs.length} 次迁移（candidate_event 表）</h3>
+    <table class="evt">
+      <tr><th>时间</th><th>事件</th><th>迁移</th><th>actor</th><th>备注</th></tr>
+      ${evtRows}
+    </table>`;
+  $("#drawer").classList.add("open");
+  $("#mask").classList.add("show");
+}
+function briefMeta(md){
+  try{ const o = JSON.parse(md); return o.arm_id ? "Bandit 话术 arm: "+o.arm_id : md.slice(0,60); }
+  catch(e){ return md.slice(0,60); }
+}
+function closeDrawer(){ $("#drawer").classList.remove("open"); $("#mask").classList.remove("show"); }
+$("#dClose").addEventListener("click", closeDrawer);
+$("#mask").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeDrawer(); });
+</script>
+</body>
+</html>

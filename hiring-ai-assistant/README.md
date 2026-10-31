@@ -16,6 +16,14 @@
 
 详细设计见 [ARCHITECTURE.md](ARCHITECTURE.md)，配套章节 Ch24（编排）、Ch25（护栏与演化）。
 
+## 本地演示页
+
+应用启动后浏览器打开 <http://localhost:8091/>：四条演示泳道（强匹配 / 弱匹配 /
+注入简历 / 歧视字段）按 FSM 真实时序逐条回放完整招聘流程；点「详情」可看
+脱敏对照镜（简历原文 vs 决策画像，逐段标注受保护特征是否被拦截）、评估分数
+与逐条理由、全部状态迁移流水。无 key 可跑（确定性回放模式），演示简历为
+虚构人物，页面零依赖单文件（`src/main/resources/static/index.html`）。
+
 ## 业务流程
 
 全部编排由状态机驱动（12 状态 / 13 事件 / 15 条转换，其中 11 条带 Guard 闸门），
@@ -116,7 +124,7 @@ bash scripts/run-e2e.sh   # 全链路 E2E（需先起服务）
 
 ```bash
 mvn clean package -Pmcp
-java -jar target/hiring-ai-assistant-0.30.0-SNAPSHOT-mcp.jar
+java -jar target/hiring-ai-assistant-0.31.0-SNAPSHOT-mcp.jar
 ```
 
 Claude Desktop / Cursor 配置：
@@ -126,7 +134,7 @@ Claude Desktop / Cursor 配置：
   "mcpServers": {
     "hiring-ai-assistant": {
       "command": "java",
-      "args": ["-jar", "/绝对路径/hiring-ai-assistant-0.30.0-SNAPSHOT-mcp.jar"]
+      "args": ["-jar", "/绝对路径/hiring-ai-assistant-0.31.0-SNAPSHOT-mcp.jar"]
     }
   }
 }

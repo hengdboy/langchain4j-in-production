@@ -14,7 +14,7 @@
     <groupId>com.example</groupId>
     <artifactId>hiring-ai-assistant</artifactId>
     <!--
-      v0.30.0-SNAPSHOT —— Ch24/25 综合实战项目：AI 招聘官（候选人全流程自动化）。
+      v0.31.0-SNAPSHOT —— Ch24/25 综合实战项目：AI 招聘官（候选人全流程自动化）。
 
       技术栈（按 ARCHITECTURE.md §2）：
       - Spring Boot 3.5.13 + JDK 21
@@ -28,7 +28,7 @@
       - hiring-ai-assistant = Ch24/25 综合实战（招聘流程自动化：FSM 编排 + 三护栏 + Bandit 演化）
       - 三模块独立编译/部署，共享 LangChain4j 1.22.0 / beta32 版本
     -->
-    <version>0.30.0-SNAPSHOT</version>
+    <version>0.31.0-SNAPSHOT</version>
     <name>hiring-ai-assistant</name>
     <description>LangChain4j Tutorial Demo Project - AI Recruiter (Hiring Process Automation)</description>
 
@@ -231,7 +231,7 @@
         <!--
           MCP stdio 入口单独打一个可执行 jar：
             mvn clean package -Pmcp
-            java -jar target/hiring-ai-assistant-0.30.0-SNAPSHOT-mcp.jar
+            java -jar target/hiring-ai-assistant-0.31.0-SNAPSHOT-mcp.jar
           不要用 java -cp xxx.jar com.example.hiring.mcp.McpServerStarter —— fat jar 的类在 BOOT-INF/ 下。
         -->
         <profile>

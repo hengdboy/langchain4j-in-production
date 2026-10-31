@@ -59,7 +59,7 @@
 | 项目 | 端口 | 是什么 |
 |---|---|---|
 | [`smart-doc-assistant/`](smart-doc-assistant/) | 8090 | 智能文档问答：RAG 全管线 + Agent + MCP + Skills + 护栏 + 可观测（版本 v0.19） |
-| [`hiring-ai-assistant/`](hiring-ai-assistant/) | 8091 | 招聘流程自动化：FSM 状态机 + 6 Agent + 三护栏 + MCP Server + Bandit/DPO + 合规审计（版本 v0.30） |
+| [`hiring-ai-assistant/`](hiring-ai-assistant/) | 8091 | 招聘流程自动化：FSM 状态机 + 6 Agent + 三护栏 + MCP Server + Bandit/DPO + 合规审计（版本 v0.31） |
 
 ## 快速开始
 
@@ -97,6 +97,9 @@ mvn spring-boot:run
 curl -X POST http://localhost:8091/api/demo/run \
      -H "Content-Type: application/json" -d '{"useRealAgent": false}'
 ```
+
+启动后浏览器打开 <http://localhost:8091/> 是全流程可视化演示页：四条泳道按
+FSM 真实时序回放，可看脱敏对照镜（简历原文 vs 模型看到的决策画像）与逐条评估理由。
 
 无 key 可跑（canned 模式）；本地 MySQL/Redis 替代方案、四条路线的预期输出与
 MCP 接入见 [hiring-ai-assistant/README.md](hiring-ai-assistant/README.md)。

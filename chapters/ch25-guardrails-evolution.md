@@ -245,7 +245,7 @@ stdio 子进程暴露 6 个工具：`getCandidateStatus` / `listCandidatesByStat
   "mcpServers": {
     "hiring-ai-assistant": {
       "command": "java",
-      "args": ["-jar", "/绝对路径/hiring-ai-assistant-0.30.0-SNAPSHOT-mcp.jar"]
+      "args": ["-jar", "/绝对路径/hiring-ai-assistant-0.31.0-SNAPSHOT-mcp.jar"]
     }
   }
 }
