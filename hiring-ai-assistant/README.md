@@ -28,8 +28,7 @@ Bandit 话术臂）→ 回复分类 → 确认函与面试题 → 面评 → Off
 结论与全部状态迁移流水。无 key 可跑（确定性回放模式），演示简历为虚构人物，
 页面零依赖单文件（`src/main/resources/static/index.html`）。
 
-录演示用 `?pace=3`（回放放慢 3 倍 + 自动滚动跟随新卡片），配合
-`scripts/record-demo.mjs`（Playwright 录屏）+ ffmpeg 调色板两遍法可复现顶部 GIF。
+演示页支持 `?pace=3`（回放放慢 3 倍并自动滚动跟随新卡片），投屏讲解时用。
 
 ## 业务流程
 

@@ -134,3 +134,10 @@ hsperfdata*
 
 # 演示录屏中间产物（webm，GIF 已提交到 assets/）
 .demo-video/
+# 图源文件（excalidraw）只留本地，仓库只放导出的 PNG
+assets/src/
+labs/assets/src/
+*.excalidraw
+
+# 录屏脚本是本地工具，不入库
+hiring-ai-assistant/scripts/record-demo.mjs
