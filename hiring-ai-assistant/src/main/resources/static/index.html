@@ -234,6 +234,9 @@ const LANES = [
 
 /* ============ 状态 ============ */
 let mode = "canned";
+/* 录制模式：?pace=3 回放放慢 3 倍并自动滚动跟随新卡片（录 GIF 用）；?focus=0 关闭跟随 */
+const PACE = Math.max(1, Math.min(6, Number(new URLSearchParams(location.search).get("pace")) || 1));
+const FOLLOW = PACE > 1 && new URLSearchParams(location.search).get("focus") !== "0";
 let busy = false;
 let paused = false;
 let online = false;
@@ -621,7 +624,7 @@ async function runDemo(){
       timeline.forEach(({key, ev})=>cline(eventLine(key, ev)));
       finishLanes();
     } else {
-      const STEP = Math.max(520, Math.min(900, Math.floor(6800/Math.max(timeline.length,1))));
+      const STEP = Math.max(520, Math.min(900, Math.floor(6800/Math.max(timeline.length,1)))) * PACE;
       for(let i=0;i<timeline.length;i++){
         while(paused && !document.hidden){ await sleep(150); }
         await sleep(STEP);
@@ -629,6 +632,7 @@ async function runDemo(){
         reachedMap[key].push(ev.toStatus);
         setTrack(key, reachedMap[key]);
         flushCards(key, ev.id);
+        if(FOLLOW){ const last = $("#steps-"+key).lastElementChild; if(last) last.scrollIntoView({behavior:"smooth", block:"center"}); }
         cline(eventLine(key, ev));
         if(String(ev.event).startsWith("SCREEN")) setBadges(key, laneData[key].ctx);
       }

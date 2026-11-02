@@ -3,6 +3,8 @@
 招聘方侧的候选人全流程自动化：**简历解析 → 决策脱敏 → 岗位匹配评估 →
 约面邀请 → 排期出题 → 评价汇总 → offer 跟踪**。
 
+![hiring 全流程演示](../assets/hiring-demo.gif)
+
 核心设计三件事：
 
 1. **确定性 FSM + LLM 叶子**：12 状态 / 13 事件 / 15 条转换（Spring StateMachine），
@@ -25,6 +27,9 @@ Bandit 话术臂）→ 回复分类 → 确认函与面试题 → 面评 → Off
 是后端接口的真实产物，可随时暂停（录演示用）。点「详情」可看脱敏对照镜、评估
 结论与全部状态迁移流水。无 key 可跑（确定性回放模式），演示简历为虚构人物，
 页面零依赖单文件（`src/main/resources/static/index.html`）。
+
+录演示用 `?pace=3`（回放放慢 3 倍 + 自动滚动跟随新卡片），配合
+`scripts/record-demo.mjs`（Playwright 录屏）+ ffmpeg 调色板两遍法可复现顶部 GIF。
 
 ## 业务流程
 

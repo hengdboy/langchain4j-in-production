@@ -131,3 +131,6 @@ hsperfdata*
 # 多媒体临时文件
 *.tmp.mp4
 *.tmp.png
+
+# 演示录屏中间产物（webm，GIF 已提交到 assets/）
+.demo-video/
