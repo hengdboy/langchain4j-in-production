@@ -212,8 +212,8 @@
                     </excludes>
                 </configuration>
             </plugin>
-            <!-- 锁 JDK 21：JDK 22+ 上 Lombok 注解处理失效，会出现 398 条"找不到符号 log"，
-                 而且增量构建时 target/classes 是旧编的，看起来像"构建成功"，一 clean 就炸 -->
+            <!-- JDK 下限 21：全书在 21.0.10 上验证，推荐用 21。曾因旧版 Lombok 在 JDK 22+ 注解处理失效
+                 （大量"找不到符号 log"）锁过 [21,22)，现 Lombok 跟随 Spring Boot（1.18.44），只拦低于 21 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -227,8 +227,8 @@
                         <configuration>
                             <rules>
                                 <requireJavaVersion>
-                                    <version>[21,22)</version>
-                                    <message>请用 JDK 21 构建（本仓库在 21.0.10 验证通过）。更高版本会让 Lombok 失效。</message>
+                                    <version>[21,)</version>
+                                    <message>请用 JDK 21 及以上构建（全书在 21.0.10 验证通过，推荐 21）。</message>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>

@@ -4,7 +4,7 @@
 
 > 本仓库收录实战篇 13 章；基础篇（Ch01–09）与全部 25 章的完整连载在博客「技术沉淀」分类：[blog.qianyecube.cn/categories/tech-notes](https://blog.qianyecube.cn/categories/tech-notes)
 
-- **教程口径**：LangChain4j `1.22.0` + 实验模块 `1.22.0-beta32` ｜ JDK 21（pom 强制）｜ 最后验证 2026-10-28
+- **教程口径**：LangChain4j `1.22.0` + 实验模块 `1.22.0-beta32` ｜ JDK 21（推荐，pom 拦下限）｜ 最后验证 2026-10-28
 - **读前必看**：[Ch00 前置速查](chapters/ch00-preflight.md)——环境、学习路径图、全系列约定，15 分钟
 
 ## 章节
@@ -108,7 +108,7 @@ MCP 接入见 [hiring-ai-assistant/README.md](hiring-ai-assistant/README.md)。
 
 ## 环境硬约束
 
-- **JDK 21**：enforcer 锁 `[21,22)`，JDK 22+ 下 Lombok 注解处理失效（一堆"找不到符号 log"，增量构建可能假成功，一 clean 就炸）
+- **JDK 21（推荐）**：enforcer 只拦下限 `[21,)`，全书在 21.0.10 上验证。早期旧版 Lombok 在 JDK 22+ 会注解处理失效（一堆"找不到符号 log"），现 Lombok 跟随 Spring Boot（1.18.44），更高版本一般可用
 - **LangChain4j 版本成对升级**：稳定模块由 `<dependencyManagement>` 按 `langchain4j.version` 钉住；实验模块（agentic / mcp / skills / guardrails / community-*）只发 beta 线，各自写 `langchain4j.beta.version`
 - **Spring Boot 3.5.x**
 

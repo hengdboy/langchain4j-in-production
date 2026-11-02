@@ -81,7 +81,7 @@
                     <parameters>true</parameters>
                 </configuration>
             </plugin>
-            <!-- 与主项目同一条铁律：JDK 21 硬约束（高版本 Lombok 失效的教训同源） -->
+            <!-- 与主项目一致：JDK 下限 21，不设上限 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -93,8 +93,8 @@
                         <configuration>
                             <rules>
                                 <requireJavaVersion>
-                                    <version>[21,22)</version>
-                                    <message>labs 用 JDK 21 构建（教程口径统一）</message>
+                                    <version>[21,)</version>
+                                    <message>labs 用 JDK 21 及以上构建（全书在 21 验证，推荐 21）</message>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
