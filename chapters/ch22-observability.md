@@ -12,8 +12,6 @@
 > 6. 掌握 `attributes` 跨方法传数据（streaming 跨线程安全的唯一通道）
 > 7. 自定义 `/api/metrics` Controller 暴露 token / cost 数据（LangChain4j 原生，零外部依赖）
 
----
-
 ## 22.1 为什么 AI 应用需要专门的可观测性
 
 AI 应用与传统的 Web 应用有**三个本质差异**：
@@ -41,8 +39,6 @@ flowchart LR
     T2 --> H1["/api/metrics 端点"]
     L1 -->|onError| E1[异常埋点]
 ```
-
----
 
 ## 22.2 关键事实：LangChain4j 1.22.0 的可观测性 API（实测验证）
 
@@ -77,15 +73,13 @@ public class OpenAiTokenUsage extends TokenUsage {
 2. **`TokenUsage.sum()` / `add()` 静态方法**——多调用汇总天然支持（呼应 Ch13 Result.totalTokenUsage()）
 3. **`OpenAiTokenUsage` 子类**——提供 cached_tokens（缓存命中）/ reasoning_tokens（推理模型专用）
 
-> 📌 **类名提示**：下面官方原文里的 `ChatLanguageModel` / `StreamingChatLanguageModel` 是 0.x 的旧名。1.22 的 jar 里只有 `ChatModel` / `StreamingChatModel`（`javap -cp ... dev.langchain4j.model.chat.ChatModel` 可验证），按新名去搜源码/文档才搜得到。
+> **类名提示**：下面官方原文里的 `ChatLanguageModel` / `StreamingChatLanguageModel` 是 0.x 的旧名。1.22 的 jar 里只有 `ChatModel` / `StreamingChatModel`（`javap -cp ... dev.langchain4j.model.chat.ChatModel` 可验证），按新名去搜源码/文档才搜得到。
 
-> ⚠️ **官方原文约束**：
+> **官方原文约束**：
 >
 > 对于 StreamingChatLanguageModel，ChatModelListener.onResponse() 和 onError() 在与 onRequest() **不同的线程**上调用。线程上下文目前**不会自动传播**，因此您可能希望使用 `attributes` 映射从 onRequest() 传播任何必要的数据到 onResponse() 或 onError()。
 
 这是本章用 `attributes` 跨方法传 `startNanos` 的根因。
-
----
 
 ## 22.3 三大埋点入口（官方确认）
 
@@ -102,8 +96,6 @@ public class OpenAiTokenUsage extends TokenUsage {
 **两者叠加使用**（生产建议）：
 1. `ChatModelListener` → 全量 Token 计量
 2. `AiServiceListener` → 业务方法级 audit（user_id 注入）
-
----
 
 ## 22.4 核心：ChatModelListener 三方法实战
 
@@ -178,8 +170,6 @@ public class ObservabilityChatModelListener implements ChatModelListener {
 1. **attributes 跨方法传数据**——streaming 跨线程，ThreadLocal 失效
 2. **多个 listener 按 List 迭代顺序执行**——本类应该放在第一个（先把 cost 算出来，后续 listener 可消费）
 
----
-
 ## 22.5 TokenUsage 详解——AI 应用的"钱袋子"
 
 ### 22.5.1 官方 TokenUsage API
@@ -241,9 +231,7 @@ public enum ModelPricing {
 }
 ```
 
-⚠️ 价格随时变动——演示用，请到厂商官网核对最新。
-
----
+价格随时变动——演示用，请到厂商官网核对最新。
 
 ## 22.6 CostTracker：按维度聚合成本
 
@@ -323,8 +311,6 @@ public class CostTracker {
 | tokensByModel key | `deepseek-flash`（无定价 → 0） | `deepseek-flash`（别名已入表） |
 | totalCost | 0.0 | **¥0.001365**（两次累计） |
 
----
-
 ## 22.7 自定义 /api/metrics Controller（LangChain4j 原生）
 
 `com/example/assistant/controller/ObservabilityController.java`（注意在 `controller` 包，不在 `observability` 包）：
@@ -359,8 +345,6 @@ public class ObservabilityController {
 ```
 
 **为什么不依赖 Spring Boot Actuator / Prometheus**：本教程定位是 LangChain4j 教学，不是 DevOps 基建——3 个端点把 LangChain4j 埋点数据原样吐出；想接 Prometheus / Grafana 时直接读 `costTracker.snapshot()`。
-
----
 
 ## 22.8 端点验证
 
@@ -438,11 +422,9 @@ rerank 后截断、上下文压缩）。
 | 全站日成本 | **预算的 80%** | 预算按业务定（如 ¥50/天 ≈ 7 万次问答），到 80% 预警、100% 熔断降级 |
 | 模型单价 miss | **UNKNOWN 出现即告警** | 22.6.1 Bug ② 的制度化——定价表没覆盖的模型名直接报，而不是默默计 0 |
 
-> 💡 最后一条最容易被忽略：**"计 0"是最危险的静默失败**——token 照跑、钱照花，
+> 最后一条最容易被忽略：**"计 0"是最危险的静默失败**——token 照跑、钱照花，
 > 报表上却是 0。给 `ModelPricing.of()` 返回 UNKNOWN 的路径加一个告警计数器，
 > 比把阈值调得再精细都值。
-
----
 
 ## 22.9 与其他章节的衔接
 
@@ -455,8 +437,6 @@ rerank 后截断、上下文压缩）。
 | **Ch16 Audit** | AiServiceListener 记业务级 audit；本章 ChatModelListener 记 Token/cost——可叠加 |
 | **Ch17/19 MCP** | McpClientListener 是 MCP 自己的回调，**与 ChatModelListener 平行**（不在 ChatModelListener 范围内）|
 | **Ch21 Guardrail** | GuardrailMetrics 记 PII/Key/限流；本章 CostTracker 记 token/cost——**两个 metrics 体系并存** |
-
----
 
 ## 22.10 高频坑点清单
 
@@ -473,8 +453,6 @@ rerank 后截断、上下文压缩）。
 | 9 | **listener 双注册** | 每事件日志 2 行，CostTracker token 精确 ×2（实测 121→242） | **只留一个注册通道**：`@Component` 或 yml `listeners:` 或 `@Bean`，三选一（22.6.1 修复实录） |
 | 10 | **响应模型名 ≠ 请求模型名** | 请求 `deepseek-v4-flash`，响应 metadata 回传 `deepseek-flash` → 定价 miss → 成本恒 0 | 定价表收录服务端归一化名；UNKNOWN 路径加告警（22.8.1 阈值表最后一条） |
 | 11 | **/api/chat 漏传 sessionId** | `@MemoryId` 参数为 null 直接 500（IllegalArgumentException） | 前端约定会话 ID 必填；服务端给默认值兜底 |
-
----
 
 ## 22.11 本章小结
 
@@ -524,11 +502,7 @@ rerank 后截断、上下文压缩）。
 6. 思考题：为什么 `ChatModelListener` 在 streaming 时必须用 `attributes` 而不是 `ThreadLocal`？提示：考虑一个请求被异步处理时（如 SSE 推送），模型返回结果可能由 Netty/CompletableFuture 调度到工作线程。
 7. 思考题：本章所有 metrics 都在内存（`LongAdder`），重启即丢。生产如何接入持久层？提示：考虑 Prometheus pull 模型 vs OpenTelemetry OTLP push 模型。
 
----
-
 **下一章预告**：Ch24 综合实战（上）——AI 招聘官：候选人全流程的 FSM 编排。
-
----
 
 ## 本章参考
 

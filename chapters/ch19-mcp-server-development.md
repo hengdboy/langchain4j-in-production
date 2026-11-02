@@ -12,8 +12,6 @@
 > 6. 记录一组**P0 工程修复**：JSON-RPC id 类型保留、空 API Key 万能 Key 漏洞、stdio 日志污染协议流、审计无上限
 > 7. 理解**配置即代码**的真相源设计：`KnowledgeBaseMcpTools.TOOL_NAMES` 单一来源驱动白名单
 
----
-
 ## 19.1 为什么需要自建 MCP Server
 
 Ch17 讲的是**用**别人的 MCP Server（Node.js 写的 demo-server.mjs，stdio 传输）。本章讲的是**造**自己的 MCP Server——把 Java/Spring Boot 项目的能力（RAG / 数据库 / 内部 API）暴露为标准协议，让任何 MCP 客户端都能用：
@@ -50,9 +48,7 @@ Ch17 讲的是**用**别人的 MCP Server（Node.js 写的 demo-server.mjs，std
 | AI 产品矩阵互操作 | 一个产品的 Agent 可以调用另一个产品暴露的 MCP Server，避免重复造轮子 |
 | 调试与可观测性 | 把内部工具的调用记录、token 用量通过 MCP 协议统一暴露给运维仪表盘 |
 
-> 💡 **Spring AI 对比**：Spring AI 1.0 同样支持 MCP，但 Server 端主要走 Spring AI MCP Server 扩展（基于 `spring-ai-starter-mcp-server`），绑定 Spring WebFlux。LangChain4j 的方案更轻——stdio 模式不需要任何 Web 框架，HTTP 模式直接复用你已学的 Spring MVC。两种生态在协议层完全兼容。
-
----
+> **Spring AI 对比**：Spring AI 1.0 同样支持 MCP，但 Server 端主要走 Spring AI MCP Server 扩展（基于 `spring-ai-starter-mcp-server`），绑定 Spring WebFlux。LangChain4j 的方案更轻——stdio 模式不需要任何 Web 框架，HTTP 模式直接复用你已学的 Spring MVC。两种生态在协议层完全兼容。
 
 ## 19.2 关键事实：官方 SDK 的位置（实测验证）
 
@@ -96,13 +92,11 @@ dev/langchain4j/community/mcp/server/transport/StdioMcpServerTransport.class
 ```
 
 **结论**：
-- ✅ 官方 Server SDK 在**社区模块** `dev.langchain4j:langchain4j-community-mcp-server`（走 beta 版本线，1.22.0-beta32）
-- ⚠️ 1.22.0-beta32 这版**仍然只支持 stdio 传输**（`StdioMcpServerTransport`），无官方 HTTP 实现——从 1.19 到 1.22，这几个类一直没变
-- ⚠️ **只支持 Tools 原语**（`@Tool` 注解），无 `@McpResource` / `@McpPrompt`——Resources/Prompts 要自实现
+- 官方 Server SDK 在**社区模块** `dev.langchain4j:langchain4j-community-mcp-server`（走 beta 版本线，1.22.0-beta32）
+- 1.22.0-beta32 这版**仍然只支持 stdio 传输**（`StdioMcpServerTransport`），无官方 HTTP 实现——从 1.19 到 1.22，这几个类一直没变
+- **只支持 Tools 原语**（`@Tool` 注解），无 `@McpResource` / `@McpPrompt`——Resources/Prompts 要自实现
 
-> ⚠️ **坑点**：写本章前我差点下了"LangChain4j 没有 Server SDK" 的错误结论。**实测 + 看官方文档原文** 才发现是社区包而不是核心包。**永远不要凭印象写 API**——这是你的方法论里"写代码前先核实"的核心铁律。
-
----
+> **坑点**：写本章前我差点下了"LangChain4j 没有 Server SDK" 的错误结论。**实测 + 看官方文档原文** 才发现是社区包而不是核心包。**永远不要凭印象写 API**——这是你的方法论里"写代码前先核实"的核心铁律。
 
 ## 19.3 协议回顾（30 秒）
 
@@ -145,12 +139,10 @@ sequenceDiagram
 
 **id 类型允许 number / string / null**——这是 P0-2 修复的源头：早期版本强转 long，客户端用字符串 id 时收不到关联响应。
 
-> ⚠️ **但官方 SDK 的 Tools 分支是例外**：`McpServer.handle()` 内部的 `extractId()` 只在
+> **但官方 SDK 的 Tools 分支是例外**：`McpServer.handle()` 内部的 `extractId()` 只在
 > `idNode.isNumber()` 时返回值，字符串 id 会让它直接返回 `null`——HTTP 层表现为
 > **200 OK + 空响应体**。本章自实现的 Resources / Prompts 分支没有这个限制。
 > 详见 19.9.1 的提示和坑点 16。
-
----
 
 ## 19.4 引入依赖
 
@@ -162,7 +154,7 @@ sequenceDiagram
   仅含 stdio 传输（StdioMcpServerTransport）+ 协议层 + Jackson；
   传递依赖 langchain4j-mcp 已由 Ch17 引入，本章不再额外加。
   HTTP 传输由本章自实现（基于 Spring MVC + McpServer.handle(JsonNode)）。
-  ⚠️ StdioMcpServerTransport 把 JSON-RPC 协议写 System.out；
+  StdioMcpServerTransport 把 JSON-RPC 协议写 System.out；
      日志必须走 System.err，否则污染协议流导致客户端断开。
 -->
 <dependency>
@@ -173,8 +165,6 @@ sequenceDiagram
 ```
 
 **版本对齐**：`${langchain4j.beta.version}` = `1.22.0-beta32`，与 `langchain4j-mcp`（同一条 beta 线）保持一致。注意别把它和核心的 `1.22.0` 混成一个属性——稳定模块和实验模块是两条发布线，混用会 404。核心的 `1.22.0` 由 pom 顶部的 `<dependencyManagement>` 钉住（见 Ch01），社区模块不在其中，所以这里必须显式写版本。
-
----
 
 ## 19.5 实战一：stdio MCP Server（Claude Desktop 方式）
 
@@ -319,7 +309,7 @@ private static void redirectLogbackToStderr() {
 
 **为什么必须这样**：stdio 传输下，`StdioMcpServerTransport` 把 JSON-RPC 消息写到 `System.out`。任何 SLF4J / Logback / Jackson 默认日志输出到 stdout 会污染协议流——客户端解析失败立即断开。
 
-> ✅ **最佳实践**：stdio 启动器里**只允许 `System.err.println(...)`** 与 SLF4J（已重定向）写日志，其他所有日志框架都得关掉。Spring Boot 自动 Logback 配置会被 `org.springframework.boot.logging.LoggingSystem=none` 关闭，然后我们编程式接管。
+> **最佳实践**：stdio 启动器里**只允许 `System.err.println(...)`** 与 SLF4J（已重定向）写日志，其他所有日志框架都得关掉。Spring Boot 自动 Logback 配置会被 `org.springframework.boot.logging.LoggingSystem=none` 关闭，然后我们编程式接管。
 
 ### 19.5.3 客户端配置（Claude Desktop 示例）
 
@@ -341,8 +331,6 @@ private static void redirectLogbackToStderr() {
 ```
 
 **注意这里必须是 `-jar`，不能写成 `-cp xxx.jar com.example.assistant.mcp.McpServerStarter`**。原因见 19.9.2：`mvn package` 出来的是 Spring Boot fat jar，类在 `BOOT-INF/classes/`、依赖在 `BOOT-INF/lib/`，`-cp` 根本看不见它们，启动会直接 `ClassNotFoundException`。
-
----
 
 ## 19.6 实战二：Streamable HTTP 传输（远程调用方式）
 
@@ -461,8 +449,6 @@ public class McpHttpController {
 
 **协议要点**：返回值类型为 `Object`——Tools 分支返回 SDK 的 `McpJsonRpcMessage`（SDK 内部用 `@JsonAnyGetter` 序列化），Resources/Prompts 分支返回本章的 `JsonRpcResponse`（显式字段），Jackson 自动按各自字段序列化。
 
----
-
 ## 19.7 扩展 Resources / Prompts 原语（官方 SDK 不支持 → 自实现）
 
 官方 SDK 1.22.0-beta32 **只支持 Tools**。但 MCP 规范定义了 Tools / Resources / Prompts 三种。本章用**装饰器模式**包装 `McpServer`，把 Resources 和 Prompts 也接上：
@@ -534,7 +520,7 @@ public class McpResourcesProvider {
 
 **P2-3 修复重点**：PDF 等二进制资源**不能再当文本读**（之前的实现把 PDF bytes 解码成 UTF-8 乱码存进 `text` 字段，误导客户端）。MCP 规范定义了 `blob` 字段用于二进制，本章按规范实现：客户端按 `mimeType` 决定解析方式。
 
-> ⚠️ **教学简化**：硬编码 4 个文件名清单（与 Ch10 的 `DocumentIngestionService` 同样硬编码）。生产建议抽 `DocsScanner` 工具类用 ClassGraph 自动扫描，避免**两个真相源漂移**（P1-1 待办）。
+> **教学简化**：硬编码 4 个文件名清单（与 Ch10 的 `DocumentIngestionService` 同样硬编码）。生产建议抽 `DocsScanner` 工具类用 ClassGraph 自动扫描，避免**两个真相源漂移**（P1-1 待办）。
 
 ### 19.7.2 McpPromptsProvider：3 个模板 + `{{var}}` 替换
 
@@ -646,8 +632,6 @@ public class JsonRpcResponse {
 
 **为什么自造**：官方 SDK 的 `McpJsonRpcMessage` 是轻量 POJO，只带 `jsonrpc` + `id`；真正的 `result`/`error` 字段依赖 Jackson `@JsonAnyGetter` 魔法——不利于扩展 Resources/Prompts。本章做更朴素的事：显式字段 + 显式构造，更易读、易测、易扩展。
 
----
-
 ## 19.8 安全与审计（呼应 Ch16）
 
 ### 19.8.1 McpSecurityService：API Key + 工具白名单
@@ -758,15 +742,13 @@ public class McpAuditService {
 - 环形 buffer 容量 500 条（教学版内存），超过覆盖最旧
 - audit 日志 redact 常见敏感字段，避免用户问"我的密码是123456"被原样写入日志
 
-> ⚠️ **生产化**：`McpAuditService` 仅做内存版演示。生产应写 ELK / 数据库，且 redact 应改用 Jackson 树遍历（更可靠）。
-
----
+> **生产化**：`McpAuditService` 仅做内存版演示。生产应写 ELK / 数据库，且 redact 应改用 Jackson 树遍历（更可靠）。
 
 ## 19.9 端点验证
 
 ### 19.9.1 Streamable HTTP 模式
 
-> ⚠️ **先看这条**：JSON-RPC 的 `id` **必须是数字**。官方社区 SDK 的 `McpServer.handle()` 里
+> **先看这条**：JSON-RPC 的 `id` **必须是数字**。官方社区 SDK 的 `McpServer.handle()` 里
 > `extractId()` 只认 `idNode.isNumber()`——传字符串 id 会让 `handle()` 直接返回 `null`，
 > HTTP 层表现为 **200 OK 但响应体长度为 0**（不是 4xx，是静默丢弃）。自实现的
 > Resources / Prompts 分支不受影响，因为 `JsonRpcResponse.id` 是 `Object`。
@@ -791,7 +773,7 @@ curl -s -X POST http://localhost:8090/mcp \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"searchKnowledgeBase","arguments":{"question":"七天无理由退货的条件是什么？","topK":3,"minScore":0.5}}}'
 ```
 
-> 💡 **参数名写错时的返回长这样**——不是 JSON-RPC 的 `-32602 Invalid params`，
+> **参数名写错时的返回长这样**——不是 JSON-RPC 的 `-32602 Invalid params`，
 > 而是工具方法体里的业务校验抛出的异常被 SDK 包成 `isError`：
 > ```json
 > {"id":2,"result":{"content":[{"text":"text cannot be null or blank","type":"text"}],"isError":true},"jsonrpc":"2.0"}
@@ -877,7 +859,7 @@ ls target/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar
 `-Pmcp` 是 pom 里的一个 profile：它让 `spring-boot-maven-plugin` 用 `classifier=mcp` + `mainClass=com.example.assistant.mcp.McpServerStarter` 再压一个包。你可以先用 MCP 的 `initialize` 请求自测，不用真开 Claude Desktop：
 
 ```bash
-# ⚠️ 别写成 `printf ... | java -jar ...` 一把梭：三条消息会随管道瞬间 EOF，
+# 别写成 `printf ... | java -jar ...` 一把梭：三条消息会随管道瞬间 EOF，
 #    进程在响应写回之前就收尾退出，stdout 一行都看不到（我们实测如此）。
 #    真实客户端不会关管道，所以自测时也要让喂消息的循环撑住。
 {
@@ -892,8 +874,6 @@ ls target/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar
 
 stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），日志全部走 stderr。**如果 stdout 里混进任何一行非 JSON 文本，客户端就会解析失败。**
 
----
-
 ## 19.10 P0 工程修复记录
 
 本章做了 6 项 P0 修复，全是**实战中会爆炸的雷**：
@@ -901,7 +881,7 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 | ID | 问题 | 症状 | 修复 |
 |---|---|---|---|
 | **P0-1** | McpHttpController 双 "not not" typo | 审计日志看不清 | 改为 "not in" |
-| **P0-2** | JSON-RPC id 强转 long | 客户端用字符串 id 时收不到关联响应 | `JsonRpcResponse.id` 改 `Object`；Dispatcher / Controller 透传 JsonNode（⚠️ 自实现的 Resources/Prompts 分支支持字符串 id，但**官方 SDK 的 Tools 分支仍然只认数字 id**，见坑点 16） |
+| **P0-2** | JSON-RPC id 强转 long | 客户端用字符串 id 时收不到关联响应 | `JsonRpcResponse.id` 改 `Object`；Dispatcher / Controller 透传 JsonNode（自实现的 Resources/Prompts 分支支持字符串 id，但**官方 SDK 的 Tools 分支仍然只认数字 id**，见坑点 16） |
 | **P0-3** | 空 API Key 万能 Key漏洞 | `constantTimeEquals("", "")` 返回 true → 任意 Key 通过鉴权 | `@PostConstruct` 校验 ≥16 字符，违者启动失败 |
 | **P0-4** | try-with-resources 资源顺序 | awaitClose() 抛异常时 ctx.close() 漏执行 | 显式 try-finally，反顺序释放 |
 | **P0-5** | stdio 启动器日志污染 stdout | Spring Boot 默认日志写 stdout → 协议流污染 → 客户端断开 | 编程式重配 Logback：stderr only |
@@ -912,14 +892,12 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 - **官方 SDK 的设计取舍要清楚**——`McpJsonRpcMessage` 用 `@JsonAnyGetter` 是因为 SDK 想"基础类型简洁 + 字段灵活"，但自定义协议（Resources/Prompts）需要显式字段结构
 - **stdio 传输是隐藏陷阱的雷区**——进程生命周期、日志流、子进程退出码、信号处理都要小心
 
----
-
 ## 19.11 高频坑点清单
 
 | # | 坑 | 现象 | 对策 |
 |---|---|---|---|
 | 1 | **stdio 日志污染 stdout** | 客户端解析失败立即断开 | `redirectLogbackToStderr()` 编程式接管；`org.springframework.boot.logging.LoggingSystem=none` |
-| 2 | **JSON-RPC id 类型丢失** | 客户端用字符串 id 时收不到响应 | id 用 `Object` 承载，透传 JsonNode；⚠️ 官方 SDK 的 Tools 分支仍只认数字 id（坑点 16） |
+| 2 | **JSON-RPC id 类型丢失** | 客户端用字符串 id 时收不到响应 | id 用 `Object` 承载，透传 JsonNode；官方 SDK 的 Tools 分支仍只认数字 id（坑点 16） |
 | 3 | **空 / 默认 API Key 上线** | 任意 Key 通过鉴权 | `@PostConstruct` 启动期校验 |
 | 4 | **工具白名单两个真相源漂移** | 加新工具忘了同步白名单 | `KnowledgeBaseMcpTools.TOOL_NAMES` 单一来源 |
 | 5 | **PDF 当文本读存乱码** | clients 拿到 base64 乱码 | MCP 规范的 `blob` 字段（二进制）+ `text` 字段（文本） |
@@ -935,8 +913,6 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 | 15 | **子进程读不到 `application.yml`** | 用 `AnnotationConfigApplicationContext` 时 `@Value` 全部落到注解默认值，和配置文件不一致（例如 reranker 变成 dashscope 却缺 key，启动即失败） | 启动器里手动 `YamlPropertySourceLoader` 加载 `application.yml` 进 Environment |
 | 16 | **Tools 分支的 id 必须用数字** | 传字符串 id → **HTTP 200 但响应体长度 0**（不是 4xx，静默丢弃，客户端以为服务端无响应） | 官方 SDK 的 `extractId()` 只认 `idNode.isNumber()`；Tools 调用一律用数字 id。资源/提示原语是自实现分支，字符串 id 也能正常返回 |
 | 17 | **工具参数名写错报的是业务错误** | 传 `query` 而工具签名是 `question` → 返回 `isError:true` + `"text cannot be null or blank"`，不是 `-32602 Invalid params` | 看 `isError` 字段区分"参数写错"和"服务端故障"；JSON Schema 里 `required` 列出的字段名就是准确参数名 |
-
----
 
 ## 19.12 本章小结
 
@@ -988,7 +964,5 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 4. 修改 `McpSecurityService.allowedTools`（或 `KnowledgeBaseMcpTools.TOOL_NAMES`），加一个新工具名但**不**在 `KnowledgeBaseMcpTools` 类加 @Tool 方法——重启后用 curl 调该工具，观察返回 403 Forbidden（验证白名单真相源）。
 5. 思考题：为什么 stdio 启动器**不能用 Spring Boot 自动配置**？提示：思考 Spring Boot 启动时哪些组件会写 stdout/启动 HTTP 服务器/读 application.yml。
 6. 思考题：Ch19 的 Resources / Prompts 是装饰器模式实现。如果官方 SDK 未来直接支持 `@McpResource` / `@McpPrompt`，本章的代码会怎样被简化？提示：考虑 `McpServer` 构造器的 `List<Object>` 参数和 `McpJsonRpcDispatcher.handle()` 的 switch 分发。
-
----
 
 **下一章预告**：Ch21 Guardrails 安全护栏 → Ch22 可观测性 · 日志 · 成本控制 → Ch24/25 综合实战：AI 招聘官。

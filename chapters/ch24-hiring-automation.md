@@ -12,8 +12,6 @@
 
 护栏（歧视防护/注入检测）、Bandit 话术演化、DPO 样本池、MCP 对外暴露在 **Ch25（下）**。
 
----
-
 ## 24.1 总体架构：一条招聘流水线怎么搭
 
 先把成品的样子立起来。项目定位是**招聘方侧、可自托管的候选人全流程自动化**——简历数据不出内网，这正是企业愿意自托管一个开源招聘助手的采购理由。整个系统分六层，一张图：
@@ -390,11 +388,7 @@ public MatchEvaluatorAgent matchEvaluatorAgent(ChatModel instrumentedChatModel) 
 | 跑 E2E | `bash scripts/run-e2e.sh` | 先 `docker-compose up -d` + 起服务 |
 | MCP 客户端接入 | `mvn package -Pmcp` | stdio 子进程，6 个只读工具 |
 
----
-
 **下一章预告**：Ch25 综合实战（下）——三道护栏（歧视防护是全系列独有话题）、Bandit 话术自迭代、DPO 样本池、MCP 对外暴露与最小披露、以及每个 Agent 的真机成本账。
-
----
 
 ## 想翻源码时从哪进
 

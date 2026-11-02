@@ -10,8 +10,6 @@
 > 4. 算清**每个 Agent 的真机成本账**，知道钱花在哪
 > 5. 拿走一份**上生产前的替换与安全清单**
 
----
-
 ## 25.1 招聘场景的威胁模型
 
 先想清楚防的是谁，再动手装护栏。招聘 AI 有两个独有威胁面：
@@ -320,11 +318,7 @@ Ch22 的 `CostChatModelListener` 在这里升级为按 Agent 维度的核算（�
 | 查 Agent 成本 | `agent_call` 表按 `agent_name` 聚合 | Ch22 监听器自动埋点 |
 | 验证歧视防护 | `HiringIntegrationTest#testPiiResumeRedactedProfileClean` + E2E Step 5 | 每轮新泄漏固化为断言 |
 
----
-
 **系列收尾**：至此 24 章 + 2 个实战项目 + 5 个实验室全部就位。回到 [Ch00 前置速查](ch00-preflight.md) 看学习路径，或直接打开 [labs/](../labs/README.md) 挑一个业务场景动手。
-
----
 
 ## 参考与实测数据出处
 

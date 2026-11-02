@@ -12,8 +12,6 @@
 > 7. 实战手动循环：`ManualAgentService` 亲手复现框架黑盒——含一个**2026-10-28 修掉的真实 bug**（漏传工具清单，循环从未转过）
 > 8. 记录一个诚实结论：手动循环是教学演示，生产用框架循环 + `Result` 审计
 
----
-
 ## 14.1 为什么需要 Agent
 
 工具调用（Function Calling）解决的是"让模型**会调一次工具**"：模型看到问题 → 决定调一个工具 → 拿到结果 → 回答，一轮结束。局限很明显：
@@ -25,8 +23,6 @@
 | **没有任务状态** | 多轮对话中"刚才那个数字"指什么？ | 没有跨步记忆 |
 
 "会调一次工具"和"会干活"之间，差的正是**循环**：调完一个工具，把结果放回对话里，让模型决定下一步——直到任务完成。能跑这个循环的，就是 **Agent**。
-
----
 
 ## 14.2 什么是 Agent（LangChain4j 视角）
 
@@ -51,9 +47,7 @@ flowchart LR
     U[用户] -->|问题| AS
 ```
 
-> 💡 **Spring AI 对比**：Spring AI 同样没有"Agent 类"，对应物是 `ChatClient` + `ToolCallback` + 自管理会话记忆，需要你自己写循环或用 `ChatClient.builder` 组合。两家的结论一致：**"Agent"是模式不是类型**。区别在 LangChain4j 把循环做进了 `AiServices`，声明式更省事。
-
----
+> **Spring AI 对比**：Spring AI 同样没有"Agent 类"，对应物是 `ChatClient` + `ToolCallback` + 自管理会话记忆，需要你自己写循环或用 `ChatClient.builder` 组合。两家的结论一致：**"Agent"是模式不是类型**。区别在 LangChain4j 把循环做进了 `AiServices`，声明式更省事。
 
 ## 14.3 ReAct 范式：Agent 的理论出身
 
@@ -94,9 +88,7 @@ Answer: 审核一般 48 小时，通过后 3 个工作日（72 小时）内到�
 2. **Observation 不靠解析**：工具结果是类型安全的 `ToolExecutionResultMessage`，不是从文本里抠 Observation；
 3. **循环有护栏**：`maxToolCallingRoundTrips` 硬上限，模型抽风不会无限烧钱。
 
-> ✅ **最佳实践**：虽然框架不要求写 Thought 模板，**Prompt 仍可以引导推理质量**——工具描述写清"什么场景用"、系统消息给决策规则（如"先查知识库再回答，不要凭记忆"），这些就是给模型的"ReAct 提示"。框架解决机械循环，Prompt 解决思考质量。
-
----
+> **最佳实践**：虽然框架不要求写 Thought 模板，**Prompt 仍可以引导推理质量**——工具描述写清"什么场景用"、系统消息给决策规则（如"先查知识库再回答，不要凭记忆"），这些就是给模型的"ReAct 提示"。框架解决机械循环，Prompt 解决思考质量。
 
 ## 14.4 底层机制：工具循环源码级拆解（Agent 的心脏）
 
@@ -227,15 +219,15 @@ while (true) {
 
 | 疑问 | 真相 |
 |---|---|
-| 开始就识别出要用哪些工具整理好？ | ❌ 否。框架从不规划，只每轮把工具清单发给模型 |
-| 执行中根据上下文推理还差什么？ | ✅ 是。模型每轮基于越来越长的上下文，自己推理"下一步调不调、调哪个" |
+| 开始就识别出要用哪些工具整理好？ |  否。框架从不规划，只每轮把工具清单发给模型 |
+| 执行中根据上下文推理还差什么？ |  是。模型每轮基于越来越长的上下文，自己推理"下一步调不调、调哪个" |
 | 怎么知道哪一步没结果了？ | `hasToolExecutionRequests()` 读模型当轮输出：有→继续循环，没有→`break` 出答案。判断权在模型，不在框架 |
 
 所以 Agent 的"智能"不在框架（框架只是 `while` 循环 + 反射调方法），而在 **LLM 每轮的 Function Calling 决策**。同一段代码换 Prompt 或换模型，工具调用路径可能完全不同——因为决策是模型现想的。
 
 ### 14.4.2 一个常见误解的纠正（作者踩过）
 
-> ⚠️ **坑点（源码纠正）**：很多人（包括本书早期版本的作者）以为 `maxToolCallingRoundTrips` 超限后"框架会强行让模型出答案"。**错**——源码是直接 `throw runtime(...)` 抛异常，整次调用失败。所以：
+> **坑点（源码纠正）**：很多人（包括本书早期版本的作者）以为 `maxToolCallingRoundTrips` 超限后"框架会强行让模型出答案"。**错**——源码是直接 `throw runtime(...)` 抛异常，整次调用失败。所以：
 > - 护栏值要设得**够宽**（业务里合理工具链需要 5-8 轮，就设 10）；
 > - 真想"超限也能拿到部分结果"，得在业务层 try-catch + 降级（比如返回"任务过复杂，请分步提问"），框架不管这层。
 
@@ -268,8 +260,6 @@ while (true) {
 - **手动循环路径**：同样问题 → 同样 200，`ManualAgentService` 的执行日志里工具结果直接就是错误文案（`…执行工具[calculate] → 除数不能为零，请换个非零的第二个数字`）——① 的就地转换。
 
 两条路殊途同归，但**机制不同**：前者异常真的抛了、被 handler 接住（日志留痕），后者压根没抛。什么时候有区别？当你配了自定义 handler（Ch16 的审计/熔断）或跑异步模式时——① 会把异常吞在执行器里，你的 handler 根本收不到。要在手动循环里复现框架语义，构造执行器时用 `DefaultToolExecutor.builder().propagateToolExecutionExceptions(true)`。
-
----
 
 ## 14.5 实战：声明式 Agent
 
@@ -326,7 +316,7 @@ public ResearchAgent researchAgent(@Qualifier("openAiChatModel") ChatModel chatM
 }
 ```
 
-> ⚠️ **坑点：Agent 别用 `@AiService` 注解装配工具**。注解模式配工具受限（且 starter 会自动注册一个无工具 Bean 造成冲突，项目里踩过）。带工具 + 防循环的 Agent 一律 `AiServices.builder()` 手动装配——这也是 `ResearchAgent` 接口不写 `@AiService` 注解的原因。
+> **坑点：Agent 别用 `@AiService` 注解装配工具**。注解模式配工具受限（且 starter 会自动注册一个无工具 Bean 造成冲突，项目里踩过）。带工具 + 防循环的 Agent 一律 `AiServices.builder()` 手动装配——这也是 `ResearchAgent` 接口不写 `@AiService` 注解的原因。
 
 ### 14.5.4 端点
 
@@ -340,8 +330,6 @@ public Map<String, Object> chat(@RequestBody Map<String, String> body) {
     return Map.of("success", true, "answer", answer);
 }
 ```
-
----
 
 ## 14.6 实战：手动循环（揭开黑盒，含一个修复实录）
 
@@ -377,7 +365,7 @@ public String run(Object sessionId, String question) {
 }
 ```
 
-> ⚠️ **修复实录（2026-10-28，本章实测抓到的真 bug）**：上面 ② 那三行原本写的是 `chatModel.chat(messages)`——**不带工具清单**。后果很隐蔽：编译过、启动过、接口也返回 200，但模型从不知道自己有工具，永远一轮就"直接回答"。实测问它"请调用 calculate 工具计算 5 除以 0"，模型回了句大实话：**「当前会话没有提供 `calculate` 工具」**。这正是 14.4.3 说的"工具清单每轮随请求下发"——框架替你做了这件事，手动复刻时漏掉它，循环就只剩个壳。修复用 `ChatRequest.builder().toolSpecifications(...)`（1.22 的 `ChatRequest` 直接收 `List<ToolSpecification>`，javap 核实），修复后同一组问题，模型当轮并行请求了 `currentTime` 和 `calculate` 两个工具，日志里两行 `` 全出现。**如果你照任何教程手写工具循环，先检查这一条。**
+> **修复实录（2026-10-28，本章实测抓到的真 bug）**：上面 ② 那三行原本写的是 `chatModel.chat(messages)`——**不带工具清单**。后果很隐蔽：编译过、启动过、接口也返回 200，但模型从不知道自己有工具，永远一轮就"直接回答"。实测问它"请调用 calculate 工具计算 5 除以 0"，模型回了句大实话：**「当前会话没有提供 `calculate` 工具」**。这正是 14.4.3 说的"工具清单每轮随请求下发"——框架替你做了这件事，手动复刻时漏掉它，循环就只剩个壳。修复用 `ChatRequest.builder().toolSpecifications(...)`（1.22 的 `ChatRequest` 直接收 `List<ToolSpecification>`，javap 核实），修复后同一组问题，模型当轮并行请求了 `currentTime` 和 `calculate` 两个工具，日志里两行 `` 全出现。**如果你照任何教程手写工具循环，先检查这一条。**
 
 **工具名 → 执行器映射**是手动循环另一个容易翻车的地方，构造时扫描每个工具对象的 `@Tool` 方法建立：
 
@@ -391,11 +379,9 @@ for (Method m : tool.getClass().getDeclaredMethods()) {
 }
 ```
 
-> ⚠️ **坑点（源码核实）**：`DefaultToolExecutor` 有个便利构造 `(Object, ToolExecutionRequest)`，但它内部 `findMethod` 是**按 Java 方法名**反射查找的；而模型返回的 `request.name()` 是**工具名**（`@Tool.name()` 或方法名）。当 `@Tool` 显式指定了 name 而方法和名字不同时，便利构造会 `IllegalArgumentException: Method not found`。所以手动循环**不要用它**，要自己按"工具名 = @Tool.name() || 方法名"建映射，再用 `(Object, Method)` 构造——本教程就是这么写的（读 `DefaultToolExecutor.java` 源码确认）。
+> **坑点（源码核实）**：`DefaultToolExecutor` 有个便利构造 `(Object, ToolExecutionRequest)`，但它内部 `findMethod` 是**按 Java 方法名**反射查找的；而模型返回的 `request.name()` 是**工具名**（`@Tool.name()` 或方法名）。当 `@Tool` 显式指定了 name 而方法和名字不同时，便利构造会 `IllegalArgumentException: Method not found`。所以手动循环**不要用它**，要自己按"工具名 = @Tool.name() || 方法名"建映射，再用 `(Object, Method)` 构造——本教程就是这么写的（读 `DefaultToolExecutor.java` 源码确认）。
 
 对比 14.4.1 的框架源码：手动版少了**记忆写入**（教学版用本地 list）、**审计事件**、**补偿机制**、**自定义错误处理**（错误文案回喂那层框架默认能力，手动版靠 14.4.5 说的执行器层就地转换兜底；Ch16 会接自定义 handler）——这就是"教学演示 vs 生产框架"的差距清单。
-
----
 
 ## 14.7 端点验证（2026-10-28 实测）
 
@@ -448,9 +434,7 @@ curl -X POST http://localhost:8090/api/agent/manual -H "Content-Type: applicatio
 
 早期版本这里还记录过一个"模型不调工具"的案例：手动循环里问"现在几点了"，模型声称"无法获取实时时间"、自己心算——修复工具清单 bug 之前，这**不是模型任性，是它真不知道自己有 `currentTime`**。工具清单修上之后同样的问法就正常调用了。但"问题里加'用工具算'"仍然是有效的引导手段（对比 ① 和 ④ 的问法），工具描述写清使用场景也依然是最佳实践。
 
-> ⚠️ **环境坑（本机验证必踩）**：声明式 Agent 的记忆默认走 `RedisChatMemoryStore`，它依赖 **RedisJSON 模块**（`JSON.GET`）——没有 Redis 直接 `Failed to connect to localhost:6379`，普通 Redis 则报 `ERR unknown command 'JSON.GET'`（和 Ch11 的 RediSearch 缺模块同类）。本地验证用 `chat.memory.backend=memory` 切内存记忆绕过；生产需 redis-stack 镜像，或换 PostgreSQL 记忆存储。
-
----
+> **环境坑（本机验证必踩）**：声明式 Agent 的记忆默认走 `RedisChatMemoryStore`，它依赖 **RedisJSON 模块**（`JSON.GET`）——没有 Redis 直接 `Failed to connect to localhost:6379`，普通 Redis 则报 `ERR unknown command 'JSON.GET'`（和 Ch11 的 RediSearch 缺模块同类）。本地验证用 `chat.memory.backend=memory` 切内存记忆绕过；生产需 redis-stack 镜像，或换 PostgreSQL 记忆存储。
 
 ## 14.8 坑点清单（高频坑专节）
 
@@ -465,13 +449,9 @@ curl -X POST http://localhost:8090/api/agent/manual -H "Content-Type: applicatio
 | 7 | **记忆后端缺模块** | `JSON.GET` unknown command / 连接拒绝 | redis-stack 或 `chat.memory.backend=memory`（14.7） |
 | 8 | **工具循环无限烧钱** | 模型反复调同一工具 | 护栏必设（10 左右）+ Ch16 错误处理引导模型纠正 |
 
----
-
 ## 14.9 下一章预告
 
 **Ch16 Agent 工程化**——本章是单 Agent（一个大脑 + 一组工具）的"能跑"版。下一章讲它到生产之间还差什么：多租户下的工具隔离（谁能看到哪些工具）、动态工具（`ToolProvider` 每次调用前重建工具上下文）、审计与自定义错误 handler（14.4.5 埋的 `toolExecutionErrorHandler` 在那里接上）、成本追踪。框架侧的多 Agent 声明式编排（`langchain4j-agentic` 模块：顺序/并行/循环/条件/Supervisor）本系列不展开，项目 `agentic/` 包里有可跑示例，配合官方文档阅读。
-
----
 
 ## 本章小结
 
@@ -508,8 +488,6 @@ curl -X POST http://localhost:8090/api/agent/manual -H "Content-Type: applicatio
 3. **除零实验**：按 14.4.5 把手动循环的执行器换成 `DefaultToolExecutor.builder().propagateToolExecutionExceptions(true).build()`，再问除零——观察异常冲出循环变成 500，对照修复前的 200，说出两层机制各自的边界。
 4. 思考题：为什么说"函数调用让 Thought 不再需要模板"？模型"决定调 calculate 而不是 currentTime"这个决策，等价于 ReAct 里的什么？
 5. 思考题：14.7 ③ 里模型把"3 个工作日"换算成 24 小时（工时口径）。如果你要锁成 72 小时（自然日口径），应该改哪里？有几种做法、各自的代价是什么？
-
----
 
 ## 本章参考
 

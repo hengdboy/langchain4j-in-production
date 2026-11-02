@@ -10,8 +10,6 @@
 > 5. 读懂仓库里的 `AdvancedRagConfig`：一套 `RetrievalAugmentor` 串起三件武器，业务侧一句接口
 > 6. 记录三个实测结论：① 父子分块让 MRR 从 0.417 提到 0.652（11 题·干净库）；② 双编码器重排截断到 top2 会伤召回；③ 关键词路在语义问题上零增益，单路由型号对照里的"一发正中"进完整管线后会被 RRF 对冲——结论要落在管线评估上
 
----
-
 ## 12.1 为什么需要"高级"管线
 
 Ch10 把文档切成块、Ch11 把块存进向量库——到这一步，"能检索"已经成立。但 Ch11 末尾留下的三个问题还没解决：分数带太窄（相关与无关只差 0.02）、排序会错位（正确答案排第 2、差 0.01）、纯向量不懂精确关键词。高级管线就是冲这三件事来的。
@@ -35,9 +33,7 @@ Ch10 的 `DocumentSplitters.recursive(chunkSize, chunkOverlap)` 只用**一个**
 
 所以光靠"向量召回 TopK"不够，需要两件事补刀：**重排序**（把初召回重新排一遍）+ **混合检索**（再加一路关键词）。
 
-> 💡 **Spring AI 对比**：Spring AI 对应 `QuestionAnswerAdvisor` / `VectorStore` + 自写 rerank；LangChain4j 的 `RetrievalAugmentor` 把"路由→多路检索→聚合(融合/重排)→注入"做成了一套可组装的接口，思路同构。两者都遵循：**检索增强 = 可插拔的管线，不是某个魔法函数**。
-
----
+> **Spring AI 对比**：Spring AI 对应 `QuestionAnswerAdvisor` / `VectorStore` + 自写 rerank；LangChain4j 的 `RetrievalAugmentor` 把"路由→多路检索→聚合(融合/重排)→注入"做成了一套可组装的接口，思路同构。两者都遵循：**检索增强 = 可插拔的管线，不是某个魔法函数**。
 
 ## 12.2 三件武器全景
 
@@ -50,8 +46,6 @@ Ch10 的 `DocumentSplitters.recursive(chunkSize, chunkOverlap)` 只用**一个**
 | **混合检索** | 关键词/精确项漏召回 | 语义问题上零增益；单路由决定性 ≠ 管线增益（12.5.5） |
 
 下面逐个拆解。每一件的"实测效果"都是在同一个 11 题评估集（Ch13 会细讲它）上量出来的，先看结论再看代码，读起来有锚点。
-
----
 
 ## 12.3 父子分块（Parent-Child Chunking）
 
@@ -120,11 +114,11 @@ private List<TextSegment> splitIntoParentChild(List<Document> cleaned) {
 
 三个源码级的要点：
 
-> ⚠️ **参数单位是字符，不是 token**。`DocumentSplitters.recursive(int, int)` 的两个参数是**字符**（不传 `TokenCountEstimator` 时）。本项目 `child-chunk-size: 400` 一直是 400 **字符**——按 token 估算调参，中文场景下会偏差一倍以上（一个汉字 ≈ 0.6~1 token，看模型）。
+> **参数单位是字符，不是 token**。`DocumentSplitters.recursive(int, int)` 的两个参数是**字符**（不传 `TokenCountEstimator` 时）。本项目 `child-chunk-size: 400` 一直是 400 **字符**——按 token 估算调参，中文场景下会偏差一倍以上（一个汉字 ≈ 0.6~1 token，看模型）。
 >
-> ⚠️ **`DocumentSplitter.split` 接收 `Document` 不是 `TextSegment`**（源码：`List<TextSegment> split(Document)`）。所以"父块→子块"要把父块用 `Document.from(parent.text(), parent.metadata())` 包回去再切，这就是代码里那行的原因。
+> **`DocumentSplitter.split` 接收 `Document` 不是 `TextSegment`**（源码：`List<TextSegment> split(Document)`）。所以"父块→子块"要把父块用 `Document.from(parent.text(), parent.metadata())` 包回去再切，这就是代码里那行的原因。
 >
-> ✅ **`parentText` 存进每个子块的 metadata，是拿存储换简单的取舍**。4 个子块的父块各存一份全文，本项目 26 个子块无感；文档量上去后向量库体积随子块数线性膨胀，应改成"内存/独立表维护 parentId→parentText 映射"，检索时查表展开（12.7 的升级路径之一）。
+> **`parentText` 存进每个子块的 metadata，是拿存储换简单的取舍**。4 个子块的父块各存一份全文，本项目 26 个子块无感；文档量上去后向量库体积随子块数线性膨胀，应改成"内存/独立表维护 parentId→parentText 映射"，检索时查表展开（12.7 的升级路径之一）。
 
 ### 12.3.3 代码：检索时展开父子块
 
@@ -195,8 +189,6 @@ public class ParentChildEmbeddingStoreRetriever implements ContentRetriever {
 
 前五全空的换了一茬：pgvector 还是老样子（小块语义太碎），新朋友是「K-3000 报修」——手册这种"全篇讲一个产品"的文档，扁平 500 字切完后"报修"那段孤零零地跟全文比相似度，查询里的"咖啡机""坏了"把手册的其他段全都排到了它前面；父子模式"小块被找到、大块讲清楚"，直接满分。小块负责"被找到"，大块负责"讲清楚"，这两个角色分开之后，11 题里 7 题的排名都变了。MRR +0.235 就是这么来的。
 
----
-
 ## 12.4 重排序（Reranker）
 
 ### 12.4.1 为什么需要 reranker
@@ -254,7 +246,7 @@ public ScoringModel embeddingScoringModel(
 }
 ```
 
-> ⚠️ **静默回落是特性也是坑**：`provider=dashscope` 但 key 没配上时，系统照常启动、照常重排——只是悄悄退回了双编码器。你以为在用交叉编码器，其实没有。确认方法：开了 dashscope 后日志里应出现 `[Rerank] request: model=qwen3-rerank, docs=N, top_n=N`（`DashScopeRerankScoringModel` 的真实日志行），没有这行就是回落了。价格参考：代码注释记的百炼重排刊例是 0.5 元/百万 token，以官网为准。
+> **静默回落是特性也是坑**：`provider=dashscope` 但 key 没配上时，系统照常启动、照常重排——只是悄悄退回了双编码器。你以为在用交叉编码器，其实没有。确认方法：开了 dashscope 后日志里应出现 `[Rerank] request: model=qwen3-rerank, docs=N, top_n=N`（`DashScopeRerankScoringModel` 的真实日志行），没有这行就是回落了。价格参考：代码注释记的百炼重排刊例是 0.5 元/百万 token，以官网为准。
 
 `EmbeddingScoringModel` 全文（`rag/EmbeddingScoringModel.java`，核心部分）：
 
@@ -293,8 +285,6 @@ public class EmbeddingScoringModel implements ScoringModel {
 逐题看，归零的四题是「什么是 RAG」「pgvector 是什么」「咖啡机多久除垢」「做一杯美式要多久」——它们的正确答案原本在第 3~5 位，截断到 top2 后 rr 全部 0。而型号题（K-3000 开箱/报修）纹丝不动还是 1.0。也就是说：**双编码器重排没能把语义题的第 3~5 名顶进前 2，截断只把它们的答案扔掉了**，而且砸得毫不均匀——语义弱命中挨刀，型号强命中无感。这正是 12.4.3 说的"双编码器重排增益有限"的数据形态——它算不出比向量召回更多的信息，于是在 topK 收紧时只剩下截断的代价。
 
 生产上想要"截断到 2~3 条还保得住答案"，需要的是真正的交叉编码器：`DashScopeRerankScoringModel`（配 key 即用）或官方 `langchain4j-onnx-scoring` 本地跑 bge-reranker。切换只动 `AdvancedRagConfig` 里那一个 `ScoringModel` Bean，下游零改动。DashScope 路线需要 API Key，不在本轮离线实测范围内，Ch13 的 A/B 配方里给了验证步骤。
-
----
 
 ## 12.5 混合检索（Hybrid：向量 + 关键词）
 
@@ -448,7 +438,7 @@ public class KeywordContentRetriever implements ContentRetriever {
 }
 ```
 
-> ⚠️ **坑点：中文分词**。默认 `split(" ")` 对中文无效（中文没空格）。本实现 `tokenize` 对拉丁做单词、对中文做"字 unigram + 相邻 bigram"，是**教学用简化**。生产中文全文检索请用 **Postgres tsvector + zhparser**（专业分词、可下推 SQL），见 12.7。
+> **坑点：中文分词**。默认 `split(" ")` 对中文无效（中文没空格）。本实现 `tokenize` 对拉丁做单词、对中文做"字 unigram + 相邻 bigram"，是**教学用简化**。生产中文全文检索请用 **Postgres tsvector + zhparser**（专业分词、可下推 SQL），见 12.7。
 
 ### 12.5.4 路由与去重：QueryRouter + DeduplicatingContentAggregator
 
@@ -518,8 +508,6 @@ public class DeduplicatingContentAggregator implements ContentAggregator {
 三个查询里向量路错两个半：型号查不中（精确 token 不在它的强项里），"保养"这种实词被中文小模型的窄分数带抹平（Ch11 的老问题）。关键词路三次全部把手册和保养段顶在前面——bigram 分词让"保养"两个字就是硬匹配。
 
 所以本章给混合检索的结论不是"有用"或"没用"，而是**触发条件**——外加一条口径警告。触发条件：查询里有型号、数字、专有名词、或 embedding 模型不熟的实词时，它是救命的那一路；查询全是自然语义问句、语料又是向量模型熟悉的领域时，它不添乱（RRF 融合后排名不变）也不帮忙。口径警告：上面这组对照是**单路由**实验（两路各查各的、互不掺和），它的结论**外推不到完整管线**——型号题后来进了 golden set（Ch13 13.4.2），在真实管线上复测（`keyword.enabled` 开/关），关键词路的增益依旧没有显形，因为管线里的向量路（父子库）对"K-3000 开箱""报修"这类带语义线索的问题自己就能排到前 2，裸「K-3000」也排在第 2。**单路由的"一发正中"，经 RRF 与另一路对冲后可能只剩下"名次不变"。混合检索到底有没有用，最终要拿完整管线跑评估说话**——这正是 Ch13 的闭环要替你把住的关。
-
----
 
 ## 12.6 装配：一套 RetrievalAugmentor 串起三件武器
 
@@ -597,9 +585,7 @@ public interface DocQaAssistant {
 
 返回 `Result<String>` 而不是裸 `String`——`answer.sources()` 里就是检索注入的内容，排障时能直接看到"模型到底看了哪些块"。Controller（`controller/RagController.java`）也是这么做的：`POST /api/rag/ask` 收 question、调 `ask()`，把 `sources` 打进日志，异常兜底成 `{"success":false,"error":...}` 而不是 500 裸奔。
 
-> ✅ **依赖倒置的胜利**：业务代码（`DocQaAssistant` + `RagController`）完全不碰向量库/检索/重排细节。把 `ScoringModel` 从 `EmbeddingScoringModel` 换成 `DashScopeRerankScoringModel` 或官方 `OnnxScoringModel`，只改 `AdvancedRagConfig` 一个 Bean，业务零改。
-
----
+> **依赖倒置的胜利**：业务代码（`DocQaAssistant` + `RagController`）完全不碰向量库/检索/重排细节。把 `ScoringModel` 从 `EmbeddingScoringModel` 换成 `DashScopeRerankScoringModel` 或官方 `OnnxScoringModel`，只改 `AdvancedRagConfig` 一个 Bean，业务零改。
 
 ## 12.7 性能与资源边界 + 生产升级路径
 
@@ -615,8 +601,6 @@ public interface DocQaAssistant {
 1. **重排换交叉编码器**：最省事的是百炼 `qwen3-rerank`（项目已内置 `DashScopeRerankScoringModel`，配 key + 切 provider 即用）；要离线就用官方 `langchain4j-onnx-scoring` 的 `OnnxScoringModel(pathToModel, pathToTokenizer)` 托一个 bge-reranker 的 ONNX 模型；
 2. **全文路下推 SQL**：进程内 BM25 换 **Postgres tsvector + zhparser**，关键词路与 pgvector 向量路在同一张表里 `@@` 匹配 + 相似度检索，融合在 SQL 层做；
 3. **父块映射外置**：`parentId → parentText` 挪到独立存储（一张 PG 表足矣），向量库里只留子块，检索时查表展开。
-
----
 
 ## 12.8 实战验证（完整链路）
 
@@ -645,9 +629,7 @@ curl -X POST http://localhost:8090/api/search/semantic \
   -d '{"query":"退货需要多久到账","topK":2,"minScore":0.4}'
 ```
 
-> ⚠️ **坑点：换分块结构后必须清库重建**。父子分块改了块结构（子块带 parentText），与旧扁平库不兼容。`POST /api/docs/ingest?dir=src/main/resources/docs&rebuild=true` 先 `removeAll()` + 清空 `LexicalSegmentIndex` 再重嵌。混合检索的"全文"一路依赖 `LexicalSegmentIndex`，不清会拿到旧索引（Ch10 10.8.6 说过：两条索引必须同生共死）。
-
----
+> **坑点：换分块结构后必须清库重建**。父子分块改了块结构（子块带 parentText），与旧扁平库不兼容。`POST /api/docs/ingest?dir=src/main/resources/docs&rebuild=true` 先 `removeAll()` + 清空 `LexicalSegmentIndex` 再重嵌。混合检索的"全文"一路依赖 `LexicalSegmentIndex`，不清会拿到旧索引（Ch10 10.8.6 说过：两条索引必须同生共死）。
 
 ## 12.9 高频坑点与最佳实践汇总
 
@@ -681,14 +663,12 @@ curl -X POST http://localhost:8090/api/search/semantic \
 
 **最佳实践汇总**：
 
-- ✅ 父子分块的默认参数（1200/150 + 400/50）是合理起点，实测 +0.235 MRR 后再微调
-- ✅ 重排的接入点只有 `ScoringModel` 一个 Bean，换实现不动业务
-- ✅ 评估先行：改任何一层之前，先让 `/api/rag/evaluate` 会说话
-- ✅ 检索质量的天花板仍在 embedding 模型（Ch11 结论不变），管线三件套是在天花板下爬高度
-- ❌ 不要把教学架构（进程内 BM25、parentText 冗余、O(N) 扫描）直接搬上生产
-- ❌ 不要在没有 A/B 数据的情况下开 关键词路 / 调 rerank 截断
-
----
+- 父子分块的默认参数（1200/150 + 400/50）是合理起点，实测 +0.235 MRR 后再微调
+- 重排的接入点只有 `ScoringModel` 一个 Bean，换实现不动业务
+- 评估先行：改任何一层之前，先让 `/api/rag/evaluate` 会说话
+- 检索质量的天花板仍在 embedding 模型（Ch11 结论不变），管线三件套是在天花板下爬高度
+- 不要把教学架构（进程内 BM25、parentText 冗余、O(N) 扫描）直接搬上生产
+- 不要在没有 A/B 数据的情况下开 关键词路 / 调 rerank 截断
 
 ## 12.10 本章小结
 
@@ -716,8 +696,6 @@ curl -X POST http://localhost:8090/api/search/semantic \
 - [ ] 能解释为什么向量路 min-score 默认 0.0
 - [ ] 知道换 provider 后去哪行日志确认没有静默回落
 
----
-
 ## 12.11 本章项目代码状态
 
 仓库当前代码即完整实现（无 tag、无版本快照，以下均为当前路径）：
@@ -737,8 +715,6 @@ curl -X POST http://localhost:8090/api/search/semantic \
 | 配置 | `application.yml` | `chat.rag.*`：parent-child / 父子块参数 / vector / keyword / reranker（含 dashscope） |
 | 业务 | `service/DocumentSearchService.java` 等 | **零改动**——依赖倒置，加高级管线不动旧检索 |
 
----
-
 ## 12.12 练习题
 
 1. **型号题的管线复测**（原题"给 golden set 补一道型号题"作者已做完：K-3000 相关 5 条用例已进集，见 Ch13 13.4.2）：你来做后半段——跑 `keyword.enabled=true` 和 `false` 两轮 evaluate，对照 12.5.5 的单路由结论，亲手验证"单路由一发正中 ≠ 管线增益"。
@@ -746,7 +722,5 @@ curl -X POST http://localhost:8090/api/search/semantic \
 3. 把 `chat.rag.parent-child` 设为 `false` 重启，复现 12.3.4 的扁平模式数字（recall@1 0.182 / MRR 0.417），找出 pgvector 和「K-3000 报修」两题掉出前五的具体块。
 4. 把 `chat.rag.reranker.max-results` 调到 2 和 8 各跑一次评估，画出 MRR 曲线，结合 12.4.4 解释拐点。
 5. 思考题：把 `EmbeddingScoringModel` 换成官方 `OnnxScoringModel`（本地 bge-reranker），需要改哪几个文件、动哪些配置？`DocQaAssistant` 和 `RagController` 要不要动？为什么？
-
----
 
 **下一章：Ch13 RAG 评估与持续优化**——本章反复用到的那 11 道 golden 题和 MRR 0.652 是哪来的、怎么算的，还没交代。Ch13 拆开 `RagEvaluator`：golden set 怎么设计（12.5.5 的教训会变成设计规则）、recall@K / MRR 怎么算、LLM-as-Judge 怎么给答案质量打分、以及"改一层 → 跑评估 → 看数字"的闭环怎么搭。

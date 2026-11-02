@@ -11,8 +11,6 @@
 > 6. 学会检索调优三件套：TopK / minScore 阈值 / metadata 过滤——并且知道它们在这个模型上各自能干什么、不能干什么
 > 7. 记录两个环境坑：Redis 缺 RediSearch 模块（`FT._LIST` unknown）、`dimension` 必须与模型匹配且改了不生效
 
----
-
 ## 11.1 为什么需要真正的向量存储
 
 ### 11.1.1 回顾：Ch08 到 Ch10，向量一直存在"内存里"
@@ -54,7 +52,7 @@ flowchart LR
 
 > **先剧透一句（11.3 展开）**：很多人一上来就纠结"向量库选哪个"——但本章会用实测数据论证，对检索质量影响最大的**根本不是向量库，而是 Embedding 模型（天花板）和分块与上游解析的质量**。向量库只决定"召回率多高、延迟多低"。先把这条认知顺序立住，选型时才不会本末倒置。
 
-> 💡 **Spring AI 对比**：Spring AI 的对应抽象是 `VectorStore`，同样有 `SimpleVectorStore`（内存版）与各类实现；LangChain4j 的 `EmbeddingStore` 与之同构。两者都遵循同一个原则：**业务代码面向接口，换存储不动业务**。
+> **Spring AI 对比**：Spring AI 的对应抽象是 `VectorStore`，同样有 `SimpleVectorStore`（内存版）与各类实现；LangChain4j 的 `EmbeddingStore` 与之同构。两者都遵循同一个原则：**业务代码面向接口，换存储不动业务**。
 
 ### 11.1.3 不升级的兜底：让内存库活过重启
 
@@ -86,8 +84,6 @@ public EmbeddingStore<TextSegment> inMemoryEmbeddingStore(
 ```
 
 它解决的只有"重启重建"这一条：仍然是进程内、仍然是暴力扫描、多实例仍然各存一份。但对单机开发和小知识库，这几行比一个 Redis Stack 容器划算得多。顺带一提，1.22.0 的 `InMemoryEmbeddingStore` 还多了 `searchAsync`（非阻塞检索）和 `removeAll(Filter)`（按元数据条件删除）——后者在 11.6.4 的元数据补齐之后，就是"只删某个类目的向量"的现成工具。
-
----
 
 ## 11.2 EmbeddingStore 抽象与检索请求
 
@@ -149,8 +145,6 @@ record EmbeddingMatch<TextSegment>(double score, TextSegment embedded) {}
 
 每个 match 带 `score`（相似度）和命中的 `TextSegment`（文本 + metadata）。`DocumentSearchService.toHit()` 就是从 segment 的 metadata 里取 `docId` / `category` 拼成 DTO 返回——至于这两个字段现在为什么是 null，Ch10 的 10.9.2 已经还原过，本章 11.6.4 会讲到把它们用起来。
 
----
-
 ## 11.3 检索质量的三层影响因素
 
 这是本章最重要的概念。**检索结果的质量由三个因素决定，且影响程度从大到小排列**：
@@ -178,7 +172,7 @@ record EmbeddingMatch<TextSegment>(double score, TextSegment embedded) {}
 
 这就是"模型是天花板"的具体形状：这个 384 维小模型把所有中文文本的相似度都压进了一条窄带，相关与无关在分数上几乎分不开。**换任何一个向量库，这条窄带一毫米都不会变**——库里存的还是这些向量，算的还是这些相似度。想把带子拉开，只能换更强的 embedding 模型（项目里 `chat.embedding.provider=bailian` 切到 text-embedding-v4，1024 维），或者在检索之后加一层重排（Ch12）。
 
-> ⚠️ 别把这张表的数字当成通用参考。分数分布是「模型 × 语料」一起决定的，你换了模型、换了自己的文档，分布就变了。能带走的是方法：**拿五六个相关查询、五六个无关查询，各跑一遍看 Top-1 分数落在哪，你的阈值只能从两条带子的缝里选**。
+> 别把这张表的数字当成通用参考。分数分布是「模型 × 语料」一起决定的，你换了模型、换了自己的文档，分布就变了。能带走的是方法：**拿五六个相关查询、五六个无关查询，各跑一遍看 Top-1 分数落在哪，你的阈值只能从两条带子的缝里选**。
 
 ### 11.3.2 ② 分块质量与上游解析：垃圾进，垃圾出
 
@@ -196,9 +190,7 @@ Ch10 讲过 chunk-size/overlap 怎么定。但本章想强调的是分块上游�
 | **度量方式** | 余弦 / 内积 / L2，排序可能不同（11.2.3 的坑） |
 | **过滤能力** | 是否支持 metadata 过滤、预过滤还是事后过滤 |
 
-> ✅ **最佳实践（一句话）**：换向量库 ≈ 换"搜索引擎"，不换"语义理解能力"。**检索质量的天花板在 Embedding 模型和分块，向量库只决定"天花板之上你能爬多接近"（召回率）和"爬多快"（延迟）**。排障时先查模型和 chunk，别一上来就怀疑向量库。
-
----
+> **最佳实践（一句话）**：换向量库 ≈ 换"搜索引擎"，不换"语义理解能力"。**检索质量的天花板在 Embedding 模型和分块，向量库只决定"天花板之上你能爬多接近"（召回率）和"爬多快"（延迟）**。排障时先查模型和 chunk，别一上来就怀疑向量库。
 
 ## 11.4 向量库生态选型
 
@@ -245,9 +237,7 @@ HNSW 把向量组织成多层图：顶层稀疏（粗筛）、底层稠密（精
 千万级以上 / 复杂过滤 / 分布式 → Milvus / Qdrant
 ```
 
-> ⚠️ **坑点：Redis 是"顺手用"的向量库，不是"专门选"的**。向量全驻内存，100 万条 × 1024 维 ≈ 4GB 内存，纯为检索烧内存不划算；且 metadata 过滤是事后过滤（先 KNN 再筛），复杂混合查询弱于 pgvector 的 SQL。本章用 Redis 演示"一行配置换库"的架构能力，生产推荐 pgvector/Milvus。
-
----
+> **坑点：Redis 是"顺手用"的向量库，不是"专门选"的**。向量全驻内存，100 万条 × 1024 维 ≈ 4GB 内存，纯为检索烧内存不划算；且 metadata 过滤是事后过滤（先 KNN 再筛），复杂混合查询弱于 pgvector 的 SQL。本章用 Redis 演示"一行配置换库"的架构能力，生产推荐 pgvector/Milvus。
 
 ## 11.5 实战：一行配置切换向量库
 
@@ -261,7 +251,7 @@ docker run -d --name redis-stack -p 6379:6379 -v redis-data:/data redis/redis-st
 
 > `-v redis-data:/data` 挂载数据卷，容器重启后向量不丢。
 
-> ⚠️ **坑点（作者本机实测记录）**：如果用的是普通 Redis（或缺失 RediSearch 的发行版），`RedisEmbeddingStore` 构造时会抛：
+> **坑点（作者本机实测记录）**：如果用的是普通 Redis（或缺失 RediSearch 的发行版），`RedisEmbeddingStore` 构造时会抛：
 > ```
 > ERR unknown command 'FT._LIST'
 > ```
@@ -321,7 +311,7 @@ public EmbeddingStore<TextSegment> redisEmbeddingStore(
 3. **`UnifiedJedis` 独立成 Bean**：连接池全局共享、只建一次，避免每次 new 连接（与 `ChatMemoryStoreConfig` 的 redis 配置同风格）；
 4. `RedisEmbeddingStore.builder()` 其余参数可选：`prefix`（key 前缀）、`metadataKeys`/`metadataConfig`（声明哪些 metadata 字段可过滤，11.6.4 用）。
 
-> ⚠️ **坑点（源码核实）**：RediSearch 索引**只在「不存在」时创建**（`RedisEmbeddingStore` 构造时 `isIndexExist` 检查，不存在才 `createIndex`）。也就是说**索引已存在时，`dimension` 参数会被静默忽略**——改了维度但旧索引还在，会默默按旧维度建索引，向量写进去全错但启动不报错。**换 dimension 前必须先删旧索引**（`redis-cli FT.DROPINDEX embedding-index`）或换一个新的 `index-name`。
+> **坑点（源码核实）**：RediSearch 索引**只在「不存在」时创建**（`RedisEmbeddingStore` 构造时 `isIndexExist` 检查，不存在才 `createIndex`）。也就是说**索引已存在时，`dimension` 参数会被静默忽略**——改了维度但旧索引还在，会默默按旧维度建索引，向量写进去全错但启动不报错。**换 dimension 前必须先删旧索引**（`redis-cli FT.DROPINDEX embedding-index`）或换一个新的 `index-name`。
 
 ### 11.5.3 配置：application.yml
 
@@ -368,11 +358,9 @@ curl -X POST http://localhost:8090/api/search/semantic \
   -d '{"query":"七天无理由退货的条件是什么？","topK":3,"minScore":0.5}'
 ```
 
-> 💡 换库后 **top1 通常一致，TopK 的"尾巴"可能不同**——这正是 11.3 讲的"换库只影响召回率与延迟"的直观体验，不是 bug。
+> 换库后 **top1 通常一致，TopK 的"尾巴"可能不同**——这正是 11.3 讲的"换库只影响召回率与延迟"的直观体验，不是 bug。
 
-> ⚠️ **坑点：换库/换模型后必须清库重建**。Ch10 的 `rebuild=true` 机制在这里就是标配：`POST /api/docs/ingest?dir=...&rebuild=true` 会先 `removeAll()` 再重新入库。**不要**增量混着来——旧库的向量是旧维度/旧模型算的，混在一起检索质量会崩。
-
----
+> **坑点：换库/换模型后必须清库重建**。Ch10 的 `rebuild=true` 机制在这里就是标配：`POST /api/docs/ingest?dir=...&rebuild=true` 会先 `removeAll()` 再重新入库。**不要**增量混着来——旧库的向量是旧维度/旧模型算的，混在一起检索质量会崩。
 
 ## 11.6 检索调优：用真实分数说话
 
@@ -445,8 +433,6 @@ EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
 
 本项目 `DocumentSearchService.search()` 暂未暴露 `filter` 参数（保持 Ch08 接口兼容），标准写法如上，练习题 3 会带你把它接进 Controller。
 
----
-
 ## 11.7 端点与验证（完整链路）
 
 ```bash
@@ -476,8 +462,6 @@ curl -X POST http://localhost:8090/api/search/semantic \
 curl -X POST 'http://localhost:8090/api/docs/ingest?dir=src/main/resources/docs&rebuild=true'
 # → segmentCount 从 26 变 10（目录入口 PDF 解析正确，见 Ch10 10.4.4）
 ```
-
----
 
 ## 11.8 高频坑点与最佳实践汇总
 
@@ -511,15 +495,13 @@ metadata 过滤的前提是写入端真的写了那个 key。恒为 null 的字�
 
 **最佳实践汇总**：
 
-- ✅ 业务代码面向 `EmbeddingStore` 接口，换存储零改动（本章实战的立足点）
-- ✅ 排障顺序：模型 → 分块与解析 → 库，别反过来
-- ✅ 阈值标定用"相关查询最低分 / 无关查询最高分"夹逼，标不出缝就升级模型
-- ✅ 问答类 TopK=3 起步，第 3 名以后的内容默认当噪声看
-- ✅ 开发调试 inmemory + 本地 ONNX，零成本零依赖；生产按 11.4.3 决策树选
-- ❌ 不要把向量库当检索质量的救命稻草——它只管召回率和延迟
-- ❌ 不要在没跑过分数分布的情况下相信任何 minScore 经验值
-
----
+- 业务代码面向 `EmbeddingStore` 接口，换存储零改动（本章实战的立足点）
+- 排障顺序：模型 → 分块与解析 → 库，别反过来
+- 阈值标定用"相关查询最低分 / 无关查询最高分"夹逼，标不出缝就升级模型
+- 问答类 TopK=3 起步，第 3 名以后的内容默认当噪声看
+- 开发调试 inmemory + 本地 ONNX，零成本零依赖；生产按 11.4.3 决策树选
+- 不要把向量库当检索质量的救命稻草——它只管召回率和延迟
+- 不要在没跑过分数分布的情况下相信任何 minScore 经验值
 
 ## 11.9 本章小结
 
@@ -547,8 +529,6 @@ metadata 过滤的前提是写入端真的写了那个 key。恒为 null 的字�
 - [ ] 能说出改 dimension 的正确顺序（删索引 → 改配置 → rebuild）
 - [ ] 能解释"退款多久能到账"那个例子：为什么正确答案排第 2，MRR 量的就是这件事
 
----
-
 ## 11.10 本章项目代码状态
 
 仓库当前代码即完整实现（无 tag、无版本快照，以下均为当前路径）：
@@ -569,8 +549,6 @@ metadata 过滤的前提是写入端真的写了那个 key。恒为 null 的字�
 | 换 dimension 不生效 | 启动不报错、检索结果全错 | 索引仅在不存在时创建，已存在则 dimension 被静默忽略 | 先 `redis-cli FT.DROPINDEX embedding-index` 或换 `index-name`；再 rebuild=true |
 | 换库后阈值失效 | 检索结果异常 | minScore 跨度量方式不可复用（余弦 vs L2） | 本章 Redis 固定 COSINE 且归一化为 [0,1]，minScore 可直接复用；pgvector 等需重新标定 |
 
----
-
 ## 11.11 练习题
 
 1. **跑一遍你自己的分数带**：把 11.3.1 的五个查询（三个相关两个无关）换成你业务里的真实问题，各跑一遍 `/api/search/semantic`（topK=1, minScore=0），把 Top-1 分数列成表——你的模型和语料的"缝"在哪，看完这张表就知道。
@@ -578,7 +556,5 @@ metadata 过滤的前提是写入端真的写了那个 key。恒为 null 的字�
 3. 给 `DocumentSearchService.search()` 增加一个 `filter` 参数（参考 11.6.4 的 Filter DSL），实现"只搜某个 category"并接入 `SemanticSearchController`——记得先把 Ch10 10.9.2 的元数据写入端补上，否则过滤结果永远是空。
 4. 把 `chat.embedding.store` 切到 `redis`，分别用 TopK=1 和 TopK=5 跑同一个查询，观察命中内容差异；再解释这个差异为什么和 11.3 的结论一致。
 5. 思考题：11.6.3 的例子里正确答案排第 2，差 0.0095。在不换 embedding 模型的前提下，你能想出几种办法让它排到第 1？（提示：改分块、改查询、加一层打分——第三种就是 Ch12。）
-
----
 
 **下一章：Ch12 RAG 高级管线**——本章的三个遗留问题（分数带太窄、排序错位、纯向量检索不懂关键词）都会在 Ch12 得到回应：**父子分块**（小 chunk 检索、大 chunk 喂 LLM）、**reranker 重排序**（交叉编码器精排）、**混合检索**（向量 + 关键词两路融合）。Ch12 会在这三条路上把检索质量再提一个台阶。

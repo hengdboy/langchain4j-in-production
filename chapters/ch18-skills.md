@@ -12,8 +12,6 @@
 > 6. 理解 **Shell 模式**（实验性）及其安全边界；掌握 Skill 与 MCP / `@Tool` 的分工
 > 7. 建立**踩坑清单**：SKILL.md 格式、激活名、资源目录、实验 API 版本等高频坑
 
----
-
 ## 18.1 为什么需要 Skills
 
 前面几章攒了一堆"能力"：工具（`@Tool`）、技能指令（Prompt）、外部工具（MCP）。但问题是它们**都以"散件"形态存在**：
@@ -39,9 +37,7 @@ flowchart LR
     IDLE -->|"模型调 activate_skill"| ACTIVE
 ```
 
-> 💡 **Spring AI 对比**：Spring AI 没有等价的"技能封装"机制，类似物是"Prompt 模板 + 工具回调"的组合，需要自己管理加载时机。LangChain4j 的 Skills 把"按需加载指令"做成了协议级的 `activate_skill` 工具——这是本章的价值点。
-
----
+> **Spring AI 对比**：Spring AI 没有等价的"技能封装"机制，类似物是"Prompt 模板 + 工具回调"的组合，需要自己管理加载时机。LangChain4j 的 Skills 把"按需加载指令"做成了协议级的 `activate_skill` 工具——这是本章的价值点。
 
 ## 18.2 Skill 文件格式：SKILL.md（含解析机制）
 
@@ -89,8 +85,6 @@ description: 处理退款、退货、运费赔付类客服问题   # 一句话�
 | **front matter 必须位于文件第一行**       | `parseFrontMatter` 按 `---` 分隔块解析 | 文件开头有空行/注释会解析失败（见 18.9 坑1）        |
 | **`name` 与 `description` 是必填字段** | 缺一个都会加载异常                        | 少写 description，技能进不了清单（见 18.9 坑2） |
 
----
-
 ## 18.3 三种创建方式（javap 核实 API）
 
 | 方式            | API                                                                      | 适用场景                      |
@@ -118,9 +112,7 @@ Skill skill = Skill.builder()
 - 已知具体类型可 `toBuilder()`（javap 确认 `DefaultSkill.toBuilder()` 存在）；
 - **稳妥路线**（本章采用）：从接口取 `name()/description()/content()`，用 `Skill.builder()` 编程式重建——零损失、不依赖具体类型。
 
-> ✅ **最佳实践**：技能内容建议**指令 + 工具调用**混合编写——"先调用 XX 工具，再按结果做 YY"比纯指令更能保证执行质量。指令描述步骤，工具负责动作。
-
----
+> **最佳实践**：技能内容建议**指令 + 工具调用**混合编写——"先调用 XX 工具，再按结果做 YY"比纯指令更能保证执行质量。指令描述步骤，工具负责动作。
 
 ## 18.4 工具模式（推荐）：activate_skill 的内部机制
 
@@ -240,8 +232,6 @@ public class SkillConfig {
 - 问"我买的商品坏了想退货，运费谁出？" → 激活 refund-policy → 查知识库 → **"根据知识库中的退款政策，您的运费承担取决于退货原因：您的情况（商品坏了/破损）属于质量问题，运费由商家承担……《退款政策说明》第二条……"**（指令流程 + 工具 + 知识库三者协作）
 - 问"付款一直失败，应该怎么排查？" → 激活 troubleshooting → **"为了更准确地定位问题，请问您付款时具体看到了什么报错信息？"**（严格按技能指令"一次只问一个问题"）
 
----
-
 ## 18.5 资源机制：read_skill_resource（含实测）
 
 当技能目录带资源文件（`references/` 等）时，`Skills` 会额外注册 `read_skill_resource` 工具。**激活 + 读资源是两个动作**：激活拿"总指令"，读资源拿"详细素材"——避免把大段话术全塞进技能 content。
@@ -253,9 +243,7 @@ public class SkillConfig {
 
 回答**逐字引用了资源文件里的话术**——证明链路完整：`activate_skill`（拿流程）→ `read_skill_resource`（拿话术素材）→ 按素材组织回答。
 
-> ✅ **最佳实践**：**大素材放资源文件、小指令放 content**。content 保持精炼（模型激活成本低），话术/参考文档按需读取（`read_skill_resource` 有缓存，同轮对话只读一次）。
-
----
+> **最佳实践**：**大素材放资源文件、小指令放 content**。content 保持精炼（模型激活成本低），话术/参考文档按需读取（`read_skill_resource` 有缓存，同轮对话只读一次）。
 
 ## 18.6 skill-scoped 工具：激活 = 解锁（深挖）
 
@@ -272,9 +260,7 @@ public class SkillConfig {
 - **权限边界**：某个技能的工具不会在别的语境误触发（比如 troubleshooting 技能绑定的工具不会在退款语境里冒出来）；
 - **与 MCP 结合**：技能绑定的"工具"也可以是 `ToolProvider`——官方示例就是 `McpToolProvider`，即"**激活某个技能 = 临时挂载一组 MCP 工具**"。这打通了 Ch17 与 Ch18：一个"GitHub 操作技能"激活时，才挂上 GitHub MCP 的工具。
 
-> ⚠️ **坑点（javap 核实）**：`Skill.builder()` 绑定工具用 `.tools(Object...)`；`DefaultSkill.toBuilder()` 存在（javap 确认），但 `ClassPathSkillLoader` 返回 `Skill` 接口（具体类型不可见），稳妥做法是像本章一样用 `Skill.builder()` 编程式重建（`name/description/content` 从接口取，零损失）。Builder 的完整方法在基类 `AbstractSkill$BaseBuilder`：`name/description/content/resources/tools(Object...)/toolProviders(ToolProvider...)`。
-
----
+> **坑点（javap 核实）**：`Skill.builder()` 绑定工具用 `.tools(Object...)`；`DefaultSkill.toBuilder()` 存在（javap 确认），但 `ClassPathSkillLoader` 返回 `Skill` 接口（具体类型不可见），稳妥做法是像本章一样用 `Skill.builder()` 编程式重建（`name/description/content` 从接口取，零损失）。Builder 的完整方法在基类 `AbstractSkill$BaseBuilder`：`name/description/content/resources/tools(Object...)/toolProviders(ToolProvider...)`。
 
 ## 18.7 Shell 模式（实验性）：直接读文件系统
 
@@ -284,7 +270,7 @@ public class SkillConfig {
 - 没有 `activate_skill` / `read_skill_resource`；
 - 适合快速原型、直接复用 agentskills.io 社区的第三方技能（无需移植到 Java）。
 
-> ⚠️ **安全警告（官方原文）**：**Shell 执行本质上不安全**。命令直接在宿主进程环境运行，**没有任何沙箱、容器化或权限限制**——被提示注入的 LLM 可在运行应用的机器上执行任意命令。**仅在完全信任输入并接受风险的受控环境使用**。生产默认用工具模式。
+> **安全警告（官方原文）**：**Shell 执行本质上不安全**。命令直接在宿主进程环境运行，**没有任何沙箱、容器化或权限限制**——被提示注入的 LLM 可在运行应用的机器上执行任意命令。**仅在完全信任输入并接受风险的受控环境使用**。生产默认用工具模式。
 
 | 维度       | 工具模式（推荐）                                           | Shell 模式（实验）        |
 | -------- | -------------------------------------------------- | ------------------- |
@@ -294,8 +280,6 @@ public class SkillConfig {
 | 适用       | 生产                                                 | 实验/原型/社区技能尝鲜        |
 
 
-
----
 
 ## 18.8 Skill 与 @Tool / MCP 的分工（选型）
 
@@ -372,8 +356,6 @@ description: 处理支付失败、发货异常、登录异常等订单技术问�
 
 ![@Tool / Skill / MCP 三分：动作、手册、外部能力](../assets/ch18-three-ways.png)
 
----
-
 ## 18.9 坑点清单（前三章同款的"高频坑"节）
 
 | # | 坑                      | 现象                                        | 对策                                           |
@@ -385,8 +367,6 @@ description: 处理支付失败、发货异常、登录异常等订单技术问�
 | 5 | **实验 API 版本漂移**        | 升级 beta 版本后 API 变化                        | 锁版本 + 冒烟测试（实验模块通用策略）                       |
 | 6 | **把大话术写进 content**     | 每次激活都吃一大段 token                           | 大素材放 resources，content 保持精炼指令                |
 | 7 | **Shell 模式误用**         | 任意命令执行                                    | 生产只用工具模式；Shell 仅受控实验                         |
-
----
 
 ## 18.10 实战深化：多技能客服场景（2026-10-28 实测）
 
@@ -415,8 +395,6 @@ curl -X POST http://localhost:8090/api/skills/ask \
 ② 是资源链路最有说服力的证据：回答里"10 分钟内可重试、订单不会重复扣款、微信/支付宝/银行卡"这些细节**只存在于资源文件里**——content 没写过，知识库检索也够不到（它查的是退款政策），唯一来源就是 `read_skill_resource` 读到的话术模板。
 
 **扩展方向**（承接 Ch19/后续）：技能 + MCP 组合（激活技能时挂 MCP 工具）、技能的可观测（Ch22 统计 activate_skill 调用频率——哪个技能最常用）、技能评估（ch13 的 golden set 思路测技能触发准确性）。
-
----
 
 ## 本章小结
 

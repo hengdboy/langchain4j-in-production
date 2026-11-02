@@ -11,8 +11,6 @@
 > 6. 亲手复现一个真实踩到的坑：classpath 启动把 PDF 当纯文本啃进向量库——并知道怎么修
 > 7. 记录一次真实的 P0 工程修复：`langchain4j-redis` 停更，迁移到 `langchain4j-community-redis`
 
----
-
 ## 10.1 先想清楚：为什么 RAG 需要一条文档处理流水线
 
 ### 10.1.1 从 8 条硬编码说起
@@ -54,7 +52,7 @@ RAG 有两条链路，文档处理流水线属于**索引链路**（Indexing Pip
 
 ![文档处理流水线：索引链路决定查询链路的召回上限](../assets/ch10-ingestion-pipeline.png)
 
-> 💡 **一句话理解**：索引链路的质量（解析是否完整、分块是否合理、元数据是否丰富）**直接决定**查询链路的召回上限。检索不到的东西，大模型再强也答不出来——这就是「第一公里」的含义。本章 10.4.4 会用一个真实事故演示这句话：一份解析错的 PDF 不会报错，它会安静地躺在向量库里污染检索。
+> **一句话理解**：索引链路的质量（解析是否完整、分块是否合理、元数据是否丰富）**直接决定**查询链路的召回上限。检索不到的东西，大模型再强也答不出来——这就是「第一公里」的含义。本章 10.4.4 会用一个真实事故演示这句话：一份解析错的 PDF 不会报错，它会安静地躺在向量库里污染检索。
 
 ### 10.1.4 LangChain4j 的四大抽象
 
@@ -68,9 +66,7 @@ LangChain4j 把索引链路的前半段抽象成四个接口 + 一个数据模�
 | `DocumentTransformer` | 文本清洗/转换 | `Document` → `Document` |
 | `DocumentSplitter` | 长文切块 | `Document` → `List<TextSegment>` |
 
-> 💡 **Spring AI 对比**：Spring AI 的对应物是 `DocumentReader`（读取）、`DocumentTransformer`（清洗）与 `TokenTextSplitter`（分块）；LangChain4j 把「加载」和「解析」拆成两个接口，职责更细。两者最终都汇入同一个概念：**文档先切块，块再向量化**。
-
----
+> **Spring AI 对比**：Spring AI 的对应物是 `DocumentReader`（读取）、`DocumentTransformer`（清洗）与 `TokenTextSplitter`（分块）；LangChain4j 把「加载」和「解析」拆成两个接口，职责更细。两者最终都汇入同一个概念：**文档先切块，块再向量化**。
 
 ## 10.2 流水线全景：六个环节
 
@@ -109,7 +105,7 @@ flowchart TB
 | **嵌入 Embed** | 文本块怎么变成向量（复用 Ch08 的模型） | 10.7 | `embeddingModel.embedAll` |
 | **入库 Store** | 向量存哪、元数据带什么（复用 Ch08 的存储） | 10.7 | `embeddingStore.addAll` |
 
-> ✅ **最佳实践**：这六个环节应该**解耦成独立的类/方法**，每个环节可单独测试、单独替换。项目的 `DocumentIngestionService` 就是这么组织的：清洗器是独立 `DocumentCleaner`（实现 `DocumentTransformer`），解析器按扩展名动态选择，分块参数走配置——任何一个环节升级都不影响其他环节。
+> **最佳实践**：这六个环节应该**解耦成独立的类/方法**，每个环节可单独测试、单独替换。项目的 `DocumentIngestionService` 就是这么组织的：清洗器是独立 `DocumentCleaner`（实现 `DocumentTransformer`），解析器按扩展名动态选择，分块参数走配置——任何一个环节升级都不影响其他环节。
 
 **先交代一个口径，避免读到后面困惑**：仓库当前代码的 `ingest()` 里有一个分块开关——`chat.rag.parent-child`，**默认开启，走的是 Ch12 的「父子分块」**；关掉它才是本章主线讲的扁平分块（`DocumentSplitters.recursive` 一层切到底）。两条路共用清洗 → 嵌入 → 入库主干，`ingest()` 里就是一个二选一分支。本章按扁平分块讲原理（Ch12 讲为什么父子分块更好），跑示例时加一个启动参数即可切到本章模式：
 
@@ -118,8 +114,6 @@ java -jar target/smart-doc-assistant-0.16.0-SNAPSHOT.jar --chat.rag.parent-child
 ```
 
 两种模式各实测过一次（同样的 4 个示例文档，解析错配修复前）：扁平分块 **20 块**，父子分块 **26 块**。数字本身不重要，重要的是你知道它从哪个分支来——10.8 读代码时会看到这个分支。还有一层要先打预防针：那两个数字里都掺着一份被解析错的 PDF 产生的垃圾块；2026-10-28 修复落地后，启动路径直接给你干净的 **7 块 / 10 块**，10.4.4 会把这件事完整还原。
-
----
 
 ## 10.3 文档加载 DocumentLoader：三种来源
 
@@ -172,9 +166,9 @@ try (var files = Files.list(Path.of(directoryPath))) {
 
 注意这里的写法：**自己遍历目录、逐文件过 `parserFor` 选解析器**。这不是绕弯——1.19 起 `loadDocuments(Path, Function<String, DocumentParser>)` 这个"遍历时按文件名自动选解析器"的重载已被移除（1.22.0 用 `javap` 核过，确实没有），所以逐文件选择只能自己写。上面就是项目里 `ingestFromDirectory` 的真实实现，目录里混着 txt 和 pdf 也能各归其位。
 
-> 💡 两个加载器在 1.22.0 里都有 `loadDocuments(dir, PathMatcher, DocumentParser)` 这一族重载（各 8 个 PathMatcher 变体，`javap` 核过），都**没有** `Function<String, DocumentParser>` 这种"逐文件按名选解析器"的重载。所以"按扩展名分拨"只有两种写法：PathMatcher 过滤后分两次加载（10.4.4 的修复配方用这个），或者像上面这样手工遍历、逐文件 `parserFor`。项目目录入口选了后者，两种都对。
+> 两个加载器在 1.22.0 里都有 `loadDocuments(dir, PathMatcher, DocumentParser)` 这一族重载（各 8 个 PathMatcher 变体，`javap` 核过），都**没有** `Function<String, DocumentParser>` 这种"逐文件按名选解析器"的重载。所以"按扩展名分拨"只有两种写法：PathMatcher 过滤后分两次加载（10.4.4 的修复配方用这个），或者像上面这样手工遍历、逐文件 `parserFor`。项目目录入口选了后者，两种都对。
 
-> ⚠️ **坑点：「放服务器目录」只对单机部署成立**。容器文件系统是易失的——Pod 一重建，目录里的文档就没了；多副本部署时每个实例各挂各的目录，互相看不见。生产上的标准做法是：文档先进对象存储（OSS / S3 / MinIO），由事件或定时任务触发入库；退一步是挂载共享存储（NFS）再扫描目录。本项目是单机教学部署，本地目录够用——哪天要搬进 K8s，先换掉这一层。
+> **坑点：「放服务器目录」只对单机部署成立**。容器文件系统是易失的——Pod 一重建，目录里的文档就没了；多副本部署时每个实例各挂各的目录，互相看不见。生产上的标准做法是：文档先进对象存储（OSS / S3 / MinIO），由事件或定时任务触发入库；退一步是挂载共享存储（NFS）再扫描目录。本项目是单机教学部署，本地目录够用——哪天要搬进 K8s，先换掉这一层。
 
 ### 10.3.4 URL：远程网页 / 远程文件
 
@@ -185,9 +179,7 @@ Document doc = UrlDocumentLoader.load(
         new URL("https://example.com/product.html"), new TextDocumentParser());
 ```
 
-> ⚠️ **坑点**：`UrlDocumentLoader` 加载的是**静态内容**。SPA 页面（Vue/React 渲染）返回的是空壳 HTML，解析出来全是脚本标签——这类场景需要无头浏览器渲染后再抓，超出 LangChain4j 范畴。
-
----
+> **坑点**：`UrlDocumentLoader` 加载的是**静态内容**。SPA 页面（Vue/React 渲染）返回的是空壳 HTML，解析出来全是脚本标签——这类场景需要无头浏览器渲染后再抓，超出 LangChain4j 范畴。
 
 ## 10.4 文档解析 DocumentParser：从字节到文本
 
@@ -204,7 +196,7 @@ Document doc = UrlDocumentLoader.load(
 | `MarkdownDocumentParser` | Markdown | `langchain4j-document-parser-markdown` | 需要保留 Markdown 结构（标题/列表） |
 | `DoclingDocumentParser` | PDF/Word 等 | `langchain4j-document-parser-docling` | 复杂排版文档，结构化输出 |
 
-> ✅ **最佳实践**：**按需引依赖，不要一上来就引 Tika**。Tika 一个依赖拖进几十个传递依赖，启动变慢、体积变大。项目里格式单一（就 txt/md/pdf）时，Text + PDFBox 足够；等格式真的杂了再加 Tika。
+> **最佳实践**：**按需引依赖，不要一上来就引 Tika**。Tika 一个依赖拖进几十个传递依赖，启动变慢、体积变大。项目里格式单一（就 txt/md/pdf）时，Text + PDFBox 足够；等格式真的杂了再加 Tika。
 
 先看清 `TextDocumentParser` 的真身——它就是 1.22.0 源码里的这几行：
 
@@ -259,7 +251,7 @@ Document document = parserFor(fileName).parse(file.getInputStream());
 
 5.2 KB 的 PDF 提取出 801 字符的中文正文，切成 2 个干净块——这是"带文本层的 PDF"该有的样子。
 
-> ⚠️ **坑点：扫描版 PDF 没有文本层**。PDFBox 只能提取「文本层」，扫描件本质是图片，解析出来是空字符串或乱码。处理扫描件需要 OCR（如 PaddleOCR / Tesseract），且要走图像流水线——这属于另一个技术栈，别指望 `ApachePdfBoxDocumentParser` 一键搞定。
+> **坑点：扫描版 PDF 没有文本层**。PDFBox 只能提取「文本层」，扫描件本质是图片，解析出来是空字符串或乱码。处理扫描件需要 OCR（如 PaddleOCR / Tesseract），且要走图像流水线——这属于另一个技术栈，别指望 `ApachePdfBoxDocumentParser` 一键搞定。
 >
 > 验证办法：`pdfinfo` / 在 PDF 阅读器里试「选中文字」。能选中的有文本层，选不中的是扫描件。
 
@@ -313,8 +305,6 @@ public synchronized void ingestClasspathDocs() {
 ```
 
 这个坑在仓库里活了很久，2026-10-28 被写进 Ch13 的评估闭环当天就修掉了——上一段配方就是现在仓库里 `ingestClasspathDocs` 的真实代码。修坑之前，Ch13 先在含垃圾块的库上量过一轮基线（6 题集 MRR 0.694），修完用扩充到 11 题的 golden set 重测（MRR 0.652），两组数字怎么读、为什么不能直接比，Ch13 13.3.4 有完整记录。如果你手头是修复前的旧版本，自己动手照配方改一遍再重启，亲眼看看 20 块怎么变 7 块——**改了解析或分块，就要重建库、重跑评估**，这句话值得亲手过一遍。
-
----
 
 ## 10.5 文档清洗 DocumentTransformer
 
@@ -392,13 +382,11 @@ public class DocumentCleaner implements DocumentTransformer {
 2. **保留 `metadata().copy()`**——清洗只动文本，不动元数据；
 3. **`transformAll` 走接口默认实现**——逐文档调用 `transform`，一行代码都不用写。
 
-> ✅ **最佳实践：清洗要「保守」**。只去除确定是噪声的内容（BOM/零宽/分隔线/多余空白），**不要**动代码缩进、表格对齐空格、列表符号——那可能是正文语义的一部分。清洗激进（比如把所有换行压成空格）会导致分块时丢失段落边界，检索质量反而下降。
+> **最佳实践：清洗要「保守」**。只去除确定是噪声的内容（BOM/零宽/分隔线/多余空白），**不要**动代码缩进、表格对齐空格、列表符号——那可能是正文语义的一部分。清洗激进（比如把所有换行压成空格）会导致分块时丢失段落边界，检索质量反而下降。
 
-> 💡 **Spring AI 对比**：Spring AI 的 `DocumentTransformer` 概念一致，也有现成的 `TextContentFormatter` 等实现；LangChain4j 不内置清洗器，一般自己写——项目的 `DocumentCleaner` 就是这个思路的参考实现。
+> **Spring AI 对比**：Spring AI 的 `DocumentTransformer` 概念一致，也有现成的 `TextContentFormatter` 等实现；LangChain4j 不内置清洗器，一般自己写——项目的 `DocumentCleaner` 就是这个思路的参考实现。
 
 顺带一提：10.4.4 那个 PDF 垃圾块，清洗器为什么没拦住？因为它的规则全是"保守"的——`%PDF-1.4` 不是分隔线、不是零宽字符、不是多余空白。**清洗器防的是格式噪声，防不了"根本不是文本"**，后者只能靠 10.4.2 那一层"选对解析器"来防。
-
----
 
 ## 10.6 分块 DocumentSplitter：决定检索质量的关键
 
@@ -442,7 +430,7 @@ flowchart LR
 - 上面这些构造器除了 `(maxSize, maxOverlap)`，都还有带 `TokenCountEstimator` 的重载。**不传 estimator 时 `maxSize` 按字符算**，传了就按 token 算——`recursive(chunkSize, overlap)` 内部就是 `recursive(chunkSize, overlap, null)`，所以默认是字符口径。
 - `recursive(...)` 本质是个**组合器**：它返回 `DocumentByParagraphSplitter(..., DocumentByLineSplitter(..., DocumentBySentenceSplitter(..., DocumentByWordSplitter(...))))`，把"切不动就换更细的粒度"这条链一次搭好，所以日常直接用它就够了。
 
-> 💡 **Spring AI 对比**：Spring AI 提供 `TokenTextSplitter`（按 token 数切，自带 `defaultChunkSize` 默认 800 token 与 350 overlap）。LangChain4j 的 `recursive` 与之思路一致，但**默认按字符计**，中文场景更直观。
+> **Spring AI 对比**：Spring AI 提供 `TokenTextSplitter`（按 token 数切，自带 `defaultChunkSize` 默认 800 token 与 350 overlap）。LangChain4j 的 `recursive` 与之思路一致，但**默认按字符计**，中文场景更直观。
 
 ### 10.6.3 recursive 的切割逻辑
 
@@ -508,13 +496,11 @@ chat:
 
 **chunkOverlap 的作用**：相邻块重叠几十个字符，保证「跨越边界」的语义不会因为硬切而丢失（比如一句话前一半在块1、后一半在块2）。经验值：overlap ≈ chunkSize 的 10%。
 
-> ⚠️ **坑点 1：overlap 不是越大越好**。overlap 过大 = 同一段内容被反复嵌入，浪费存储与 token，且检索时会重复召回近似内容。
+> **坑点 1：overlap 不是越大越好**。overlap 过大 = 同一段内容被反复嵌入，浪费存储与 token，且检索时会重复召回近似内容。
 >
-> ⚠️ **坑点 2：metadata 会被复制到每个块**。分块后每个 `TextSegment` 都继承原文档的 metadata——块多了 metadata 膨胀。入库前想清楚哪些元数据值得带（docId、category 有价值；临时调试字段不要带）。而且"有价值"的前提是**真的有人写过**——10.9.2 有一个没人写导致检索全返回 null 的实测案例。
+> **坑点 2：metadata 会被复制到每个块**。分块后每个 `TextSegment` 都继承原文档的 metadata——块多了 metadata 膨胀。入库前想清楚哪些元数据值得带（docId、category 有价值；临时调试字段不要带）。而且"有价值"的前提是**真的有人写过**——10.9.2 有一个没人写导致检索全返回 null 的实测案例。
 >
-> ⚠️ **坑点 3：换 embedding 模型必须重新分块/重嵌入**。chunk 参数和 embedding 模型是耦合的：模型变了，最优 chunkSize 通常也变了。改配置后**清库重建**（10.8.6 的 `rebuild=true`），不要增量混着来。
-
----
+> **坑点 3：换 embedding 模型必须重新分块/重嵌入**。chunk 参数和 embedding 模型是耦合的：模型变了，最优 chunkSize 通常也变了。改配置后**清库重建**（10.8.6 的 `rebuild=true`），不要增量混着来。
 
 ## 10.7 嵌入与入库：与 Ch08 的衔接
 
@@ -552,9 +538,7 @@ embeddingStore.addAll(embeddings, segments);
 - **用 `embedAll` 批量，不要 for 循环 `embed`**——批量复用请求、减少往返，远程 API 省请求次数，本地 ONNX 复用算子提速（Ch08 已强调）；
 - `addAll(embeddings, segments)` 的**下标一一对应**：第 i 个向量对应第 i 个块，LangChain4j 内部自动把 `TextSegment` 的 text 与 metadata 一起存进向量库。
 
-> ✅ **最佳实践：分块在嵌入之前、清洗在分块之前**，顺序别搞反。先清洗（去掉噪声）→ 再分块（切在干净文本上）→ 最后嵌入（只嵌入有语义的块）。
-
----
+> **最佳实践：分块在嵌入之前、清洗在分块之前**，顺序别搞反。先清洗（去掉噪声）→ 再分块（切在干净文本上）→ 最后嵌入（只嵌入有语义的块）。
 
 ## 10.8 三种数据源汇聚：DocumentIngestionService 实战
 
@@ -728,8 +712,6 @@ public synchronized void clearStore() {
 
 三个入口和 `clearStore` 都标了 `synchronized`，为什么？它们写的是**同一个** `EmbeddingStore` 和同一对计数器，并发入库会出现计数错乱甚至交错写入。`synchronized` 保证进程内串行。它的边界也要说清楚：**只防本进程内的并发**——多实例部署时各进程各有各的锁，那是 Ch11 / Ch24 生产化时再处理的问题。
 
----
-
 ## 10.9 REST 端点：DocumentController
 
 三个端点覆盖「查看状态 / 手动建库 / 即时入库」三种操作需求（`controller/DocumentController.java`，与仓库一致）：
@@ -892,11 +874,7 @@ private void stampMetadata(List<Document> documents) {
 
 盖章放在清洗**之前**——清洗器实现是规规矩矩的 `metadata().copy()`，元数据能活着穿过它；之后扁平分块由 `DocumentSplitter` 自动遗传给每个块，父子分块则在 `splitIntoParentChild` 里显式写进子块。这些真值会一路传到 Ch11 的 metadata 过滤（"只在 refund-policy 里搜"）和 Ch13 的评估口径。**元数据的规则是：检索端读的每一个 key，写入端必须有对应来源；两边对不上的 key，就会像修复前那样安静地返回 null。**
 
----
-
-> ✅ **最佳实践：把「建库」从「启动」中解放出来**。生产环境文档是持续增长的，启动时全量建库只适合小知识库。文档量大时，把 `ingestFromDirectory` 挂到定时任务（每天凌晨增量入库）、`upload` 挂到文件上传事件，实现增量索引——Ch13 评估章节会展开增量更新策略。
-
----
+> **最佳实践：把「建库」从「启动」中解放出来**。生产环境文档是持续增长的，启动时全量建库只适合小知识库。文档量大时，把 `ingestFromDirectory` 挂到定时任务（每天凌晨增量入库）、`upload` 挂到文件上传事件，实现增量索引——Ch13 评估章节会展开增量更新策略。
 
 ## 10.10 高频坑点与最佳实践汇总
 
@@ -936,16 +914,14 @@ overlap ≈ chunkSize 的 10% 起步。过大 = 重复嵌入 + 重复召回。
 
 **最佳实践汇总**：
 
-- ✅ 六环节解耦成独立类/方法，每个环节可单测可替换
-- ✅ 解析器按扩展名选，**每个加载入口都要选**（坑 1 的教训）
-- ✅ 清洗保守：只去确定是噪声的，不动可能是语义的
-- ✅ `embedAll` 批量，别 for 循环单条
-- ✅ 建库失败不挡启动，留手动重试入口
-- ✅ 开发调试用本地 ONNX 嵌入：零成本零外呼
-- ❌ 不要假设"解析失败会报错"——它多半不报，只是脏
-- ❌ 不要在启动建库里做重活（全量重建大库），增量策略进 Ch13
-
----
+- 六环节解耦成独立类/方法，每个环节可单测可替换
+- 解析器按扩展名选，**每个加载入口都要选**（坑 1 的教训）
+- 清洗保守：只去确定是噪声的，不动可能是语义的
+- `embedAll` 批量，别 for 循环单条
+- 建库失败不挡启动，留手动重试入口
+- 开发调试用本地 ONNX 嵌入：零成本零外呼
+- 不要假设"解析失败会报错"——它多半不报，只是脏
+- 不要在启动建库里做重活（全量重建大库），增量策略进 Ch13
 
 ## 10.11 本章小结
 
@@ -974,8 +950,6 @@ overlap ≈ chunkSize 的 10% 起步。过大 = 重复嵌入 + 重复召回。
 - [ ] 目录入口 rebuild 后 stats 仍是 7 块，能说出修复前启动为什么曾是 20 块（差的 13 块是 PDF 垃圾）
 - [ ] 能复述 10.9.2 的元数据坑：修复前 `docId` 为什么是 null，修复后 `stampMetadata` 在哪个环节盖章
 - [ ] 能说出"改 chunk 参数 / 换 embedding 模型后必须做什么"（清库重建，两条索引一起）
-
----
 
 ## 10.12 本章项目代码状态
 
@@ -1015,8 +989,6 @@ overlap ≈ chunkSize 的 10% 起步。过大 = 重复嵌入 + 重复召回。
 
 **经验**：升级 LangChain4j 版本后，**先核对 Maven Central 上每个依赖确实存在**再动代码。社区模块与核心模块版本节奏不同，个别版本号缺失是常态。
 
----
-
 ## 10.13 练习题
 
 1. **验收 10.4.4 的修复**（配方已落仓库，你来做验收）：重启后对比三件事——`/api/docs/stats` 应为 7 块（扁平模式；父子模式 10 块）；检索"咖啡机开箱安装步骤"能命中 PDF 正文；`minScore=0.5`、topK 拉大时不再出现 `%PDF-1.4` 开头的块。
@@ -1024,7 +996,5 @@ overlap ≈ chunkSize 的 10% 起步。过大 = 重复嵌入 + 重复召回。
 3. 把 `chunk-size` 改成 200 和 1000 各跑一次 `/api/docs/stats` 与语义搜索，观察块数与召回差异。
 4. 用 `/api/docs/upload` 上传一份不含文本层的扫描 PDF，记录报错/空结果，理解「PDFBox 只能提文本层」的边界。
 5. 写一个 `BannerCleaner`（实现 `DocumentTransformer`），去除文档头部固定横幅文案，接入流水线并用 `/api/docs/stats` 前后对比验证它生效。
-
----
 
 **下一章：Ch11 向量存储与检索**——本章把文档变成块、块变成向量，但向量**存在哪**还没细讲。Ch11 会深入 `EmbeddingStore` 的实现选型：内存版、Redis、pgvector、Milvus 各自的适用边界与检索调优（Top-K、阈值、metadata 过滤），并回答「什么时候该从内存库升级到真正的向量数据库」。

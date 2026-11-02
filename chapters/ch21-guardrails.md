@@ -12,8 +12,6 @@
 > 6. 实现工具层授权：黑名单 + 角色 RBAC + 速率限制（呼应 Ch06/Ch16/Ch19）
 > 7. 掌握统一异常处理 +埋点监控 + Spring Boot 集成
 
----
-
 ## 21.1 为什么需要 Guardrails
 
 Ch19 做的"鉴权 + 工具白名单"是<strong>准入层</strong>防护——挡住"不该进来的请求"。但请求进来后还会有**三类威胁**：
@@ -40,8 +38,6 @@ flowchart TB
     L3 -.->|PII/Key 计数| LOG1
     L4 -.->|限流/拒绝计数| LOG1
 ```
-
----
 
 ## 21.2 关键发现：LangChain4j 1.22.0-beta32 的 Guardrail 现状（实测验证）
 
@@ -82,8 +78,6 @@ dev/langchain4j/guardrails/PatternBasedPromptInjectionGuardrail.class
 1. **实验性**：API 可能变；生产用需锁版本
 2. **只能在 AiServices 层用**——这是为什么本章必须**两层防护**架构（Application 层做兜底）
 
----
-
 ## 21.3 两层防护架构
 
 官方 Guardrail 的限制催生了这个设计：
@@ -99,8 +93,6 @@ dev/langchain4j/guardrails/PatternBasedPromptInjectionGuardrail.class
 - 官方 Guardrail 只对 AiServices 接口生效——Controller 直调的 `chatModel.chat()` / `streamingChatModel.chat()` 绕过它
 - Controller 层处理 HTTP/JSON 层的清洗（HTML/控制字符）不该让 LLM 处理
 - 工具调用前的角色权限，Guardrail 接口不覆盖
-
----
 
 ## 21.4 输入层：Application 层 `InputGuard`
 
@@ -144,8 +136,6 @@ public class InputGuard {
 **为什么不把注入检测也放在这里**：
 - Controller 层**先清洗** → 给到 AiService 时是"干净文本"
 - AiServices 层**再注入检测** → 这时用的是官方实现，模式匹配更专业
-
----
 
 ## 21.5 输入层：AiServices 层官方 Guardrail
 
@@ -196,7 +186,7 @@ public Assistant assistant(ChatModel chatModel, ChatMemoryProvider memoryProvide
 
 `PatternBasedPromptInjectionGuardrail` 实现的是 `InputGuardrail`，`JsonExtractorOutputGuardrail` 实现的是 `OutputGuardrail`——把它们塞进同一个 `.inputGuardrails(...)` 会直接编译失败（"类型不匹配"），也不存在"注入 → 内容 → 格式"这种跨链顺序。
 
-> ⚠️ **包名单复数**：两个内置实现类在 `dev.langchain4j.guardrails`（**复数**），而接口 `InputGuardrail` / `OutputGuardrail` 与 `InputGuardrailResult` / `OutputGuardrailResult` 在 `dev.langchain4j.guardrail`（**单数**）。import 写错就是"找不到符号"，而且 IDE 自动补全经常只给你其中一个。
+> **包名单复数**：两个内置实现类在 `dev.langchain4j.guardrails`（**复数**），而接口 `InputGuardrail` / `OutputGuardrail` 与 `InputGuardrailResult` / `OutputGuardrailResult` 在 `dev.langchain4j.guardrail`（**单数**）。import 写错就是"找不到符号"，而且 IDE 自动补全经常只给你其中一个。
 
 官方文档讲的那个"顺序"，指的是**同一条链内部**的顺序：
 
@@ -210,8 +200,6 @@ public Assistant assistant(ChatModel chatModel, ChatMemoryProvider memoryProvide
 |---|---|---|
 | 输入链 | ① 正则注入检测 → ② `MessageModeratorInputGuardrail` | 正则零成本、能拦掉大部分明显注入；Moderation 要额外调模型，放后面避免白花钱 |
 | 输出链 | ① `JsonExtractorOutputGuardrail` → ② 自定义业务校验（引用合法 / 长度限制） | 先保证结构能被解析，再谈内容是否合规 |
-
----
 
 ## 21.6 输出层：PII 脱敏 + API Key 拦截
 
@@ -378,7 +366,7 @@ public class OutputGuard {
   词边界不成立，回溯到 18 位、17 位……全都因为尾部边界不成立而失败，
   **整体一个都不匹配**。
 
-> 💡 **这个"长数字反而安全"是本项目实测最反直觉的一条**：某天有人拿到一个 20 位订单号，
+> **这个"长数字反而安全"是本项目实测最反直觉的一条**：某天有人拿到一个 20 位订单号，
 > 看到银行卡规则的正则写着 `{13,19}` 就放心了——**恰恰因为位数超过了上限，它躲过了脱敏**。
 > 要是哪天把规则改成 `{13,25}`，这批 20 位订单号立刻全部被涂。
 > **规则的正则区间和它的安全假设，必须一起看。**
@@ -387,7 +375,7 @@ public class OutputGuard {
 
 | 卡号位数 | 19 | 16 | 15 | 14 | 13 |
 |---|---|---|---|---|---|
-| 结果 | ✅ 已脱敏 | ✅ 已脱敏 | ❌ **未脱敏** | ❌ **未脱敏** | ❌ **未脱敏** |
+| 结果 |  已脱敏 |  已脱敏 |  **未脱敏** |  **未脱敏** |  **未脱敏** |
 
 13–15 位卡号被 `if (s.length() < 16) return s;` 这道闸放过了。**这是"误杀优先"策略的
 直接代价**：宁可漏一条稀有卡号，也不涂错用户的订单号。生产上要两头兼顾，
@@ -398,10 +386,10 @@ public class OutputGuard {
 
 | 文本 | 结果 |
 |---|---|
-| `请在 Bearer 认证头里传 token` | ✅ 未拦截（`Bearer` 后面必须跟 ≥16 位有效字符） |
-| `订单 sk-1234567890 已发货` | ✅ 未拦截（只有 10 位，不足 16） |
-| `文档里写了 github_pat_11ABCDEFG0` | ✅ 未拦截（`github_pat_` 后面长度不够） |
-| `配置项是 sk-or-v1-1234567890abcdefghij` | ❌ **被拦截** |
+| `请在 Bearer 认证头里传 token` |  未拦截（`Bearer` 后面必须跟 ≥16 位有效字符） |
+| `订单 sk-1234567890 已发货` |  未拦截（只有 10 位，不足 16） |
+| `文档里写了 github_pat_11ABCDEFG0` |  未拦截（`github_pat_` 后面长度不够） |
+| `配置项是 sk-or-v1-1234567890abcdefghij` |  **被拦截** |
 
 最后一条确实长得像真 Key——但换个角度：规则只要匹配 `sk-or-` + ≥16 位就拦截，
 **一个真实泄露的 Key 长什么样它就长什么样**，这一条宁可误杀也不能放过。
@@ -417,12 +405,10 @@ API Key 规则的取舍因此很明确：**只对"高熵值 + 已知前缀"的�
 | 输出里混有订单号和 PII | PII 走结构化字段脱敏（按 JSON 路径），不要靠正则扫全文 |
 | 这套教学版正则 | **只适合演示**——它证明"三层护栏怎么串起来"，不适合直接上生产 |
 
-> 📌 本节的测试语料与结论都可以复现：测试类直接用 `GuardrailProperties` /
+> 本节的测试语料与结论都可以复现：测试类直接用 `GuardrailProperties` /
 > `OutputGuard` / `InputGuard` / `ToolGuard` 四个真实类，`new` 出来即可跑，
 > 不需要启动 Spring 上下文。**护栏逻辑写成纯 POJO 才好测**——这是本章一个
 > 意外的设计红利：正因为 `OutputGuard` 不依赖任何 Bean，误杀率才可能在一秒钟内测出来。
-
----
 
 ## 21.7 工具层：`ToolGuard` 三道防线
 
@@ -506,8 +492,6 @@ public class ToolGuard {
 
 两者是**叠加**关系——MCP 白名单 ⊇ 角色白名单。
 
----
-
 ## 21.8 配置 + 监控
 
 `GuardrailProperties.java`（绑定 `chat.guardrail.*`）：
@@ -536,11 +520,11 @@ chat:
       blocked-tools: [executeShell, formatDisk]
       role-allowed-tools:
         user:     [searchKnowledgeBase]     # 普通用户只能查知识库
-        admin:    []                        # ⚠️ 空列表 = 该角色一个工具都不许调，不是"不限制"
+        admin:    []                        # 空列表 = 该角色一个工具都不许调，不是"不限制"
         readonly: [searchKnowledgeBase]     # 只读角色同样只可查
 ```
 
-> ⚠️ **空列表不是"不限制"**——这是本项目实测踩到、且**注释与语义对不上**的地方。
+> **空列表不是"不限制"**——这是本项目实测踩到、且**注释与语义对不上**的地方。
 > `ToolGuard.checkRolePermission()` 的逻辑是：整张映射表为空 → 全部放行；
 > 只要列了某个角色，就按该角色的白名单逐个匹配，**白名单里没有的工具一律拒绝**。
 > 所以 `admin: []` 的实际效果是**管理员连 `searchKnowledgeBase` 都调不了**。
@@ -548,13 +532,13 @@ chat:
 >
 > | 调用 | 角色 | 结果 |
 > |---|---|---|
-> | `searchKnowledgeBase` | `user` | ✅ 放行 |
-> | `searchKnowledgeBase` | `readonly` | ✅ 放行 |
-> | `calculate` | `user` | ❌ 拒绝（角色 [user] 无权调用工具 [calculate]） |
-> | `calculate` | `admin` | ❌ 拒绝（角色 [admin] 无权调用工具 [calculate]） |
-> | `executeShell` | `admin` | ✅ 拦截（黑名单） |
-> | `searchKnowledgeBase` | `guest` | ✅ 拦截（角色无配置项 → deny by default） |
-> | `searchKnowledgeBase` | `USER` | ✅ 拦截（**大小写敏感**，键是小写 `user`） |
+> | `searchKnowledgeBase` | `user` |  放行 |
+> | `searchKnowledgeBase` | `readonly` |  放行 |
+> | `calculate` | `user` |  拒绝（角色 [user] 无权调用工具 [calculate]） |
+> | `calculate` | `admin` |  拒绝（角色 [admin] 无权调用工具 [calculate]） |
+> | `executeShell` | `admin` |  拦截（黑名单） |
+> | `searchKnowledgeBase` | `guest` |  拦截（角色无配置项 → deny by default） |
+> | `searchKnowledgeBase` | `USER` |  拦截（**大小写敏感**，键是小写 `user`） |
 >
 > 想让 admin 真不受限，只能**整段删掉 `role-allowed-tools` 配置**（让整张表为空），
 > 而不是写 `admin: []`。**配置注释和实现语义对不上，本身就是一个坑**——
@@ -570,8 +554,6 @@ public Snapshot snapshot() {
     );
 }
 ```
-
----
 
 ## 21.9 端点验证
 
@@ -613,8 +595,6 @@ curl -X POST http://localhost:8090/api/agent/chat \
 # → AgentToolGuard 拦截："tool.blacklisted"
 ```
 
----
-
 ## 21.10 高频坑点清单
 
 | # | 坑 | 现象 | 对策 |
@@ -629,8 +609,6 @@ curl -X POST http://localhost:8090/api/agent/chat \
 | 8 | **实验性 API 漂移** | LangChain4j 升级后 Guardrail 接口变了 | 锁版本（pom 里写死）+ golden set 回归 |
 | 9 | **配置注释与实现语义对不上** | `admin: []` 注释写"不限制"，实现是"一个工具都不许调" | 配 RBAC 前先读 `ToolGuard.checkRolePermission()` 实现，别信注释 |
 | 10 | **角色键大小写敏感** | 传 `role=USER`（大写）→ deny by default，用户莫名被拒 | 入口处统一 `role.toLowerCase()`；配置键全小写 |
-
----
 
 ## 21.11 本章小结
 
@@ -684,11 +662,7 @@ Ch22 用 OpenTelemetry / Micrometer / Prometheus 把它接入完整可观测性�
 5. 思考题：为什么 PII 脱敏不能放在 Guardrail.validate() 之外（即不通过 Guardrail 框架）？提示：考虑可观测性（metrics/audit 链）、错误处理（异常类型一致性）、可测试性（单测粒度）。
 6. 思考题：本章说"两层防护"——如果 LangChain4j 官方 Guardrail 升到 2.0 改成了可直接用于 ChatModel，本章的 Application 层 InputGuard 还需要保留吗？提示：考虑"职责分离"与"防御性深度"（defense in depth）。
 
----
-
 **下一章预告**：Ch22 可观测性 · 日志 · 成本控制 → Ch24/25 综合实战：AI 招聘官。
-
----
 
 ## 本章参考
 

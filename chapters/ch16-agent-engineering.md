@@ -11,8 +11,6 @@
 > 6. 掌握**记忆管理**：窗口裁剪（`maxMessages`）+ 会话 TTL，理解 Agent 长跑的"记忆膨胀"问题
 > 7. 建立**生产化全景**：Guardrails→Ch21、可观测/成本→Ch22、评估思维复用 ch13 的章节地图
 
----
-
 ## 16.1 为什么 Agent 需要"工程化"
 
 Ch14 造出了会干活的 Agent。但**能跑 ≠ 能上线**。上线前工程团队会连环问：
@@ -27,8 +25,6 @@ Ch14 造出了会干活的 Agent。但**能跑 ≠ 能上线**。上线前工程
 | "聊了 100 轮记忆会不会爆？" | 记忆有窗口上限、有清理策略 | **记忆管理** |
 
 本章用 `AiServices.builder()` 给 Agent 装上这六件能力（**API 全部在 `1.22.0` 上 javap 核实 + 项目编译通过**）。
-
----
 
 ## 16.2 动态工具注入：ToolProvider
 
@@ -127,21 +123,19 @@ public ToolProviderResult provideTools(ToolProviderRequest request) {
 }
 ```
 
-> ⚠️ **坑点（源码核实）**：`ToolProviderResult.Builder` 的方法是 **`addAll(Map<ToolSpecification, ToolExecutor>)`** 或 `add(spec, executor)`，没有 `tools(...)`。`ToolExecutor` 在 `dev.langchain4j.service.tool` 包（不在 `agent.tool.execution`）。`ChatModel` 没有 `generate(String)`，轻量分类用 `chat(String)`（返回 `String`）。
+> **坑点（源码核实）**：`ToolProviderResult.Builder` 的方法是 **`addAll(Map<ToolSpecification, ToolExecutor>)`** 或 `add(spec, executor)`，没有 `tools(...)`。`ToolExecutor` 在 `dev.langchain4j.service.tool` 包（不在 `agent.tool.execution`）。`ChatModel` 没有 `generate(String)`，轻量分类用 `chat(String)`（返回 `String`）。
 
 **④ 执行期护栏（ToolGuard 包裹）——"看得见"不等于"有权跑"**。`DynamicToolProvider` 在返回前给每个选出的工具包了一层代理 executor：真正执行前再过一次 `ToolGuard`（黑名单 / 角色白名单 / 限流，Ch21 的组件在这里提前上岗），被拦就返回 `操作被安全策略拦截：…` 的提示文本，交由模型向用户解释。它和 ③ 是**两层正交的闸门**：`TenantToolFilter` 管"模型看得见哪些工具"（暴露时），`ToolGuard` 管"这个角色跑了才算数"（执行时兜底）——即使模型通过提示注入点名叫工具，没有权限也执行不了。16.10 的 ② 有这组边界的实测。
 
 **真实效果**（2026-10-28 实测）：问"退款政策里运费谁出？再算 500×8"（`tenantA/u1001/role=user`），注入日志 `域=[refund, calc] → 暴露 3 个工具`——检索工具正常执行并给出完整答案，`calculate` 被 ToolGuard 以 `角色 [user] 无权调用工具 [calculate]` 拦下，审计如实留痕。
 
-> 💡 **生产方向**：纯只读低风险工具（<30 个）其实**直接全量给模型（`tools(...)`）更稳**——你之前担心"工具多模型选错"，但 1.19 的 function calling 对 30 个以内工具准确率很高，**漏召回比误召回更糟**。只有当工具含写操作/高权限/高成本时，才需要"先分类裁剪 + 二次权限校验"再暴露（本节的 TenantToolFilter 就是二次校验）。工具上百个时可用官方 **`ToolSearchStrategy`**（`AiServices.toolSearchStrategy(...)`）做语义检索。
-
----
+> **生产方向**：纯只读低风险工具（<30 个）其实**直接全量给模型（`tools(...)`）更稳**——你之前担心"工具多模型选错"，但 1.19 的 function calling 对 30 个以内工具准确率很高，**漏召回比误召回更糟**。只有当工具含写操作/高权限/高成本时，才需要"先分类裁剪 + 二次权限校验"再暴露（本节的 TenantToolFilter 就是二次校验）。工具上百个时可用官方 **`ToolSearchStrategy`**（`AiServices.toolSearchStrategy(...)`）做语义检索。
 
 ## 16.3 工具调用审计：before/afterToolExecution + 多租户复合 key
 
 `AiServices` 提供两个回调钩子（javap 核实）：`beforeToolExecution(Consumer<BeforeToolExecution>)` 和 `afterToolExecution(Consumer<ToolExecution>)`。`ToolExecution` 有 `request()`（含工具名/参数）/ `result()` / `hasFailed()` / `startTime()` / `duration()` / `invocationContext()`（含 `chatMemoryId()`）。
 
-> ⚠️ **坑点（javap 核实）**：`InvocationContext` 的方法叫 **`chatMemoryId()`**（在 core 的 `dev.langchain4j.invocation` 包，不在 umbrella），不是 `memoryId()`——凭印象写会编译失败。
+> **坑点（javap 核实）**：`InvocationContext` 的方法叫 **`chatMemoryId()`**（在 core 的 `dev.langchain4j.invocation` 包，不在 umbrella），不是 `memoryId()`——凭印象写会编译失败。
 
 **复合审计 key（多租户必备）**：生产 SaaS 下，审计必须按 `tenantId:userId:sessionId` 三维聚合，才能"按租户查调用、按用户追责、按会话排障"。单用 `sessionId` 无法做租户级合规排查。复合 key 在 `record` 内部从 `RequestContext` 拼出——**但"tool 执行与主调用同线程"这个前提在并发执行下不成立**（16.9.1 的核心案例），所以现行代码留了一个显式传租户/用户的 `record` 重载，回调线程用 `provideTools` 在请求线程捕获的快照写入：
 
@@ -164,11 +158,9 @@ public void record(Object memoryId, String toolName, String arguments, String re
 
 `AgentAuditService` 另提供两个合规查询方法：`getAuditByTenant(tenantId)`（按租户拉全部调用，做成本/合规分析）、`getAuditByUser(tenantId, userId)`（按"租户:用户"追责）。
 
-> ⚠️ **修复实录（2026-10-28）：查询侧的同构坑**。写入侧 key 带了租户，查询侧却对不上：`GET /api/agent/audit?sessionId=17` 这个 HTTP 请求自己不在工具调用线程上，`RequestContext` 的 ThreadLocal 已被 POST 的 finally 清掉，`auditKey()` 拼出来的是 `default:anonymous:17`——**写入是 `tenantA:u1001:17`，查询永远空**。修复：查询接口加 `tenantId` / `userId` 请求参数，走显式三元组的 `getAudit(tenantId, userId, sessionId)`。教训和写入侧是同一句话的两半：**复合 key 的每一个维度，读端和写端必须由同一条链路供给**——写端从请求上下文拿，读端就得显式传参，不能指望"反正 ThreadLocal 里应该还有"。
+> **修复实录（2026-10-28）：查询侧的同构坑**。写入侧 key 带了租户，查询侧却对不上：`GET /api/agent/audit?sessionId=17` 这个 HTTP 请求自己不在工具调用线程上，`RequestContext` 的 ThreadLocal 已被 POST 的 finally 清掉，`auditKey()` 拼出来的是 `default:anonymous:17`——**写入是 `tenantA:u1001:17`，查询永远空**。修复：查询接口加 `tenantId` / `userId` 请求参数，走显式三元组的 `getAudit(tenantId, userId, sessionId)`。教训和写入侧是同一句话的两半：**复合 key 的每一个维度，读端和写端必须由同一条链路供给**——写端从请求上下文拿，读端就得显式传参，不能指望"反正 ThreadLocal 里应该还有"。
 
 **审计的价值**：排障（哪次调用参数错了）、安全（有没有越权调工具）、成本（工具调用频次 × 单次耗时）。生产版应写日志/DB（本教程内存版仅演示），`duration()` 已可用——做一个"哪个工具最慢"的统计是练习题。
-
----
 
 ## 16.4 并发工具执行：executeToolsConcurrently
 
@@ -180,9 +172,7 @@ public void record(Object memoryId, String toolName, String arguments, String re
 
 **真实效果**（2026-10-28 实测）：一次请求里 `calculate` 和 `searchKnowledgeBase` 同时执行，日志显示跑在虚拟线程（`virtual-76` / `virtual-78`）——并发生效。同一个开关还有个容易忽略的细节：**单工具的轮次不派发**，就在调用线程上内联执行——所以"上一轮只调了一个工具"的请求，审计日志又回到 `nio-8090-exec-*` 请求线程。上下文（ThreadLocal）会不会丢，取决于这一轮派没派发。
 
-> ✅ **最佳实践**：工具之间**无依赖**时才适合并发。框架的并发只是把"模型同一轮请求的多个工具"并行执行、结果各自回填，**不做依赖分析**（源码核实：无工具依赖解析逻辑）；若任务有依赖（如先查再算），模型会在下一轮请求里等上一轮结果就绪后再调。并发 + 防循环（`maxToolCallingRoundTrips(10)`）一起上，才是一套完整护栏。**但并发和 ThreadLocal 请求上下文是死对头**——16.9.1 有完整的事故实录与修法。
-
----
+> **最佳实践**：工具之间**无依赖**时才适合并发。框架的并发只是把"模型同一轮请求的多个工具"并行执行、结果各自回填，**不做依赖分析**（源码核实：无工具依赖解析逻辑）；若任务有依赖（如先查再算），模型会在下一轮请求里等上一轮结果就绪后再调。并发 + 防循环（`maxToolCallingRoundTrips(10)`）一起上，才是一套完整护栏。**但并发和 ThreadLocal 请求上下文是死对头**——16.9.1 有完整的事故实录与修法。
 
 ## 16.5 可观测性：registerListener + tokenUsage
 
@@ -218,8 +208,6 @@ private AiServiceListener<AiServiceCompletedEvent> completedListener() {
 三条日志三种价值：注入日志回答"模型这轮**被允许**用什么"（暴露≠执行，见 ②），审计日志回答"实际用了什么、结果如何"，观测日志回答"这条请求花了多少"。三行日志拼在一起，一次 Agent 调用就完全可解释了。
 
 **成本闭环**：`total=1978` 乘单价就是这一条请求的成本；把每日所有 `total` 累加就是 Agent 的 token 账单。给一个当天实测的量级感：单轮带两工具的请求 `total` 在 1500~2000 之间（输入 1100~1350、输出 350~630，取决于工具结果的长度——检索片段进上下文是大头）。`in` 远大于 `out` 是 Agent 的普遍形态，**成本治理优先盯输入侧**：工具结果裁剪、检索片段限量（Ch12 的 rerank topK）、记忆窗口（16.7）都是输入侧的闸门。生产版接 OpenTelemetry/Micrometer 由 Ch22 展开。
-
----
 
 ## 16.6 错误处理三件套（生产必配）
 
@@ -262,15 +250,13 @@ Agent 跑在生产，**工具不可能永远成功**：参数格式错、服务�
 "计算器返回了错误，这个结果是符合数学定义的：5 ÷ 0 没有意义，即结果不存在……"   ← HTTP 200
 ```
 
-> ⚠️ **修复实录（2026-10-28）：provider 供给的工具，handler 会静默失明**。修这条实测时抓到的：第一次跑，`⚠️` 日志没出现、审计 `failed=false`——handler 根本没收到异常。根因在**执行器是谁建的**：`AiServices.tools(...)` 路径下框架自建执行器，`propagateToolExecutionExceptions=true`（`ToolService` 源码 L243），异常上抛给 handler；而 **`ToolProvider` 路径下执行器是 provider 自己 `new DefaultToolExecutor(tool, m)` 的——裸构造默认 `propagate=false`，异常就地转成 `isError=true` 的文本**，走到模型的"工具异常三层机制"第一层就停了（Ch14 14.4.5）。修法与框架同款：provider 里改用 `DefaultToolExecutor.builder()....propagateToolExecutionExceptions(true).build()`，上表的全链路立刻通。**给 AiServices 配了错误处理三件套、工具却从 ToolProvider 来的读者，几乎必踩这一条**——它的表现不是报错，而是"兜底配置从未生效"的静默。
+> **修复实录（2026-10-28）：provider 供给的工具，handler 会静默失明**。修这条实测时抓到的：第一次跑，`` 日志没出现、审计 `failed=false`——handler 根本没收到异常。根因在**执行器是谁建的**：`AiServices.tools(...)` 路径下框架自建执行器，`propagateToolExecutionExceptions=true`（`ToolService` 源码 L243），异常上抛给 handler；而 **`ToolProvider` 路径下执行器是 provider 自己 `new DefaultToolExecutor(tool, m)` 的——裸构造默认 `propagate=false`，异常就地转成 `isError=true` 的文本**，走到模型的"工具异常三层机制"第一层就停了（Ch14 14.4.5）。修法与框架同款：provider 里改用 `DefaultToolExecutor.builder()....propagateToolExecutionExceptions(true).build()`，上表的全链路立刻通。**给 AiServices 配了错误处理三件套、工具却从 ToolProvider 来的读者，几乎必踩这一条**——它的表现不是报错，而是"兜底配置从未生效"的静默。
 
 同时审计把这次调用标记为 **`failed=true`**（`ToolExecution.hasFailed()`）——错误既被兜底，又被留痕。顺带对照 Ch14 的默认行为：不配 handler 时同步模式的默认（`sendExceptionMessageToLlm`）兜的是同样的底，自定义 handler 的增量价值在**文案可控**（带工具名、带下一步指引）和**审计/告警挂钩**（这里打了 WARN 日志、审计记了 failed）。
 
-> ✅ **最佳实践**：错误处理的核心是**把异常翻译成模型听得懂的话**，让它自己纠正重试，而不是把 `IllegalArgumentException` 堆栈甩给用户。三条原则：① 消息里带工具名和具体原因；② 给模型明确的下一步指令（"修正参数重试 / 换一种方式"）；③ 别把敏感内部信息（堆栈、SQL）塞进给模型的文本——那等于把它喂给 Prompt 攻击面。
+> **最佳实践**：错误处理的核心是**把异常翻译成模型听得懂的话**，让它自己纠正重试，而不是把 `IllegalArgumentException` 堆栈甩给用户。三条原则：① 消息里带工具名和具体原因；② 给模型明确的下一步指令（"修正参数重试 / 换一种方式"）；③ 别把敏感内部信息（堆栈、SQL）塞进给模型的文本——那等于把它喂给 Prompt 攻击面。
 
-> ⚠️ **坑点**：`hallucinatedToolNameStrategy` 在早期模型时代会频繁触发（模型瞎编工具名），现在的主流模型很少犯——但它仍是**最后一层防线**：万一触发而没兜底，整个对话会卡死在"调用不存在的工具"，所以生产必须配。
-
----
+> **坑点**：`hallucinatedToolNameStrategy` 在早期模型时代会频繁触发（模型瞎编工具名），现在的主流模型很少犯——但它仍是**最后一层防线**：万一触发而没兜底，整个对话会卡死在"调用不存在的工具"，所以生产必须配。
 
 ## 16.7 记忆管理：窗口裁剪 + 会话 TTL
 
@@ -304,9 +290,7 @@ chat:
 
 **两条策略各管一件事**：`maxMessages(20)` 管**单会话长度**（防止一次对话无限变长）；`ttl-days: 30` 管**会话生命周期**（防止千万个僵尸会话占存储）。二者叠加才是完整的记忆治理。
 
-> 💡 **生产方向**：窗口裁剪是"简单粗暴"方案——它可能把早先的关键上下文也裁掉。进阶方案是**摘要压缩**（summarization）：窗口里的旧消息先让 LLM 压成一段摘要，再随窗口一起进上下文（LangChain4j 生态有此方向；Ch17 MCP / Ch22 可观测会继续谈）。经验：窗口 20 条对短任务够用，长任务（多工具多轮）建议 30-50 条或上摘要。
-
----
+> **生产方向**：窗口裁剪是"简单粗暴"方案——它可能把早先的关键上下文也裁掉。进阶方案是**摘要压缩**（summarization）：窗口里的旧消息先让 LLM 压成一段摘要，再随窗口一起进上下文（LangChain4j 生态有此方向；Ch17 MCP / Ch22 可观测会继续谈）。经验：窗口 20 条对短任务够用，长任务（多工具多轮）建议 30-50 条或上摘要。
 
 ## 16.8 生产化全景：这一章在教程里的位置
 
@@ -342,8 +326,6 @@ flowchart TB
 
 读者地图：学完 Ch16，你就有了"能上线的 Agent 地基"；Ch21/Ch22 是把它加固成"生产级"的接力棒，评估思维则在 Ch13 已经交过底。
 
----
-
 ## 16.9 踩坑实录：ThreadLocal 请求上下文的三种死法
 
 **现象**：多租户下，A 租户的会话偶尔查到 B 租户的审计记录，或工具被错误租户调用。
@@ -364,7 +346,7 @@ try {
 }
 ```
 
-> ⚠️ **坑点（通用教训）**：**凡是 `ThreadLocal` 传递请求级上下文（tenant / traceId / userId），必须在请求结束时 `remove()`**。Spring 的 `SecurityContextHolder`、日志的 `MDC` 都是同样道理——忘了清理就是并发下的定时炸弹。更规范的做法是做成 `HandlerInterceptor`，在 `afterCompletion` 里统一 `clear()`（本项目为演示清晰写在 Controller，生产建议收口到拦截器）。
+> **坑点（通用教训）**：**凡是 `ThreadLocal` 传递请求级上下文（tenant / traceId / userId），必须在请求结束时 `remove()`**。Spring 的 `SecurityContextHolder`、日志的 `MDC` 都是同样道理——忘了清理就是并发下的定时炸弹。更规范的做法是做成 `HandlerInterceptor`，在 `afterCompletion` 里统一 `clear()`（本项目为演示清晰写在 Controller，生产建议收口到拦截器）。
 
 **旧坑（已规避，记一笔）**：早期用 `Map<Object, List>` 以 `chatMemoryId()`（`Long`）做 key、查询用 `String`——`Long.equals("1")` 永远 false 查不到。本项目现已统一为 `tenantId:userId:sessionId` 的 **String 复合 key**，天然规避类型不一致。
 
@@ -392,7 +374,7 @@ try {
 
 修复后复测：审计正确落 `tenantA:u1001:17`，`role=user` 的用户检索放行、计算器被拦（文案里角色是 `user`，不再是幽灵 `USER`）。
 
-> ⚠️ **通用教训**：**ThreadLocal 传的是"线程作用域"，HTTP 请求的边界是"逻辑作用域"，两者只在同步、单线程执行时重合**。凡是框架可能把工作挪到别的线程（并发工具执行、异步流、@Async、线程池回调），请求级上下文都要显式传递：要么在切进异步前捕获快照（本节做法），要么上 TaskDecorator / TransmittableThreadLocal 这类传递机制。审计、租户、链路追踪——在并发下"静默变成默认值"是它们的共同死法。
+> **通用教训**：**ThreadLocal 传的是"线程作用域"，HTTP 请求的边界是"逻辑作用域"，两者只在同步、单线程执行时重合**。凡是框架可能把工作挪到别的线程（并发工具执行、异步流、@Async、线程池回调），请求级上下文都要显式传递：要么在切进异步前捕获快照（本节做法），要么上 TaskDecorator / TransmittableThreadLocal 这类传递机制。审计、租户、链路追踪——在并发下"静默变成默认值"是它们的共同死法。
 
 ### 16.9.2 踩坑实录：`ReturnBehavior.IMMEDIATE_IF_LAST` 在 1.19.0 抛 NPE
 
@@ -415,8 +397,6 @@ public double calculate(...) { ... }
 ```
 
 **教训**：这类"省一次调用"的优化，在框架还在 beta 的版本线上要**先写最小用例验证**再用到业务里。省下的那点 token，抵不上一次线上 NPE。
-
----
 
 ## 16.10 接口验证（2026-10-28 实测）
 
@@ -460,9 +440,7 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 #    ① 的日志里审计已带 tenantA/u1001（修复前是 default/anonymous）
 ```
 
-> 💡 生产里 `tenantId/userId/role` 应从 **JWT/网关头** 提取（本项目简化放到请求体演示）。另外留意角色值的大小写：`ToolGuard` 的白名单键是小写 `user/admin/readonly`，传 `USER` 会落进"deny by default"分支——本项目实测踩过（① 之前那轮）。配置里 `admin: []`（空列表）的语义是**全禁**而不是"不限制"：这套实现是"整表为空才全放、列了角色就按白名单、白名单没列的工具一律拒绝"。想让 admin 真不受限，只能整段删掉 `role-allowed-tools` 配置——注释和语义对不上的配置，本身就是坑。
-
----
+> 生产里 `tenantId/userId/role` 应从 **JWT/网关头** 提取（本项目简化放到请求体演示）。另外留意角色值的大小写：`ToolGuard` 的白名单键是小写 `user/admin/readonly`，传 `USER` 会落进"deny by default"分支——本项目实测踩过（① 之前那轮）。配置里 `admin: []`（空列表）的语义是**全禁**而不是"不限制"：这套实现是"整表为空才全放、列了角色就按白名单、白名单没列的工具一律拒绝"。想让 admin 真不受限，只能整段删掉 `role-allowed-tools` 配置——注释和语义对不上的配置，本身就是坑。
 
 ## 本章小结
 
@@ -502,11 +480,9 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 
 1. 在 `IntentRouter.fallbackByKeyword` 里把某域（如 calc）的关键词删光，问一个纯计算问题（如"128 乘以 7"），观察日志：LLM 分类仍可能命中 calc 域；若注释掉整个 `classifyByLlm` 让路由只走关键词，再问中性问题（如"你好"），观察日志暴露的工具数——体会动态注入对 token 的节省与"漏召回 vs 误召回"的权衡。
 2. **并发上下文实验**：在 `DynamicToolProvider` 里把 `requestContexts` 的捕获逻辑注释掉，用两个会话分别以 `tenantA/u1001` 和 `tenantB/u2002` 发带双工具的问题，再查两个租户的审计——你会看到记录全混进 `default:anonymous`；恢复捕获后复测。亲手做一遍 16.9.1，比读十遍记得牢。
-3. 给 `calculate` 工具问一个 `5 除以 0` 的问题触发异常，然后**把 `DynamicToolProvider` 里的 `propagateToolExecutionExceptions(true)` 改回裸构造**再问一次——对照 `⚠️ [错误处理]` 日志和审计 `failed` 标志的消失，体会 16.6 修复实录里的"静默失明"。
+3. 给 `calculate` 工具问一个 `5 除以 0` 的问题触发异常，然后**把 `DynamicToolProvider` 里的 `propagateToolExecutionExceptions(true)` 改回裸构造**再问一次——对照 `[错误处理]` 日志和审计 `failed` 标志的消失，体会 16.6 修复实录里的"静默失明"。
 4. 把 `AiServiceConfig` 的 `maxMessages(20)` 改成 `5`，连问 6 轮问题后追问"我第一句说了什么"——观察记忆窗口裁掉了早期消息，理解窗口大小的取舍。
 5. 思考题：`executeToolsConcurrently()` 对"先查知识库、再根据结果算数"这类有依赖的任务有效吗？为什么？（提示：依赖链会串行等待）
-
----
 
 ## 本章参考
 

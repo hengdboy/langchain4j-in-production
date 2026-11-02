@@ -11,8 +11,6 @@
 > 6. 掌握工具**过滤/重命名**等工程化细节，理解 MCP 与 `@Tool` / `ToolProvider` 的三角关系
 > 7. 建立**安全边界**意识：不可信服务器、工具白名单、进程生命周期
 
----
-
 ## 17.1 为什么需要 MCP
 
 `@Tool` 解决的是"把**项目里**的方法暴露给模型"。但现实世界的工具**不在你的项目里**：数据库、文件系统、GitHub、企业内部服务……每个工具都要自己写接入代码，一个工具一套协议：
@@ -38,9 +36,7 @@ flowchart TB
     APP -->|"统一协议：JSON-RPC over stdio / HTTP"| SVR
 ```
 
-> 💡 **Spring AI 对比**：Spring AI 1.0 同样支持 MCP（`ToolCallback` 包装 MCP 工具），思路一致。MCP 是**生态标准**，两家都在朝它靠拢——学一次协议，两边通用。
-
----
+> **Spring AI 对比**：Spring AI 1.0 同样支持 MCP（`ToolCallback` 包装 MCP 工具），思路一致。MCP 是**生态标准**，两家都在朝它靠拢——学一次协议，两边通用。
 
 ## 17.2 协议原理：原语、传输、生命周期
 
@@ -48,8 +44,8 @@ flowchart TB
 
 | 原语 | 作用 | 类比 | 本章状态 |
 |---|---|---|---|
-| **Tools 工具** | AI 应用可调用的函数（有名字、描述、输入 Schema） | 相当于 `@Tool` | ✅ 端到端实测 |
-| **Resources 资源** | 可读取的只读数据（文件内容、文档、图片） | 相当于"知识库只读挂载" | ✅ 端到端实测（17.5） |
+| **Tools 工具** | AI 应用可调用的函数（有名字、描述、输入 Schema） | 相当于 `@Tool` |  端到端实测 |
+| **Resources 资源** | 可读取的只读数据（文件内容、文档、图片） | 相当于"知识库只读挂载" |  端到端实测（17.5） |
 | **Prompts 提示** | 服务器预置的提示词模板 | 相当于"服务端 Prompt 模板" | 代码级（17.5.3） |
 
 ### 17.2.2 两种传输（协议怎么跑）
@@ -74,8 +70,6 @@ sequenceDiagram
     C->>S: tools/call（调用工具）
     S-->>C: 工具结果（content）
 ```
-
----
 
 ## 17.3 协议字段级：看懂一个真实请求/响应
 
@@ -125,8 +119,6 @@ MCP 的**消息格式**是 JSON-RPC 2.0，**传输通道**是 stdin/stdout（每
 ```
 
 **capabilities 是 MCP 的"能力发现"**：客户端读完响应才知道"这个服务器支持工具还是资源"，然后才决定调 `tools/list` 还是 `resources/list`。协议版本不匹配时，客户端应选双方都支持的最高版本。
-
----
 
 ## 17.4 看懂协议本体：手写一个 MCP 服务器（80 行）
 
@@ -185,9 +177,7 @@ rl.on('line', (line) => {
 - **`tools/list` → `tools/call`**：发现与调用分离，工具描述带 JSON Schema，模型据此决定怎么传参；
 - **stdout 是协议通道**：`console.log` 会污染协议流（客户端解析失败），调试一律走 stderr。
 
-> ✅ **最佳实践**：学 MCP 别只学客户端 API，先读一个最小服务器的实现——协议是你自己的知识，客户端 API 只是包装。看完这段，再去看官方 `@modelcontextprotocol/sdk` 就只是"熟悉 API"了。
-
----
+> **最佳实践**：学 MCP 别只学客户端 API，先读一个最小服务器的实现——协议是你自己的知识，客户端 API 只是包装。看完这段，再去看官方 `@modelcontextprotocol/sdk` 就只是"熟悉 API"了。
 
 ## 17.5 实战：stdio 客户端接入
 
@@ -308,16 +298,14 @@ chat:
 | `tool-execution` | **20s** | 上限 = 最慢工具的 P99 × 富余。检索类工具给 10~30s；有外部 I/O（GitHub API 等）按其 SLA 定，并让超时走 `failIfOneServerFails=false` 的降级而不是拖死整轮对话 |
 | 重连 | `start()` 幂等可重入 | 子进程崩溃后由健康检查拉起；**客户端侧救不了的是协议级失败**（服务器 stdout 被污染），那会稳定复现，重连无用——靠 17.4 的 stderr 纪律预防 |
 
-配套的两个工程习惯（本项目已落地，启动日志可查）：**客户端审计包装**——`McpConfig` 在 `tools/call` 前后打 `[MCP 审计] 即将执行 / 执行完成 → 结果`，把"外部服务器被调了什么、返回了什么"纳入可观测；**默认密钥告警**——`McpSecurityService` 检测到 `chat.mcp.api-key` 还是示例值时打 `⚠️ Using default API key`，生产的启动脚本应把这条告警当失败处理。
+配套的两个工程习惯（本项目已落地，启动日志可查）：**客户端审计包装**——`McpConfig` 在 `tools/call` 前后打 `[MCP 审计] 即将执行 / 执行完成 → 结果`，把"外部服务器被调了什么、返回了什么"纳入可观测；**默认密钥告警**——`McpSecurityService` 检测到 `chat.mcp.api-key` 还是示例值时打 `Using default API key`，生产的启动脚本应把这条告警当失败处理。
 
 ### 17.5.4 真实输出（2026-10-28 实测，node v24）
 
 - 问"3 加 4 等于多少？" → 模型调 MCP `add` 工具 → **"3 加 4 等于 7。"**
 - 资源发现/读取 → 17.7.2 的两个端点原样返回（见下文实测输出）
 
-> ⚠️ **坑点（编译/启动实测）**：`langchain4j-mcp` 传递依赖会引入 `langchain4j-http-client-jdk`，与 starter 自带的 `spring-restclient` **冲突**（同 SPI 双实现，启动报 `Conflict: multiple HTTP clients`）。解决：在 pom 里对 mcp 排除 `langchain4j-http-client-jdk`（runtime scope 实现，spring-restclient 已提供同一 SPI）。
-
----
+> **坑点（编译/启动实测）**：`langchain4j-mcp` 传递依赖会引入 `langchain4j-http-client-jdk`，与 starter 自带的 `spring-restclient` **冲突**（同 SPI 双实现，启动报 `Conflict: multiple HTTP clients`）。解决：在 pom 里对 mcp 排除 `langchain4j-http-client-jdk`（runtime scope 实现，spring-restclient 已提供同一 SPI）。
 
 ## 17.6 实战：Streamable HTTP 传输（远程服务器）
 
@@ -338,9 +326,7 @@ public McpTransport streamableHttpMcpTransport() {
 
 **与 stdio 的唯一区别在 Transport 层**——`DefaultMcpClient` / `McpToolProvider` / `@AiService` 全部不变。这就是 MCP 的"传输可插拔"：换远程服务器只换一个 Bean，业务代码零改动。
 
-> ⚠️ **坑点**：HTTP 传输的鉴权、超时、重试都在 Transport 配置层解决；生产还可用 `.customHeaders(Supplier)` 动态生成 token（过期自动刷新）。
-
----
+> **坑点**：HTTP 传输的鉴权、超时、重试都在 Transport 配置层解决；生产还可用 `.customHeaders(Supplier)` 动态生成 token（过期自动刷新）。
 
 ## 17.7 resources 原语：资源发现与读取（含实测）
 
@@ -381,9 +367,7 @@ curl "http://localhost:8090/api/mcp/resource?uri=docs://demo/protocol-notes"
 # → {"success":true,"contents":[{"uri":"docs://demo/protocol-notes","mimeType":"text/markdown","text":"# MCP 协议学习笔记\n- MCP = Model Context Protocol…"}]}
 ```
 
-> ⚠️ **坑点（作者实测踩到）**：`readResource()` 返回 `McpReadResourceResult.contents()` 的元素是**多态类型** `McpResourceContents`，`uri()/text()/mimeType()` 方法在**子类 `McpTextResourceContents`** 上——直接返回 `contents` 让 Jackson 序列化会得到 `[{}]`（字段全丢）。必须 `instanceof McpTextResourceContents` 判断后手动取字段（项目代码已这么做）。
-
----
+> **坑点（作者实测踩到）**：`readResource()` 返回 `McpReadResourceResult.contents()` 的元素是**多态类型** `McpResourceContents`，`uri()/text()/mimeType()` 方法在**子类 `McpTextResourceContents`** 上——直接返回 `contents` 让 Jackson 序列化会得到 `[{}]`（字段全丢）。必须 `instanceof McpTextResourceContents` 判断后手动取字段（项目代码已这么做）。
 
 ## 17.8 工具过滤与重命名（多服务器场景）
 
@@ -403,8 +387,6 @@ McpToolProvider.builder()
                 || client.key().equals("numeric-mcp"))   // 只留 numeric 客户端的 echoInteger
         .build();
 ```
-
----
 
 ## 17.9 MCP 与 @Tool / ToolProvider 的三角关系
 
@@ -431,8 +413,6 @@ MCP 是双边协议，本项目两边都做了——本章做**客户端**（消
 
 同一套协议知识两头用：17.3 的 JSON-RPC 字段级理解，在 Ch19 排查服务端问题时同样生效。
 
----
-
 ## 17.10 坑点清单（生产必读）
 
 | # | 坑 | 现象 | 对策 |
@@ -443,10 +423,8 @@ MCP 是双边协议，本项目两边都做了——本章做**客户端**（消
 | 4 | **stdout 污染** | 协议解析失败 | 服务器侧调试走 stderr（17.4） |
 | 5 | **不可信服务器** | 工具执行任意操作 | 只连可信服务器 + `filterToolNames` 白名单；公共注册表（`McpRegistryClient`）官方有安全警告 |
 | 6 | **工具越权/提示注入** | 工具返回内容夹带恶意指令 | 最小权限设计 + 对工具返回 sanitize（Ch21 Guardrails 深化） |
-| 7 | **默认 API key 上生产** | `⚠️ Using default API key` 告警被无视 | 启动脚本把这条告警当失败处理；`chat.mcp.api-key` 用 ≥16 字符强密钥（Ch19 服务端同样要） |
+| 7 | **默认 API key 上生产** | `Using default API key` 告警被无视 | 启动脚本把这条告警当失败处理；`chat.mcp.api-key` 用 ≥16 字符强密钥（Ch19 服务端同样要） |
 | 8 | **initialization 超时用默认 30s** | 本地 stdio 起不来时启动干等半分钟 | 收紧到 5s，让"环境坏了"快点现形（17.5.3） |
-
----
 
 ## 17.11 接口验证（2026-10-28 实测）
 
@@ -465,8 +443,6 @@ curl http://localhost:8090/api/mcp/resources
 curl "http://localhost:8090/api/mcp/resource?uri=docs://demo/protocol-notes"
 # → {"success":true,"contents":[{…"text":"# MCP 协议学习笔记\n- MCP = Model Context Protocol…"}]}
 ```
-
----
 
 ## 本章小结
 
@@ -504,8 +480,6 @@ curl "http://localhost:8090/api/mcp/resource?uri=docs://demo/protocol-notes"
 4. 在 `McpToolProvider` 加 `.filterToolNames("add")`，再问"现在几点"——观察模型找不到 get_time 工具时的行为。
 5. 思考题：为什么 `McpToolProvider implements ToolProvider` 意味着 MCP 工具能和 Ch16 的动态工具 `toolProviders(...)` 并存？这对系统设计意味着什么？
 6. 思考题：stdio 传输下，如果 MCP 服务器的 `stdout` 被 `console.log` 污染（如调试输出），会发生什么？（提示：协议解析失败）——为什么本章的 demo 服务器调试全部走 stderr？
-
----
 
 ## 本章参考
 
