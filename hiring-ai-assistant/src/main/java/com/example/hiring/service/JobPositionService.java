@@ -2,10 +2,12 @@ package com.example.hiring.service;
 
 import com.example.hiring.api.CreateJobRequest;
 import com.example.hiring.entity.JobPosition;
+import com.example.hiring.exception.HiringException;
 import com.example.hiring.mapper.JobPositionMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -41,7 +43,11 @@ public class JobPositionService {
     }
 
     public JobPosition get(Long id) {
-        return jobPositionMapper.selectById(id);
+        JobPosition job = jobPositionMapper.selectById(id);
+        if (job == null) {
+            throw new HiringException(HttpStatus.NOT_FOUND, "Job not found: " + id);
+        }
+        return job;
     }
 
     public List<JobPosition> listOpen() {

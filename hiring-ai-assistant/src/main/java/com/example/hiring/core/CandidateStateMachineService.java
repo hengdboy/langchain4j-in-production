@@ -59,7 +59,7 @@ public class CandidateStateMachineService {
             });
         }
 
-        // 以 DB 状态为事实源重置（修复 bug 2）
+        // 以 DB 状态为事实源重置
         DefaultStateMachineContext<CandidateStatus, FsmEvent> ctx =
                 new DefaultStateMachineContext<>(candidate.getStatus(), null, new HashMap<>(),
                         new DefaultExtendedState(new HashMap<>(extended)));

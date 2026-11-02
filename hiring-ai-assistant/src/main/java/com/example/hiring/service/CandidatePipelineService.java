@@ -13,6 +13,7 @@ import com.example.hiring.core.CandidateStatus;
 import com.example.hiring.core.CandidateTransitionedEvent;
 import com.example.hiring.core.FsmEvent;
 import com.example.hiring.entity.BanditOutcome;
+import com.example.hiring.exception.HiringException;
 import com.example.hiring.entity.Interview;
 import com.example.hiring.entity.JobPosition;
 import com.example.hiring.entity.ReceivedEmail;
@@ -38,6 +39,7 @@ import dev.langchain4j.data.message.UserMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -81,7 +83,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class CandidatePipelineService {
 
-    private static final String FROM_EMAIL = "hiring@postbox.workbuddy.dev";
+    private static final String FROM_EMAIL = "hiring@postbox.dev";
     private static final String COMPANY = "星航科技";
     private static final String INTERVIEWER = "interviewer-01";
 
@@ -225,7 +227,7 @@ public class CandidatePipelineService {
     private CandidateContext doReply(Long candidateId, String replyText) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null) {
-            throw new IllegalArgumentException("Candidate not found: " + candidateId);
+            throw new HiringException(HttpStatus.NOT_FOUND, "Candidate not found: " + candidateId);
         }
         if (candidate.getStatus() != CandidateStatus.INVITE_SENT
                 && candidate.getStatus() != CandidateStatus.OFFER_SENT) {
@@ -282,7 +284,7 @@ public class CandidatePipelineService {
     private CandidateContext doCompleteInterview(Long candidateId, String feedback) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null) {
-            throw new IllegalArgumentException("Candidate not found: " + candidateId);
+            throw new HiringException(HttpStatus.NOT_FOUND, "Candidate not found: " + candidateId);
         }
         if (candidate.getStatus() != CandidateStatus.INTERVIEW_SCHEDULED) {
             throw new IllegalStateException("候选人不在待面试状态: " + candidate.getStatus());
@@ -323,7 +325,7 @@ public class CandidatePipelineService {
     }
 
     // ============================================================
-    // FSM 迁移事件监听：确定性推进
+    // FSM 事件监听：确定性推进
     // ============================================================
 
     @EventListener

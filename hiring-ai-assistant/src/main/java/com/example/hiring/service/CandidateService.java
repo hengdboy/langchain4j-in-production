@@ -8,6 +8,7 @@ import com.example.hiring.core.CandidateTransitionedEvent;
 import com.example.hiring.core.DelayedEventQueue;
 import com.example.hiring.core.FsmEvent;
 import com.example.hiring.core.CandidateContext;
+import com.example.hiring.exception.HiringException;
 import com.example.hiring.entity.SentEmail;
 import com.example.hiring.mapper.CandidateEventMapper;
 import com.example.hiring.mapper.CandidateMapper;
@@ -17,6 +18,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -78,10 +80,10 @@ public class CandidateService {
             return handleOfferTimeout(candidateId);
         }
 
-        // 读候选人（MySQL）
+        // 读候选人
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null) {
-            throw new IllegalArgumentException("Candidate not found: " + candidateId);
+            throw new HiringException(HttpStatus.NOT_FOUND, "Candidate not found: " + candidateId);
         }
         CandidateStatus oldStatus = candidate.getStatus();
 

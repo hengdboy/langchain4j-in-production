@@ -11,6 +11,7 @@ import com.example.hiring.core.CandidateContext;
 import com.example.hiring.core.CandidateStatus;
 import com.example.hiring.core.FsmEvent;
 import com.example.hiring.evolution.DpoSampleWriter;
+import com.example.hiring.exception.HiringException;
 import com.example.hiring.entity.ReceivedEmail;
 import com.example.hiring.entity.SentEmail;
 import com.example.hiring.mapper.CandidateEventMapper;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -82,7 +84,11 @@ public class CandidateController {
 
     @GetMapping("/{id}")
     public CandidateContext get(@PathVariable Long id) {
-        return candidateMapper.selectById(id);
+        CandidateContext candidate = candidateMapper.selectById(id);
+        if (candidate == null) {
+            throw new HiringException(HttpStatus.NOT_FOUND, "Candidate not found: " + id);
+        }
+        return candidate;
     }
 
     @GetMapping("/{id}/events")
@@ -148,7 +154,7 @@ public class CandidateController {
                                          @Valid @RequestBody SendEventRequest req) {
         CandidateContext before = candidateMapper.selectById(id);
         if (before == null) {
-            throw new IllegalArgumentException("Candidate not found: " + id);
+            throw new HiringException(HttpStatus.NOT_FOUND, "Candidate not found: " + id);
         }
         CandidateStatus from = before.getStatus();
         FsmEvent event = FsmEvent.valueOf(req.event());
