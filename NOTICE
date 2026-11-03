@@ -1,0 +1,11 @@
+langchain4j-in-production
+Copyright 2026 hengdboy
+
+本仓库采用双许可：
+
+- 代码（smart-doc-assistant/、hiring-ai-assistant/、labs/ 下的源码与构建脚本、.github/、scripts/）
+  遵循 Apache License 2.0，全文见 LICENSE。
+- 教程内容（chapters/ 章节文字、assets/ 配图、README 说明文字）
+  遵循 CC BY-NC-SA 4.0，全文见 LICENSE-DOCS.md。
+
+LangChain4j 框架本身遵循 Apache License 2.0，归其作者所有；本仓库仅通过 Maven 依赖引用，不重新分发框架源码。

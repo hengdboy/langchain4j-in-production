@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     name: build smart-doc-assistant
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
@@ -28,7 +28,7 @@ jobs:
         if: always()
         # 存储配额重算期（6-12h）artifact 会被拒传，测试报告只是附带产物，不该拖红 CI
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: surefire-smart-doc-assistant
           path: smart-doc-assistant/target/surefire-reports/
@@ -70,9 +70,9 @@ jobs:
       MYSQL_HOST: 127.0.0.1
       REDIS_HOST: 127.0.0.1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
@@ -96,7 +96,7 @@ jobs:
         if: always()
         # 存储配额重算期（6-12h）artifact 会被拒传，测试报告只是附带产物，不该拖红 CI
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: surefire-hiring-ai-assistant
           path: hiring-ai-assistant/target/surefire-reports/
@@ -109,9 +109,9 @@ jobs:
     runs-on: ubuntu-latest
     name: build labs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
@@ -123,7 +123,7 @@ jobs:
         if: always()
         # 存储配额重算期（6-12h）artifact 会被拒传，测试报告只是附带产物，不该拖红 CI
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: surefire-labs
           path: labs/**/target/surefire-reports/

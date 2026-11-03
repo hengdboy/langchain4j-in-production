@@ -114,7 +114,11 @@ MCP 接入见 [hiring-ai-assistant/README.md](hiring-ai-assistant/README.md)。
 
 ## License
 
-代码（两个项目 + 构建脚本）按 Apache-2.0；章节文字与配图按 CC BY-NC-SA 4.0——转载需署名、非商用、相同方式共享。详见 [LICENSE](LICENSE)。
+本仓库采用双许可：
+
+- **代码**（`smart-doc-assistant/`、`hiring-ai-assistant/`、`labs/` 下的源码与构建脚本、`.github/`）：[Apache License 2.0](LICENSE)
+- **教程内容**（`chapters/` 章节文字、`assets/` 配图、README 说明文字）：[CC BY-NC-SA 4.0](LICENSE-DOCS.md)——转载需署名、非商用、相同方式共享
+- 商业授权请联系仓库所有者；版权归属与边界说明见 [NOTICE](NOTICE)。
 
 ## 版本基准
 
