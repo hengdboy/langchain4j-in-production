@@ -9,6 +9,18 @@
 
 > **参与讨论**：环境问题、选型讨论、踩坑分享请到 [Discussions](https://github.com/hengdboy/langchain4j-in-production/discussions)；可复现的 bug 和文档错误请开 [Issues](https://github.com/hengdboy/langchain4j-in-production/issues)。第一次提问前建议先看 [欢迎帖与提问指引](https://github.com/hengdboy/langchain4j-in-production/discussions/1)。
 
+## 学完你能带走什么
+
+这套教程的目标不是让你"会用 LangChain4j"，而是让你在面试和项目里拿得出证据。
+
+- **简历上多两个完整项目**：智能文档问答（RAG 全管线）和 AI 招聘官（6 Agent + 状态机）。两个都能本地跑、有架构图、有测试、有成本账，不是跟着敲一遍就丢的 demo。
+- **面试里接得住追问**：检索效果为什么变好（11 题金标集，MRR 0.417 → 0.652）、token 为什么翻倍、虚拟线程下 ThreadLocal 为什么丢、MCP 协议有哪些坑、护栏误杀率怎么量。大多数候选人只能讲 prompt 和接口调用；这里的项目能经得起往下追问三层，每个结论都指得到章节和代码位置。
+- **项目里能直接搬**：5 个独立 labs、金标集与 CI 阈值、输入/输出护栏、token 成本 listener、docker-compose 和可视化演示页。
+
+适合有 Java / Spring Boot 基础、想把 AI 能力真正落进业务，或者正在准备面试的开发者。完全零 Java 基础、或者只想要"调个 API 就上线"的速成方案，这套教程不合适。
+
+所有数字都是 LangChain4j 1.22.0 + 指定模型下的实测结果，换版本或换模型请按 Ch13 的方法重测。教程给的是方法和判断，不承诺你的业务指标。
+
 ## 章节
 
 **RAG 主线**（文档怎么进库、怎么检索、怎么知道检索得好不好）
