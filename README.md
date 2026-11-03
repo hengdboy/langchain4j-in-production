@@ -1,6 +1,6 @@
 # LangChain4j 生产实战——13 章 + 2 个可运行项目
 
-面向 Java / Spring Boot 开发者的 LangChain4j 教程。不讲 Hello World 罗列 API，每一章都围绕两个**真实可运行**的 Spring Boot 项目展开，正文里的关键数字（检索 MRR、单次调用成本、护栏误杀率、64 个测试）都是标注了验证日期的实跑结果。
+面向 Java / Spring Boot 开发者的 LangChain4j 教程。不讲 Hello World 罗列 API，每一章都围绕两个**真实可运行**的 Spring Boot 项目展开，正文里的关键数字（检索 MRR、两笔调用合计成本、护栏误杀率、68 个测试）都是标注了验证日期的实跑结果。
 
 > 本仓库收录实战篇 13 章；基础篇（Ch01–09、Ch15）与全书导读只在博客。全书 24 章《langchain4j 从零到生产》在线阅读：[notes.qianyecube.cn/knowledge/langchain4j](https://notes.qianyecube.cn/knowledge/langchain4j/)
 
@@ -39,7 +39,7 @@
 
 | 章 | 主题 | 一句话产出 |
 |---|---|---|
-| [Ch24 综合实战（上）](chapters/ch24-hiring-automation.md) | AI 招聘官：FSM 编排 | 系统架构总览、12 态 15 转换全景图、事件驱动编排、E2E 12 项断言、63/63 测试全绿 |
+| [Ch24 综合实战（上）](chapters/ch24-hiring-automation.md) | AI 招聘官：FSM 编排 | 系统架构总览、12 态 15 转换全景图、事件驱动编排、E2E 12 项断言、68/68 测试全绿 |
 | [Ch25 综合实战（下）](chapters/ch25-guardrails-evolution.md) | AI 招聘官：护栏与演化 | 歧视防护三层闸、Bandit 话术自迭代、每 Agent 真机成本账 |
 
 ## 实验室（Labs）：5 个小业务场景

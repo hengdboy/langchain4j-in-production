@@ -322,4 +322,4 @@ Ch22 的 `CostChatModelListener` 在这里升级为按 Agent 维度的核算（�
 
 ## 参考与实测数据出处
 
-三道护栏的实现都在 `hiring-ai-assistant/src/main/java/com/example/hiring/guardrail/`，`DecisionFieldFilter` 200 行出头，是全项目最值得逐行读的类。25.4.4 的 Bandit 结算数字和 25.7 的成本账来自 2026-10-29 真机运行后的 `bandit_state` 与 `agent_call` 表，复现方式：`docker-compose up -d` 起库、跑 `POST /api/demo/run` 若干次、等 EvolutionScheduler 结算后查询。Guardrails 机制官方文档：https://docs.langchain4j.dev/tutorials/agents/#guardrails ；Thompson Sampling 想深挖可读 Chapelle & Li (NeurIPS 2011)，本文只用到 Beta 分布采样的直觉。
+三道护栏的实现都在 `hiring-ai-assistant/src/main/java/com/example/hiring/guardrail/`，`DecisionFieldFilter` 150 行出头，是全项目里我最推荐逐行读的类。25.4.4 的 Bandit 结算数字和 25.7 的成本账来自 2026-10-29 真机运行后的 `bandit_state` 与 `agent_call` 表，复现方式：`docker-compose up -d` 起库、跑 `POST /api/demo/run` 若干次、等 EvolutionScheduler 结算后查询。Guardrails 机制官方文档：https://docs.langchain4j.dev/tutorials/agents/#guardrails ；Thompson Sampling 想深挖可读 Chapelle & Li (NeurIPS 2011)，本文只用到 Beta 分布采样的直觉。

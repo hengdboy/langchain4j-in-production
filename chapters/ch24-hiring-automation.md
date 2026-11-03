@@ -8,7 +8,7 @@
 > 2. 把 Ch14~Ch22 的能力**组装成一条业务流水线**：6 个 Agent + Spring StateMachine + 事件驱动编排 + 延迟队列 + 审计
 > 3. 吃透**这套架构最核心的一条设计决策**：编排权在状态机不在 LLM，Agent 只做叶子
 > 4. 学会**事件驱动编排**的完整姿势：`@EventListener` 按新状态触发下一个 Agent、超时事件走业务层前置判断
-> 5. 看懂**63 个测试怎么组织**、E2E 脚本怎么验证 12 项断言
+> 5. 看懂**68 个测试怎么组织**、E2E 脚本怎么验证 12 项断言
 
 护栏（歧视防护/注入检测）、Bandit 话术演化、DPO 样本池、MCP 对外暴露在 **Ch25（下）**。
 
@@ -314,7 +314,7 @@ public MatchEvaluatorAgent matchEvaluatorAgent(ChatModel instrumentedChatModel) 
 
 ### 24.6.1 真实模式 vs Canned 模式
 
-每个 Agent 调用先看 `hiring.demo.use-real-agent`：真实模式调 LLM、失败兜底 canned；canned 模式直接走确定性规则（正则解析、技能交集打分、模板渲染）。**两种模式的 FSM 流转完全一致**——这是"编排与模型解耦"带来的可测试性红利：63 个测试不需要任何 API key。
+每个 Agent 调用先看 `hiring.demo.use-real-agent`：真实模式调 LLM、失败兜底 canned；canned 模式直接走确定性规则（正则解析、技能交集打分、模板渲染）。**两种模式的 FSM 流转完全一致**——这是"编排与模型解耦"带来的可测试性红利：68 个测试不需要任何 API key。
 
 一个例外：`EvaluationAgent` 失败**不兜底**。评价触发合规护栏时抛异常、候选人停在 `INTERVIEWED` 等面试官修订——合规场景宁可停，不可错（Ch25 §25.3）。
 
