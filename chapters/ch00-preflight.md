@@ -70,7 +70,7 @@ key 欠费时的报错长这样，见到就该去充值而不是改代码：
 ## 0.3 五分钟跑通 smart-doc-assistant
 
 ```bash
-git clone <仓库地址> && cd langchain4j-in-production
+git clone https://github.com/hengdboy/langchain4j-in-production.git && cd langchain4j-in-production
 # 先创建 smart-doc-assistant/src/main/resources/application-local.yml，填入你的 key
 
 cd smart-doc-assistant
@@ -151,6 +151,7 @@ hiring 项目（Ch24/25）需要 MySQL + Redis 先就位，启动与 E2E 验证�
 
 ## 本章参考
 
+- 配套仓库（代码 + 5 个 labs + 实战篇章节原文）：https://github.com/hengdboy/langchain4j-in-production
 - LangChain4j 版本发布页：https://github.com/langchain4j/langchain4j/releases
 - 两个项目的 `application.yml`（全部配置项带注释，是配置的单一真相源）
 - 各章"本章基线"块——环境口径以它为准
