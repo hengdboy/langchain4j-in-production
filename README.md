@@ -7,6 +7,8 @@
 - **教程口径**：LangChain4j `1.22.0` + 实验模块 `1.22.0-beta32` ｜ JDK 21（推荐，pom 拦下限）｜ 最后验证 2026-10-28
 - **读前必看**：[Ch00 前置速查](chapters/ch00-preflight.md)——环境、学习路径图、全系列约定，15 分钟
 
+> **参与讨论**：环境问题、选型讨论、踩坑分享请到 [Discussions](https://github.com/hengdboy/langchain4j-in-production/discussions)；可复现的 bug 和文档错误请开 [Issues](https://github.com/hengdboy/langchain4j-in-production/issues)。第一次提问前建议先看 [欢迎帖与提问指引](https://github.com/hengdboy/langchain4j-in-production/discussions/1)。
+
 ## 章节
 
 **RAG 主线**（文档怎么进库、怎么检索、怎么知道检索得好不好）
