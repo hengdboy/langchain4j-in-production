@@ -608,7 +608,7 @@ public interface DocQaAssistant {
 cd smart-doc-assistant
 # 默认 inmemory + 本地 ONNX 嵌入（检索链路无需 Redis、无需任何 API Key）
 mvn -DskipTests package
-java -jar target/smart-doc-assistant-0.16.0-SNAPSHOT.jar
+java -jar target/smart-doc-assistant-0.19.0-SNAPSHOT.jar
 
 # 启动日志（2026-10-28 实测，Ch10 解析修复后）：
 #  分块完成：4 个文档 → 10 个块（parent-child=true） ← 干净库（扁平模式 7 块；修复前曾是 26 / 20，见 Ch10 10.4.4）

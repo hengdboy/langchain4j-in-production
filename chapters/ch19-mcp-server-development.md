@@ -27,7 +27,7 @@ Ch17 讲的是**用**别人的 MCP Server（Node.js 写的 demo-server.mjs，std
                                      │ MCP 协议（JSON-RPC 2.0）
                                      ↓
               ┌──────────────────────────────────────────────┐
-              │ 你的 MCP Server（本章 v0.17 新增）           │
+              │ 你的 MCP Server（本章 v0.19 新增）           │
               │ ├─ 3 个 @Tool：searchKnowledgeBase 等        │
               │ ├─ 4 个 Resource：docs:// 协议              │
               │ ├─ 3 个 Prompt：review-code 等模板          │
@@ -320,7 +320,7 @@ private static void redirectLogbackToStderr() {
   "mcpServers": {
     "smart-doc-assistant": {
       "command": "java",
-      "args": ["-jar", "/path/to/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar"],
+      "args": ["-jar", "/path/to/smart-doc-assistant-0.19.0-SNAPSHOT-mcp.jar"],
       "env": {
         "DEEPSEEK_API_KEY": "sk-xxx",
         "DASHSCOPE_API_KEY": "sk-xxx"
@@ -847,7 +847,7 @@ curl -s "http://localhost:8090/mcp/audit?n=10" \
 #    直接 java -jar 会拉起整个 Web 应用，而不是 MCP 子进程）
 cd smart-doc-assistant
 mvn clean package -DskipTests -Pmcp
-ls target/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar
+ls target/smart-doc-assistant-0.19.0-SNAPSHOT-mcp.jar
 
 # 2. 配置 Claude Desktop（19.5.3 里的 args 指向这个 -mcp.jar）
 
@@ -869,7 +869,7 @@ ls target/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar
   sleep 1
   printf '%s\n' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
   sleep 3
-} | java -jar target/smart-doc-assistant-0.16.0-SNAPSHOT-mcp.jar
+} | java -jar target/smart-doc-assistant-0.19.0-SNAPSHOT-mcp.jar
 ```
 
 stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），日志全部走 stderr。**如果 stdout 里混进任何一行非 JSON 文本，客户端就会解析失败。**
@@ -933,7 +933,7 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 | **`{{var}}` 模板渲染** | Prompts 用正则替换；缺值时换空字符串（避免 LLM 把 `{{var}}` 当指令） |
 | **MCP blob 字段** | 二进制资源（PDF / 图片）走 `blob` 字段（base64）；文本走 `text` 字段（UTF-8） |
 
-### 项目代码状态表（v0.17）
+### 项目代码状态表（v0.19）
 
 | 模块 | 文件 | 说明 |
 |---|---|---|

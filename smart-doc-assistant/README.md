@@ -1,6 +1,6 @@
 # smart-doc-assistant — 端点速查
 
-> 本目录是 LangChain4j 教程（Ch01~Ch18）的配套可运行工程。当前版本与仓库根 `pom.xml` 一致（v0.16.0-SNAPSHOT）。
+> 本目录是 LangChain4j 教程（Ch01~Ch19）的配套可运行工程。当前版本与仓库根 `pom.xml` 一致（v0.19.0-SNAPSHOT）。
 >
 > 本文按"卷"分组列出全部 REST 端点，全部来自 `src/main/java/.../controller/` 真实注解，可直接 `curl` 验证。
 

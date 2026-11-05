@@ -469,7 +469,7 @@ curl -X POST http://localhost:8090/api/agent/manual -H "Content-Type: applicatio
 | **RagLookupTool** | 把 Ch12 的 `RetrievalAugmentor` 变成 Agent 的一个工具——跨章复用的范本 |
 | **Result\<String\>** | 返回它而非 String，拿到 `toolExecutions()` / `tokenUsage()` 做审计 |
 
-### 项目代码状态表（v0.12）
+### 项目代码状态表（v0.14）
 
 | 模块 | 文件 | 说明 |
 |---|---|---|

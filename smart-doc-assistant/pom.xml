@@ -14,12 +14,12 @@
     <groupId>com.example</groupId>
     <artifactId>smart-doc-assistant</artifactId>
     <!--
-      版本基线说明：v0.X.Y-SNAPSHOT 中 X 对应大章节卷，Y 对应该卷下小节。
-      本仓库当前已落地 Ch01~Ch18（v0.1 ~ v0.16），故主版本号应同步到 0.16。
-      下一章（Ch19 MCP 深度开发）落地后升 0.17，依此类推。
+      版本基线说明：版本号与章节一一对应（Ch01→0.1、Ch02→0.2 …… Ch19→0.19）。
+      本仓库当前已落地 Ch01~Ch19（v0.1 ~ v0.19），故主版本号同步到 0.19。
+      下一章（Ch20）落地后升 0.20，依此类推。
       维护原则：每完成一章即 bump minor 一档，README 章节勾选 / 配套项目表 / 此标签三者必须联动。
     -->
-    <version>0.16.0-SNAPSHOT</version>
+    <version>0.19.0-SNAPSHOT</version>
     <name>smart-doc-assistant</name>
     <description>LangChain4j Tutorial Demo Project - Smart Document Assistant</description>
 

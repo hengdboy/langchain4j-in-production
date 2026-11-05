@@ -168,7 +168,7 @@ return ToolExecutionResult.builder()
 
 ### 18.4.4 装配与实测
 
-`SkillConfig`（`config/` 包，Ch18 新增，v0.16）：
+`SkillConfig`（`config/` 包，Ch18 新增，v0.18）：
 
 ```java
 @Configuration
@@ -412,7 +412,7 @@ curl -X POST http://localhost:8090/api/skills/ask \
 | **Shell 模式**            | `run_shell_command` 直读文件系统——**不安全**，仅受控实验                                                     |
 | **与 MCP 结合**            | Skill 的 `toolProviders(...)` 可挂 `McpToolProvider`（激活=挂载 MCP 工具）                               |
 
-### 项目代码状态表（v0.16）
+### 项目代码状态表（v0.18）
 
 | 模块   | 文件                                                           | 说明                                                        |
 | ---- | ------------------------------------------------------------ | --------------------------------------------------------- |

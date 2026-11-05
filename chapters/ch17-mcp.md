@@ -192,7 +192,7 @@ flowchart LR
     P --> A["@AiService(toolProvider=...)"]
 ```
 
-`McpConfig`（`config/` 包，Ch17 新增，v0.15）：
+`McpConfig`（`config/` 包，Ch17 新增，v0.17）：
 
 ```java
 @Configuration
@@ -462,7 +462,7 @@ curl "http://localhost:8090/api/mcp/resource?uri=docs://demo/protocol-notes"
 | **超时/重连** | initialization 5s（默认约 30s 太钝）、tool-execution 20s、`start()` 幂等可重连；协议级失败重连救不了 |
 | **客户端 vs 服务端** | 本章=消费不可信第三方（白名单+审计）；Ch19=当设防的供货商（鉴权+白名单+审计）——同套协议知识两头用 |
 
-### 项目代码状态表（v0.15）
+### 项目代码状态表（v0.17）
 
 | 模块 | 文件 | 说明 |
 |---|---|---|

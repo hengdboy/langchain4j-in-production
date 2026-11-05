@@ -460,7 +460,7 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 | **坑：provider 吞异常** | ToolProvider 自建执行器默认 `propagate=false`，AiServices 的错误 handler 收不到工具异常——builder 显式开（16.6） |
 | **坑：ThreadLocal 清理** | 用 ThreadLocal 传租户/用户上下文，必须在请求结束 `remove()`，否则线程池复用会串租户 |
 
-### 项目代码状态表（v0.14）
+### 项目代码状态表（v0.16）
 
 | 模块 | 文件 | 说明 |
 |---|---|---|

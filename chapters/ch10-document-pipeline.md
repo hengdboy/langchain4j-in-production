@@ -110,7 +110,7 @@ flowchart TB
 **先交代一个口径，避免读到后面困惑**：仓库当前代码的 `ingest()` 里有一个分块开关——`chat.rag.parent-child`，**默认开启，走的是 Ch12 的「父子分块」**；关掉它才是本章主线讲的扁平分块（`DocumentSplitters.recursive` 一层切到底）。两条路共用清洗 → 嵌入 → 入库主干，`ingest()` 里就是一个二选一分支。本章按扁平分块讲原理（Ch12 讲为什么父子分块更好），跑示例时加一个启动参数即可切到本章模式：
 
 ```bash
-java -jar target/smart-doc-assistant-0.16.0-SNAPSHOT.jar --chat.rag.parent-child=false
+java -jar target/smart-doc-assistant-0.19.0-SNAPSHOT.jar --chat.rag.parent-child=false
 ```
 
 两种模式各实测过一次（同样的 4 个示例文档，解析错配修复前）：扁平分块 **20 块**，父子分块 **26 块**。数字本身不重要，重要的是你知道它从哪个分支来——10.8 读代码时会看到这个分支。还有一层要先打预防针：那两个数字里都掺着一份被解析错的 PDF 产生的垃圾块；2026-10-28 修复落地后，启动路径直接给你干净的 **7 块 / 10 块**，10.4.4 会把这件事完整还原。
@@ -776,7 +776,7 @@ public record PipelineStats(int documentCount, int segmentCount, int dimension, 
 ```bash
 cd smart-doc-assistant
 mvn -DskipTests package
-java -jar target/smart-doc-assistant-0.16.0-SNAPSHOT.jar --chat.rag.parent-child=false
+java -jar target/smart-doc-assistant-0.19.0-SNAPSHOT.jar --chat.rag.parent-child=false
 ```
 
 启动后整条流水线的日志原文（本地 ONNX 嵌入，无需任何 API Key；解析修复后启动即干净库）：
