@@ -76,6 +76,7 @@ import java.util.regex.Pattern;
  *
  * <p>每个 Agent 调用先看 {@code hiring.demo.use-real-agent}（或请求级覆盖）：
  * true 调真实 LLM、失败兜底 canned；false 直接走确定性规则（无 key 可跑）。
+ *
  * @author hengdboy
  */
 @Slf4j
@@ -180,9 +181,12 @@ public class CandidatePipelineService {
 
         // 简历解析（只提取，不评估）
         ResumeParserAgent.ParsedProfile profile = doParse(candidate);
-        if (candidate.getName() == null && profile.name() != null) candidate.setName(profile.name());
-        if (candidate.getPhone() == null && profile.phone() != null) candidate.setPhone(profile.phone());
-        candidateMapper.updateById(candidate);
+        if (candidate.getName() == null && profile.name() != null) {
+            candidate.setName(profile.name());
+        }
+        if (candidate.getPhone() == null && profile.phone() != null) {
+            candidate.setPhone(profile.phone());
+        }
 
         // 决策脱敏（白名单过滤：年龄/性别/婚育/籍贯/联系方式根本进不了评估 prompt）
         String fullProfileJson = toJson(profile);
@@ -290,7 +294,7 @@ public class CandidatePipelineService {
             throw new IllegalStateException("候选人不在待面试状态: " + candidate.getStatus());
         }
         Interview interview = interviewMapper.selectList(new QueryWrapper<Interview>()
-                .eq("candidate_id", candidateId).orderByDesc("id").last("LIMIT 1"))
+                        .eq("candidate_id", candidateId).orderByDesc("id").last("LIMIT 1"))
                 .stream().findFirst().orElseThrow(
                         () -> new IllegalStateException("找不到面试安排: " + candidateId));
         interview.setFeedback(feedback);
@@ -309,7 +313,9 @@ public class CandidatePipelineService {
                 Map.of("evalOutcome", outcome));
     }
 
-    /** HR 复核 ON_HOLD 候选人：approve → 进约面流程；否决 → 淘汰（必须给 reason）。 */
+    /**
+     * HR 复核 ON_HOLD 候选人：approve → 进约面流程；否决 → 淘汰（必须给 reason）。
+     */
     public CandidateContext review(Long candidateId, boolean approve, String reason) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.ON_HOLD) {
@@ -338,7 +344,9 @@ public class CandidatePipelineService {
         }
     }
 
-    /** SHORTLISTED → Bandit 选臂 → 邀请 Agent → 发送 → INVITE_SENT */
+    /**
+     * SHORTLISTED → Bandit 选臂 → 邀请 Agent → 发送 → INVITE_SENT
+     */
     private void generateInviteAndSend(Long candidateId) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.SHORTLISTED) return;
@@ -374,7 +382,9 @@ public class CandidatePipelineService {
         candidateService.processEvent(candidateId, FsmEvent.INVITE_SENT, Map.of());
     }
 
-    /** INTERVIEW_SCHEDULED → 日历占位 + 出题 + 确认函 */
+    /**
+     * INTERVIEW_SCHEDULED → 日历占位 + 出题 + 确认函
+     */
     private void bookSlotAndPrepare(Long candidateId) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.INTERVIEW_SCHEDULED) return;
@@ -417,7 +427,9 @@ public class CandidatePipelineService {
                 booking.bookingId(), qs == null ? 0 : qs.questions().size());
     }
 
-    /** OFFER_SENT → offer 函（确定性模板：offer 是法律承诺文件，正文不走 LLM） */
+    /**
+     * OFFER_SENT → offer 函（确定性模板：offer 是法律承诺文件，正文不走 LLM）
+     */
     private void sendOfferLetter(Long candidateId) {
         CandidateContext candidate = candidateMapper.selectById(candidateId);
         if (candidate == null || candidate.getStatus() != CandidateStatus.OFFER_SENT) return;
@@ -555,7 +567,9 @@ public class CandidatePipelineService {
         return cannedEvaluation(feedback);
     }
 
-    /** 生效模式：请求级覆盖优先，否则用配置 */
+    /**
+     * 生效模式：请求级覆盖优先，否则用配置
+     */
     private boolean realAgentEnabled() {
         Boolean override = MODE_OVERRIDE.get();
         return override != null ? override : props.getDemo().isUseRealAgent();
@@ -573,7 +587,9 @@ public class CandidatePipelineService {
             "Python", "PyTorch", "React", "Vue", "Kubernetes", "Docker", "Kafka",
             "MyBatis", "JVM", "向量", "微服务");
 
-    /** 规则版解析：正则 + 词表，LLM 不存在也产出确定结果 */
+    /**
+     * 规则版解析：正则 + 词表，LLM 不存在也产出确定结果
+     */
     private ResumeParserAgent.ParsedProfile cannedParse(String resumeText) {
         String text = resumeText == null ? "" : resumeText;
         String name = null;
@@ -609,7 +625,9 @@ public class CandidatePipelineService {
                 skills, education, projects, "canned: 正则+词表解析");
     }
 
-    /** 规则版评估：技能交集 + 年限加权，阈值 70/40 分档 */
+    /**
+     * 规则版评估：技能交集 + 年限加权，阈值 70/40 分档
+     */
     private MatchEvaluatorAgent.MatchVerdict cannedEvaluate(String redactedProfileJson, JobPosition job) {
         List<String> required = parseSkills(job.getRequiredSkills());
         List<String> owned = parseSkills(redactedProfileJson);
@@ -630,7 +648,9 @@ public class CandidatePipelineService {
         return new MatchEvaluatorAgent.MatchVerdict(score, verdict, reasons);
     }
 
-    /** 模板邀请（按 Bandit 选臂 → CannedInviteTemplates 6 模板之一） */
+    /**
+     * 模板邀请（按 Bandit 选臂 → CannedInviteTemplates 6 模板之一）
+     */
     private InviteContentAgent.InviteEmail cannedInvite(CandidateContext candidate,
                                                         String jobTitle, String tone, String cta) {
         CannedInviteTemplates.Template t = CannedInviteTemplates.render(
@@ -639,7 +659,9 @@ public class CandidatePipelineService {
         return new InviteContentAgent.InviteEmail(t.subject(), t.body(), "zh");
     }
 
-    /** 关键词规则版回复分类 */
+    /**
+     * 关键词规则版回复分类
+     */
     private ReplyClassifierAgent.ReplyAssessment cannedClassify(String replyText) {
         String t = replyText == null ? "" : replyText.toLowerCase(Locale.ROOT);
         if (t.contains("放弃") || t.contains("不考虑") || t.contains("拒绝") || t.contains("退出")
@@ -650,7 +672,9 @@ public class CandidatePipelineService {
                 "canned: 未明确拒绝，按确认处理并电话跟进");
     }
 
-    /** 规则版出题：核心技能 3 题 + 项目 1 题 + 盲区 1 题 */
+    /**
+     * 规则版出题：核心技能 3 题 + 项目 1 题 + 盲区 1 题
+     */
     private InterviewQuestionAgent.QuestionSet cannedQuestions(CandidateContext candidate) {
         List<String> owned = parseSkills(candidate.getRedactedProfile());
         JobPosition job = jobPositionMapper.selectById(candidate.getJobId());
@@ -668,7 +692,9 @@ public class CandidatePipelineService {
         return new InterviewQuestionAgent.QuestionSet(questions, "canned: 技能深挖+盲区探测");
     }
 
-    /** 关键词规则版评价汇总 */
+    /**
+     * 关键词规则版评价汇总
+     */
     private EvaluationAgent.EvaluationSummary cannedEvaluation(String feedback) {
         String t = feedback == null ? "" : feedback.toLowerCase(Locale.ROOT);
         boolean pass = t.contains("通过") || t.contains("pass") || t.contains("不错")

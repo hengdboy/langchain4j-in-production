@@ -10,6 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 决策白名单过滤器单元测试——歧视防护的第一道闸。
  *
+ * <p>2026-11-02 增补：真实泄漏形态是 {@code notes} 里一句"女，[REDACTED]..."。
+ * 原来的用例把"性别：女"当输入，被第一个 标签:值 模式顺手洗掉，第四个独立性别
+ * 模式从没被执行过——测试绿着，线上漏了两周。这里的用例改成按真实形态压。
+ *
  * @author hengdboy
  * @since v0.30
  */
@@ -20,7 +24,7 @@ class DecisionFieldFilterTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    @DisplayName("【白名单】技能/年限/学历/项目放行，姓名/联系方式/受保护特征全拦")
+    @DisplayName("【白名单】技能/年限/学历/项目放行，notes 与身份字段全拦")
     void testWhitelist() throws Exception {
         String full = """
                 {"name":"陈静","email":"cj@example.com","phone":"13800002222",
@@ -35,6 +39,7 @@ class DecisionFieldFilterTest {
         assertThat(filter.hasKey(redacted, "skills")).isTrue();
         assertThat(filter.hasKey(redacted, "education")).isTrue();
         assertThat(filter.hasKey(redacted, "projects")).isTrue();
+        assertThat(filter.hasKey(redacted, "notes")).isFalse();
 
         for (String banned : new String[]{"name", "email", "phone", "birthDate", "age",
                 "gender", "maritalStatus", "hukou", "ethnicity", "photo"}) {
@@ -45,29 +50,52 @@ class DecisionFieldFilterTest {
     }
 
     @Test
-    @DisplayName("【值级兜底】白名单字段的文本里混入'28 岁'也被抹掉")
+    @DisplayName("【值级兜底】放行字段的文本里混入'28 岁'也被抹掉")
     void testValueLevelRedaction() {
-        String sneaky = "{\"notes\":\"沟通良好，28 岁，期望到岗快\"}";
+        String sneaky = "{\"education\":\"本科，28 岁\",\"skills\":[\"Java\"]}";
         String redacted = filter.redact(sneaky);
         assertThat(redacted).doesNotContain("28 岁").contains("[REDACTED]");
+        assertThat(redacted).contains("本科");
     }
 
     @Test
-    @DisplayName("【值级兜底2】解析器把'性别：女/已婚/户籍：杭州'塞进 notes 也被洗掉（2026-10-29 实测泄漏案例）")
-    void testProtectedTermsInNotesValue() {
-        // 真实 LLM 解析 c4 简历时产出的 notes 原文（值级清洗前）
-        String leaky = "{\"notes\":\"性别：女；年龄：[REDACTED]；已婚；户籍：杭州\",\"skills\":[\"Java\"]}";
+    @DisplayName("【真实泄漏形态】notes 整段不再进决策画像，别处的'女，'也洗得掉")
+    void testNotesDroppedAndLeadingGenderScrubbed() {
+        // 数据库 #205/#209 的实际形态：标签被模型丢掉，只剩一个以"女，"
+        // 开头的 notes；同期解析结果里也可能把同样的文本塞进 projects。
+        String leaky = """
+                {"notes":"女，[REDACTED]，[REDACTED]，[REDACTED]",
+                 "projects":["原文标注：女，知识库问答"],
+                 "skills":["Java"]}
+                """;
         String redacted = filter.redact(leaky);
-        assertThat(redacted).doesNotContain("女").doesNotContain("已婚")
-                .doesNotContain("户籍").doesNotContain("杭州");
+
+        assertThat(filter.hasKey(redacted, "notes")).isFalse();
+        assertThat(redacted).doesNotContain("原文标注：女");
+        assertThat(redacted).contains("[REDACTED]").contains("知识库问答");
         assertThat(filter.hasKey(redacted, "skills")).isTrue();
-        log.info("notes 值清洗后：{}", redacted);
+        log.info("泄漏形态过滤后：{}", redacted);
     }
 
     @Test
-    @DisplayName("【非法输入】不是 JSON 时原样返回（不抛异常阻断业务）")
+    @DisplayName("【串首】没有前导标点的'女，'也命中")
+    void testGenderAtStartOfString() {
+        assertThat(filter.scrubText("女，本科")).isEqualTo("[REDACTED]，本科");
+        assertThat(filter.scrubText("女")).isEqualTo("[REDACTED]");
+        assertThat(filter.scrubText("男；4 年经验")).isEqualTo("[REDACTED]；4 年经验");
+    }
+
+    @Test
+    @DisplayName("【不误伤】女士/男方这类正常词原样保留")
+    void testNoFalsePositive() {
+        String safe = "{\"projects\":[\"负责女士产品线\",\"对接男方家属\"]}";
+        assertThat(filter.redact(safe)).contains("女士").contains("男方");
+    }
+
+    @Test
+    @DisplayName("【非法输入】不是 JSON 时返回空画像（fail-closed，不抛异常）")
     void testNonJsonPassthrough() {
-        assertThat(filter.redact("纯文本画像")).isEqualTo("纯文本画像");
+        assertThat(filter.redact("纯文本画像")).isEqualTo("{}");
         assertThat(filter.redact("")).isEqualTo("{}");
         assertThat(filter.redact(null)).isEqualTo("{}");
     }

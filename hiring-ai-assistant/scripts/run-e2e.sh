@@ -193,12 +193,15 @@ except Exception:
     print('PARSE_FAIL')
     raise SystemExit
 banned = {'name', 'email', 'phone', 'birthdate', 'age', 'gender',
-          'maritalstatus', 'hukou', 'ethnicity', 'photo'}
+          'maritalstatus', 'hukou', 'ethnicity', 'photo', 'notes'}
 leaked = [k for k in profile.keys() if k.lower() in banned]
+text = json.dumps(profile, ensure_ascii=False)
+leaked += [t for t in ('陈静', '性别', '年龄', '女', '已婚', '户籍', '杭州', '28 岁')
+           if t in text]
 print(','.join(leaked) if leaked else 'CLEAN')
 " 2>/dev/null || echo "PARSE_FAIL")
 if [ "$LEAK" = "CLEAN" ]; then
-    ok "c4 决策画像白名单干净（无姓名/年龄/性别/婚育/户籍字段）"
+    ok "c4 决策画像键与值都干净（无姓名/年龄/性别/婚育/户籍，notes 不在画像里）"
 else
     err "c4 决策画像泄漏或解析失败：$LEAK"
 fi
