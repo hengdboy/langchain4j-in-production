@@ -3,6 +3,7 @@ package com.example.assistant.config;
 import com.example.assistant.engineering.AgentAuditService;
 import com.example.assistant.engineering.DynamicToolProvider;
 import com.example.assistant.engineering.EngineeringAgent;
+import com.example.assistant.guardrail.ToolGuard;
 import com.example.assistant.tools.CalculatorTools;
 import com.example.assistant.tools.RagLookupTool;
 import com.example.assistant.tools.TimeTools;
@@ -49,7 +50,7 @@ public class EngineeringAgentConfig {
     private final CalculatorTools calculatorTools;
     private final RagLookupTool ragLookupTool;
     private final AgentAuditService agentAuditService;
-    private final com.example.assistant.guardrail.ToolGuard toolGuard;
+    private final ToolGuard toolGuard;
 
     @Bean
     public DynamicToolProvider dynamicToolProvider(@Qualifier("openAiChatModel") ChatModel chatModel) {

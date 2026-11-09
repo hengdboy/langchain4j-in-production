@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -81,7 +82,10 @@ public class ToolGuard {
         if (roleMap == null || roleMap.isEmpty()) {
             return;
         }
-        List<String> allowed = roleMap.get(role);
+        // 防御性归一化：yml 配置 key 是小写（user/admin/readonly），
+        // 上游传入的 role 可能来自各种来源（JWT/网关头/默认值），统一转小写再匹配
+        String normalized = (role == null || role.isBlank()) ? "user" : role.toLowerCase(Locale.ROOT);
+        List<String> allowed = roleMap.get(normalized);
         if (allowed == null) {
             log.warn("[ToolGuard] role '{}' has no allowed-tools entry (deny by default)", role);
             metrics.incrementToolBlock(toolName);

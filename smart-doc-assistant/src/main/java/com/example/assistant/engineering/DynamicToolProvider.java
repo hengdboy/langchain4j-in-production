@@ -17,8 +17,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 动态工具注入
@@ -60,8 +62,8 @@ public class DynamicToolProvider implements ToolProvider {
      * 捕获进本表；工具执行与审计回调按 chatMemoryId 取捕获值。表随会话数增长（教学版可接受，
      * 生产应挂过期或随请求清理）。
      */
-    private final java.util.concurrent.ConcurrentHashMap<Object, String[]> requestContexts =
-            new java.util.concurrent.ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Object, String[]> requestContexts =
+            new ConcurrentHashMap<>();
 
     /** 审计/护栏在非请求线程上取上下文的入口（提供者捕获的请求线程上下文快照） */
     public String[] contextFor(Object memoryId) {
@@ -137,7 +139,9 @@ public class DynamicToolProvider implements ToolProvider {
             ToolExecutor guarded = (toolExecutionRequest, memoryId) -> {
                 String toolName = e.spec().name();
                 String[] ctx = memoryId == null ? null : requestContexts.get(memoryId);
-                String execRole = ctx != null ? ctx[2] : role;
+                String capturedRole = (ctx != null ? ctx[2] : role);
+                String execRole = (capturedRole == null || capturedRole.isBlank())
+                        ? "user" : capturedRole.toLowerCase(Locale.ROOT);
                 String execUser = ctx != null ? ctx[1] : String.valueOf(memoryId);
                 try {
                     toolGuard.authorize(toolName, execRole, execUser);
@@ -166,8 +170,8 @@ public class DynamicToolProvider implements ToolProvider {
      * <li>currentTime / daysBetween：logistics 域；</li>
      * <li>calculate / percentage：calc 域；</li>
      * </ul>
-     * 若某工具需高权限（如 admin 域的发短信/删数据），在此标 requiredRoles=Set.of("ADMIN")，
-     * 非 ADMIN 租户用户即使意图命中也会被 TenantToolFilter 拦掉。
+     * 若某工具需高权限（如 admin 域的发短信/删数据），在此标 requiredRoles=Set.of("admin")，
+     * 非 admin 租户用户即使意图命中也会被 TenantToolFilter 拦掉。
      */
     private static final Map<String, DomainMeta> DOMAIN_META = Map.of(
             "searchKnowledgeBase", new DomainMeta("refund", Set.of(), Set.of()),

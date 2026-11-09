@@ -449,7 +449,9 @@ public class ToolGuard {
     private void checkRolePermission(String toolName, String role) {
         Map<String, List<String>> roleMap = properties.getTool().getRoleAllowedTools();
         if (roleMap == null || roleMap.isEmpty()) return;
-        List<String> allowed = roleMap.get(role);
+        // 防御性归一化：配置键是小写，上游 role 可能是 USER/Admin，统一转小写再查表
+        String normalized = (role == null || role.isBlank()) ? "user" : role.toLowerCase(Locale.ROOT);
+        List<String> allowed = roleMap.get(normalized);
         if (allowed == null) {
             throw new GuardrailViolation("tool.role_unknown", "角色 [" + role + "] 无可用工具权限");
         }
@@ -543,6 +545,11 @@ chat:
 > 想让 admin 真不受限，只能**整段删掉 `role-allowed-tools` 配置**（让整张表为空），
 > 而不是写 `admin: []`。**配置注释和实现语义对不上，本身就是一个坑**——
 > 读配置时别信注释，去 `ToolGuard` 里看一眼实现。
+>
+> 表里 `USER` 那一行是 2026-10-28 的现场记录（当时精确匹配，大写直接被拒）。2026-11-09
+> 起 `RequestContext` / `TenantToolFilter` / `ToolGuard` 三个入口统一
+> `toLowerCase(Locale.ROOT)`，`USER`、`Admin` 都能落到小写键上；`guest` 这类真正没配置的
+> 角色仍然 deny by default。
 
 `GuardrailMetrics.java` 提供快照导出（便于 Controller 显示 / 测试断言）：
 
@@ -608,7 +615,7 @@ curl -X POST http://localhost:8090/api/agent/chat \
 | 7 | **AiServices 直接绕过** | Controller 调 chatModel.chat() 跳过 Guardrail | Application 层 InputGuard.sanitize() 兜底 |
 | 8 | **实验性 API 漂移** | LangChain4j 升级后 Guardrail 接口变了 | 锁版本（pom 里写死）+ golden set 回归 |
 | 9 | **配置注释与实现语义对不上** | `admin: []` 注释写"不限制"，实现是"一个工具都不许调" | 配 RBAC 前先读 `ToolGuard.checkRolePermission()` 实现，别信注释 |
-| 10 | **角色键大小写敏感** | 传 `role=USER`（大写）→ deny by default，用户莫名被拒 | 入口处统一 `role.toLowerCase()`；配置键全小写 |
+| 10 | **角色键大小写敏感** | 传 `role=USER`（大写）→ deny by default，用户莫名被拒 | 已在三个入口统一 `role.toLowerCase(Locale.ROOT)`；配置键全小写 |
 
 ## 21.11 本章小结
 
@@ -641,7 +648,7 @@ curl -X POST http://localhost:8090/api/agent/chat \
 | 配置 | `guardrail/GuardrailConfig.java` | **新增**：Spring `@EnableConfigurationProperties` 绑定 |
 | 输入 | `guardrail/InputGuard.java` | **新增**：Application 层 sanitize（HTML/控字符/截断）|
 | 输出 | `guardrail/OutputGuard.java` | **新增**：PII 脱敏 + API Key 拦截 |
-| 工具 | `guardrail/ToolGuard.java` | **新增**：黑名单 + 角色 RBAC + 速率限制 |
+| 工具 | `guardrail/ToolGuard.java` | **新增（2026-11-09 角色归一化）**：黑名单 + 角色 RBAC + 速率限制；角色键统一小写后再查表 |
 | 监控 | `guardrail/GuardrailMetrics.java` | **新增**：埋点快照 |
 | 异常 | `guardrail/GuardrailViolation.java` | **新增**：统一异常类型（code + message）|
 | 文档 | `chapters/ch21-guardrails.md` | **新增**：本章 |

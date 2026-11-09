@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Guardrails：三层配置（input / output / tool），每层独立开关。
  *
@@ -83,8 +86,8 @@ public class GuardrailProperties {
         /** 每分钟最大工具调用次数（限流） */
         private int rateLimitPerMinute = 60;
         /** 黑名单：永远禁止调用的工具名 */
-        private java.util.List<String> blockedTools = java.util.List.of();
+        private List<String> blockedTools = List.of();
         /** 角色 → 允许工具的映射；空映射表示无限制 */
-        private java.util.Map<String, java.util.List<String>> roleAllowedTools = java.util.Map.of();
+        private Map<String, List<String>> roleAllowedTools = Map.of();
     }
 }

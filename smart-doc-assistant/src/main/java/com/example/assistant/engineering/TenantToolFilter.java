@@ -3,6 +3,7 @@ package com.example.assistant.engineering;
 import com.example.assistant.engineering.ToolCatalog.Entry;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,7 +32,7 @@ public class TenantToolFilter {
      */
     public List<Entry> filter(List<Entry> candidates, String tenantId, String role) {
         final String t = (tenantId == null || tenantId.isBlank()) ? "default" : tenantId;
-        final String r = (role == null || role.isBlank()) ? "USER" : role;
+        final String r = (role == null || role.isBlank()) ? "user" : role.toLowerCase(Locale.ROOT);
 
         return candidates.stream()
                 .filter(e -> tenantEnabled(e.enabledTenants(), t))
@@ -44,6 +45,9 @@ public class TenantToolFilter {
     }
 
     private boolean roleAllowed(Set<String> requiredRoles, String role) {
-        return requiredRoles == null || requiredRoles.isEmpty() || requiredRoles.contains(role);
+        if (requiredRoles == null || requiredRoles.isEmpty()) {
+            return true;
+        }
+        return requiredRoles.stream().anyMatch(r -> r.equalsIgnoreCase(role));
     }
 }

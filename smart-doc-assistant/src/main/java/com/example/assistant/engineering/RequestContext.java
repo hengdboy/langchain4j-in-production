@@ -1,5 +1,7 @@
 package com.example.assistant.engineering;
 
+import java.util.Locale;
+
 /**
  * 请求级上下文（租户 / 用户 / 角色）——生产环境多租户隔离的载体。
  *
@@ -23,7 +25,7 @@ public final class RequestContext {
         Context c = HOLDER.get();
         c.tenantId = tenantId;
         c.userId = userId;
-        c.role = (role == null || role.isBlank()) ? "USER" : role;
+        c.role = (role == null || role.isBlank()) ? "user" : role.toLowerCase(Locale.ROOT);
     }
 
     public static String tenantId() {
@@ -46,6 +48,6 @@ public final class RequestContext {
     private static final class Context {
         String tenantId = "default";
         String userId = "anonymous";
-        String role = "USER";
+        String role = "user";
     }
 }

@@ -54,12 +54,12 @@ public class EngineeringAgentController {
         RequestContext.set(
                 body.getOrDefault("tenantId", "default"),
                 body.getOrDefault("userId", "anonymous"),
-                body.getOrDefault("role", "USER"));
+                body.getOrDefault("role", "user"));
 
-        // 输入清洗和安全校验
-        inputGuard.sanitize(body.get("question"));
+        // 输入清洗：去 HTML / 控制字符 / 截断超长，清洗结果才是真正送进 Agent 的内容
+        String question = inputGuard.sanitize(body.get("question"));
         try {
-            String answer = engineeringAgent.chat(sessionId, body.get("question")).content();
+            String answer = engineeringAgent.chat(sessionId, question).content();
             // 输出清洗和安全校验
             String safeAnswer = outputGuard.guard(answer);
             return Map.of("success", true, "answer", safeAnswer);

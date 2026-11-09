@@ -114,7 +114,7 @@ private List<TextSegment> splitIntoParentChild(List<Document> cleaned) {
 
 三个源码级的要点：
 
-> **参数单位是字符，不是 token**。`DocumentSplitters.recursive(int, int)` 的两个参数是**字符**（不传 `TokenCountEstimator` 时）。本项目 `child-chunk-size: 400` 一直是 400 **字符**——按 token 估算调参，中文场景下会偏差一倍以上（一个汉字 ≈ 0.6~1 token，看模型）。
+> **参数单位是字符，不是 token**。`DocumentSplitters.recursive(int, int)` 的两个参数是**字符**（不传 `TokenCountEstimator` 时）。本项目 `child-chunk-size: 400` 一直是 400 **字符**——按 token 估算调参，中文场景下会偏差一倍以上（一个汉字 ≈ 0.6～1 token，看模型）。
 >
 > **`DocumentSplitter.split` 接收 `Document` 不是 `TextSegment`**（源码：`List<TextSegment> split(Document)`）。所以"父块→子块"要把父块用 `Document.from(parent.text(), parent.metadata())` 包回去再切，这就是代码里那行的原因。
 >
@@ -284,7 +284,7 @@ public class EmbeddingScoringModel implements ScoringModel {
 
 逐题看，归零的四题是「什么是 RAG」「pgvector 是什么」「咖啡机多久除垢」「做一杯美式要多久」——按 12.3.4 那张逐题表，它们的正确答案原本排在第 3 和第 4 位，截断到 top2 后 rr 全部 0。而型号题（K-3000 开箱/报修）纹丝不动还是 1.0，连裸型号题「K-3000」原本在第 2 名也照旧 0.5。也就是说：**双编码器重排没能把语义题的第 3、第 4 名顶进前 2，截断只把它们的答案扔掉了**，而且砸得毫不均匀——语义弱命中挨刀，型号强命中无感。这正是 12.4.3 说的"双编码器重排增益有限"的数据形态——它算不出比向量召回更多的信息，于是在 topK 收紧时只剩下截断的代价。
 
-生产上想要"截断到 2~3 条还保得住答案"，需要的是真正的交叉编码器：`DashScopeRerankScoringModel`（配 key 即用）或官方 `langchain4j-onnx-scoring` 本地跑 bge-reranker。切换只动 `AdvancedRagConfig` 里那一个 `ScoringModel` Bean，下游零改动。DashScope 路线需要 API Key，不在本轮离线实测范围内，Ch13 的 A/B 配方里给了验证步骤。
+生产上想要"截断到 2～3 条还保得住答案"，需要的是真正的交叉编码器：`DashScopeRerankScoringModel`（配 key 即用）或官方 `langchain4j-onnx-scoring` 本地跑 bge-reranker。切换只动 `AdvancedRagConfig` 里那一个 `ScoringModel` Bean，下游零改动。DashScope 路线需要 API Key，不在本轮离线实测范围内，Ch13 的 A/B 配方里给了验证步骤。
 
 ## 12.5 混合检索（Hybrid：向量 + 关键词）
 

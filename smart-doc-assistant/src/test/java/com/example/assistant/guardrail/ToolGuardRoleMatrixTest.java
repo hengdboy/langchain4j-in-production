@@ -14,7 +14,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Ch21 / Ch16：ToolGuard 角色矩阵实测（2026-10-28 数据的固化版）。
  *
  * <p>关键语义：整表为空 = 全放行；列了角色 = 白名单逐个匹配，没列的工具一律拒绝；
- * {@code admin: []} 是"零权限"不是"不限制"；角色键大小写敏感。
+ * {@code admin: []} 是"零权限"不是"不限制"；<b>角色键大小写不敏感</b>（修复前敏感是 bug，
+ * 上下游各层统一用小写，ToolGuard 再加 toLowerCase(Locale.ROOT) 做防御性归一化）。
  *
  * @author hengdboy
  * @since v0.19
@@ -61,13 +62,14 @@ class ToolGuardRoleMatrixTest {
     }
 
     @Test
-    @DisplayName("未配置角色 deny by default；角色键大小写敏感（USER ≠ user）")
-    void unknownRoleAndCaseSensitivity() {
+    @DisplayName("未配置角色 deny by default；角色键大小写不敏感（USER → user 归一化后放行）")
+    void unknownRoleAndCaseInsensitive() {
         ToolGuard g = newGuard();
+        // guest 不在配置里 → deny by default
         assertThatThrownBy(() -> g.authorize("searchKnowledgeBase", "guest", "s5"))
                 .hasMessageContaining("无可用工具权限");
-        assertThatThrownBy(() -> g.authorize("searchKnowledgeBase", "USER", "s6"))
-                .hasMessageContaining("无可用工具权限");
+        // USER 大写 → toLowerCase() 归一化成 user → 放行
+        assertThatCode(() -> g.authorize("searchKnowledgeBase", "USER", "s6")).doesNotThrowAnyException();
     }
 
     @Test
