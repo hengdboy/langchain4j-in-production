@@ -5,6 +5,7 @@ import com.example.assistant.engineering.ToolCatalog.Entry;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 /**
@@ -13,7 +14,9 @@ import java.util.stream.Collectors;
  * <p>无论意图路由选出了哪些候选工具，最终暴露给模型前都必须过这道闸：
  * <ol>
  * <li><b>租户开通</b>：工具 {@code enabledTenants} 为空 = 全租户可用；否则必须包含当前 tenantId；</li>
- * <li><b>角色授权</b>：用户角色必须命中工具 {@code requiredRoles} 之一（空 = 任意角色可用）。</li>
+ * <li><b>角色授权</b>：先看代码里的粗粒度 {@code requiredRoles}（空 = 任意角色）；
+ * 再按 {@code chat.guardrail.tool.role-allowed-tools} 逐个匹配——这份细粒度白名单与执行期
+ * {@code ToolGuard} <b>共用同一个判定入口</b>，避免"模型看得见但一调就被拦"。</li>
  * </ol>
  *
  * <p>这是多租户 SaaS 防止"租户 A 调到了租户 B/管理员专属工具"的核心手段。
@@ -21,6 +24,13 @@ import java.util.stream.Collectors;
  * @author hengdboy
  */
 public class TenantToolFilter {
+
+    /** (工具名, 角色) → 是否允许；由 {@code ToolGuard::isToolAllowedForRole} 提供 */
+    private final BiPredicate<String, String> roleWhitelist;
+
+    public TenantToolFilter(BiPredicate<String, String> roleWhitelist) {
+        this.roleWhitelist = roleWhitelist;
+    }
 
     /**
      * 过滤候选工具列表。
@@ -37,6 +47,7 @@ public class TenantToolFilter {
         return candidates.stream()
                 .filter(e -> tenantEnabled(e.enabledTenants(), t))
                 .filter(e -> roleAllowed(e.requiredRoles(), r))
+                .filter(e -> roleWhitelist.test(e.spec().name(), r))
                 .collect(Collectors.toList());
     }
 

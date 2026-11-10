@@ -522,34 +522,38 @@ chat:
       blocked-tools: [executeShell, formatDisk]
       role-allowed-tools:
         user:     [searchKnowledgeBase]     # 普通用户只能查知识库
-        admin:    []                        # 空列表 = 该角色一个工具都不许调，不是"不限制"
+        admin:    []                        # 空列表 = 该角色不限制（静默放开，配置要 review）
         readonly: [searchKnowledgeBase]     # 只读角色同样只可查
 ```
 
-> **空列表不是"不限制"**——这是本项目实测踩到、且**注释与语义对不上**的地方。
-> `ToolGuard.checkRolePermission()` 的逻辑是：整张映射表为空 → 全部放行；
-> 只要列了某个角色，就按该角色的白名单逐个匹配，**白名单里没有的工具一律拒绝**。
-> 所以 `admin: []` 的实际效果是**管理员连 `searchKnowledgeBase` 都调不了**。
-> 本仓库实测（2026-10-28）：
+> **空列表表示"该角色不限制"**。
+> `ToolGuard.isToolAllowedForRole()` 的判定顺序：工具层关闭或整张映射表为空 → 全部放行；
+> 角色未配置 → deny by default；角色配置了空列表 → 不限制；其余按该角色白名单逐个匹配，
+> 白名单里没有的工具一律拒绝。所以 `admin: []` 的实际效果是**管理员可以使用全部工具**
+> （黑名单仍然优先）。
+>
+> 本仓库单测（2026-11-10 修正后）：
 >
 > | 调用 | 角色 | 结果 |
 > |---|---|---|
-> | `searchKnowledgeBase` | `user` |  放行 |
-> | `searchKnowledgeBase` | `readonly` |  放行 |
-> | `calculate` | `user` |  拒绝（角色 [user] 无权调用工具 [calculate]） |
-> | `calculate` | `admin` |  拒绝（角色 [admin] 无权调用工具 [calculate]） |
-> | `executeShell` | `admin` |  拦截（黑名单） |
-> | `searchKnowledgeBase` | `guest` |  拦截（角色无配置项 → deny by default） |
-> | `searchKnowledgeBase` | `USER` |  拦截（**大小写敏感**，键是小写 `user`） |
+> | `searchKnowledgeBase` | `user` | 放行 |
+> | `searchKnowledgeBase` | `readonly` | 放行 |
+> | `calculate` | `user` | 拒绝（角色 [user] 无权调用工具 [calculate]） |
+> | `calculate` | `admin` | 放行（空列表 = 不限制） |
+> | `executeShell` | `admin` | 拦截（黑名单优先） |
+> | `searchKnowledgeBase` | `guest` | 拦截（角色无配置项 → deny by default） |
+> | `searchKnowledgeBase` | `USER` | 放行（2026-11-09 起三个入口统一转小写） |
 >
-> 想让 admin 真不受限，只能**整段删掉 `role-allowed-tools` 配置**（让整张表为空），
-> 而不是写 `admin: []`。**配置注释和实现语义对不上，本身就是一个坑**——
-> 读配置时别信注释，去 `ToolGuard` 里看一眼实现。
+> 空列表属于**静默放开**：配置里多写一个 `[]`，该角色就拿到全部工具。权限最小化时
+> 用显式白名单；只有确实要全开的角色才写空列表。想让某个角色只拿部分工具，
+> 就老老实实列工具名，别用空列表省事。
 >
-> 表里 `USER` 那一行是 2026-10-28 的现场记录（当时精确匹配，大写直接被拒）。2026-11-09
-> 起 `RequestContext` / `TenantToolFilter` / `ToolGuard` 三个入口统一
-> `toLowerCase(Locale.ROOT)`，`USER`、`Admin` 都能落到小写键上；`guest` 这类真正没配置的
-> 角色仍然 deny by default。
+> 历史记录：2026-10-28 的实现在这里把空列表当成零权限，和 yml 注释相反，当时把
+> "注释与语义对不上"当作坑写进了本节；2026-11-10 按"空列表 = 不限制"修正，
+> 管理员高危工具确认流程（`submitReturnTicket` 等只给 admin）才走得通。
+> 表里 `USER` 那一行也是历史记录：2026-11-09 起 `RequestContext` / `TenantToolFilter` /
+> `ToolGuard` 三个入口统一 `toLowerCase(Locale.ROOT)`，`USER`、`Admin` 都能落到小写键上；
+> `guest` 这类真正没配置的角色仍然 deny by default。
 
 `GuardrailMetrics.java` 提供快照导出（便于 Controller 显示 / 测试断言）：
 
@@ -614,7 +618,7 @@ curl -X POST http://localhost:8090/api/agent/chat \
 | 6 | **银行卡误报** | 长数字（订单号）被当卡号——实测 16–19 位数字被涂，20 位以上反而安全 | 加 Luhn 校验或更严的上下文判断（21.6.1 有长度轴实测数据） |
 | 7 | **AiServices 直接绕过** | Controller 调 chatModel.chat() 跳过 Guardrail | Application 层 InputGuard.sanitize() 兜底 |
 | 8 | **实验性 API 漂移** | LangChain4j 升级后 Guardrail 接口变了 | 锁版本（pom 里写死）+ golden set 回归 |
-| 9 | **配置注释与实现语义对不上** | `admin: []` 注释写"不限制"，实现是"一个工具都不许调" | 配 RBAC 前先读 `ToolGuard.checkRolePermission()` 实现，别信注释 |
+| 9 | **空列表=静默放开** | `admin: []` 看着像"没配"，实际是"全部工具可用" | 权限最小化时写显式白名单；空列表只留给确实要全开的角色 |
 | 10 | **角色键大小写敏感** | 传 `role=USER`（大写）→ deny by default，用户莫名被拒 | 已在三个入口统一 `role.toLowerCase(Locale.ROOT)`；配置键全小写 |
 
 ## 21.11 本章小结
@@ -637,7 +641,7 @@ curl -X POST http://localhost:8090/api/agent/chat \
 | **GuardrailMetrics** | 埋点计数器：脱敏/拦截/拒绝/限流全部可观测 |
 | **误杀率** | 实测：10 条业务正常文本误杀 1 条（10.0%），5 条真 PII 漏杀 0 条 |
 | **银行卡规则生效区间** | 实测只咬 16–19 位纯数字（代码里有 `<16 放过` 的闸）；20 位以上因词边界反而安全 |
-| **`admin: []` 语义** | 空列表 = 该角色零权限，不是"不限制"；要放开得整段删掉角色映射 |
+| **`admin: []` 语义** | 空列表 = 该角色不限制（全部工具，黑名单仍优先）；角色未配置才 deny by default |
 
 ### 项目代码状态表（v0.20）
 

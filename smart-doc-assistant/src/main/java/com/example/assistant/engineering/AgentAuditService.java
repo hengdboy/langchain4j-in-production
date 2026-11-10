@@ -34,7 +34,8 @@ public class AgentAuditService {
     private final Map<String, List<AuditEntry>> auditLog = new ConcurrentHashMap<>();
 
     public record AuditEntry(String toolName, String arguments, String result,
-                             boolean failed, LocalDateTime startTime, LocalDateTime endTime) {}
+                             boolean failed, boolean blocked,
+                             LocalDateTime startTime, LocalDateTime endTime) {}
 
     /**
      * 拼复合审计 key：tenantId:userId:sessionId
@@ -47,24 +48,27 @@ public class AgentAuditService {
     }
 
     public void record(Object memoryId, String toolName, String arguments, String result,
-                       boolean failed, LocalDateTime startTime) {
+                       boolean failed, boolean blocked, LocalDateTime startTime) {
         record(memoryId, RequestContext.tenantId(), RequestContext.userId(),
-                toolName, arguments, result, failed, startTime);
+                toolName, arguments, result, failed, blocked, startTime);
     }
 
     /**
      * 显式租户/用户版本的记录入口——审计回调可能跑在虚拟线程上（executeToolsConcurrently），
      * ThreadLocal 里没有请求上下文，租户/用户必须由调用方从请求线程捕获的快照传入。
+     *
+     * @param blocked 是否被执行期护栏拒绝（与普通异常失败区分开，便于统计"越权尝试"）
      */
     public void record(Object memoryId, String tenantId, String userId, String toolName,
-                       String arguments, String result, boolean failed, LocalDateTime startTime) {
+                       String arguments, String result, boolean failed, boolean blocked,
+                       LocalDateTime startTime) {
         String key = tenantId + ":" + userId + ":" + memoryId;
         AuditEntry entry = new AuditEntry(toolName, arguments,
                 result != null && result.length() > 200 ? result.substring(0, 200) + "…" : result,
-                failed, startTime, LocalDateTime.now());
+                failed, blocked, startTime, LocalDateTime.now());
         auditLog.computeIfAbsent(key, k -> new ArrayList<>()).add(entry);
-        log.info("[审计] 租户={} 用户={} 会话={} 工具[{}] failed={} 耗时{}ms",
-                tenantId, userId, memoryId, toolName, failed,
+        log.info("[审计] 租户={} 用户={} 会话={} 工具[{}] failed={} blocked={} 耗时{}ms",
+                tenantId, userId, memoryId, toolName, failed, blocked,
                 java.time.Duration.between(startTime, entry.endTime()).toMillis());
     }
 

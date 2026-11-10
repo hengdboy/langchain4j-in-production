@@ -3,6 +3,7 @@ package com.example.assistant.config;
 import com.example.assistant.engineering.AgentAuditService;
 import com.example.assistant.engineering.DynamicToolProvider;
 import com.example.assistant.engineering.EngineeringAgent;
+import com.example.assistant.engineering.ToolErrorMessages;
 import com.example.assistant.guardrail.ToolGuard;
 import com.example.assistant.tools.CalculatorTools;
 import com.example.assistant.tools.RagLookupTool;
@@ -16,6 +17,7 @@ import dev.langchain4j.observability.api.listener.AiServiceListener;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
+import dev.langchain4j.service.tool.ToolExecutionErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -73,30 +75,33 @@ public class EngineeringAgentConfig {
                     // 租户/用户从 provideTools 在请求线程捕获的快照里取（DynamicToolProvider.contextFor）
                     Object memoryId = te.invocationContext().chatMemoryId();
                     String[] ctx = dynamicToolProvider.contextFor(memoryId);
+                    // 护栏拒绝会带 attributes.blocked=true（不发给模型），据此把"被拦"和"工具异常"分开
+                    boolean blocked = Boolean.TRUE.equals(te.attributes().get("blocked"));
                     if (ctx != null) {
                         agentAuditService.record(memoryId, ctx[0], ctx[1],
                                 te.request().name(), te.request().arguments(),
-                                te.result(), te.hasFailed(), te.startTime());
+                                te.result(), te.hasFailed(), blocked, te.startTime());
                     } else {
                         agentAuditService.record(memoryId,
                                 te.request().name(), te.request().arguments(),
-                                te.result(), te.hasFailed(), te.startTime());
+                                te.result(), te.hasFailed(), blocked, te.startTime());
                     }
                 })
                 .executeToolsConcurrently()                        // 并发执行
                 .maxToolCallingRoundTrips(10)
                 // 错误处理三件套：工具异常 / 参数解析失败 / 幻觉工具名，都兜底成友好文本引导模型纠正
-                .toolExecutionErrorHandler((throwable, context) -> {
+                // 只有实现了 ToolErrorVisibleToLlm 的业务异常才把消息交给模型；
+                // 其余内部异常回通用文案，原始异常由框架打 WARN（含堆栈）。
+                .toolExecutionErrorHandler(
+                        ToolExecutionErrorHandler.sendGenericMessageToLlmUnlessVisibleToLlm(
+                                "工具执行失败，请稍后重试或告知用户。"))
+                .toolArgumentsErrorHandler((error, context) -> {
                     String tool = context.toolExecutionRequest().name();
-                    log.warn("[错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
-                    return ToolErrorHandlerResult.text(
-                            "工具 [" + tool + "] 执行失败：" + throwable.getMessage()
-                                    + "。请修正参数后重试，或换一种方式回答。");
-                })
-                .toolArgumentsErrorHandler((throwable, context) -> {
-                    log.warn("[错误处理] 工具参数解析失败: {}", throwable.getMessage());
-                    return ToolErrorHandlerResult.text(
-                            "工具参数格式不正确：" + throwable.getMessage() + "。请重新生成参数。");
+                    // 原始异常只进日志；回给模型的是稳定分类 + 参数名
+                    log.warn("[错误处理] 工具[{}] 参数解析失败 session={} requestId={} {}: {}",
+                            tool, context.memoryId(), context.toolExecutionRequest().id(),
+                            error.getClass().getSimpleName(), error.getMessage());
+                    return ToolErrorHandlerResult.text(ToolErrorMessages.argumentError(tool, error));
                 })
                 .hallucinatedToolNameStrategy(request ->
                         ToolExecutionResultMessage.from(request,

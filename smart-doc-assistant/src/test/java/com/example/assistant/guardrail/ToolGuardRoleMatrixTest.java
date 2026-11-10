@@ -13,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Ch21 / Ch16：ToolGuard 角色矩阵实测（2026-10-28 数据的固化版）。
  *
- * <p>关键语义：整表为空 = 全放行；列了角色 = 白名单逐个匹配，没列的工具一律拒绝；
- * {@code admin: []} 是"零权限"不是"不限制"；<b>角色键大小写不敏感</b>（修复前敏感是 bug，
+ * <p>关键语义：整表为空 = 全放行；角色未配置 = deny by default；角色列了空列表 = 该角色不限制；
+ * 其余按白名单逐个匹配，没列的工具一律拒绝；<b>角色键大小写不敏感</b>（修复前敏感是 bug，
  * 上下游各层统一用小写，ToolGuard 再加 toLowerCase(Locale.ROOT) 做防御性归一化）。
  *
  * @author hengdboy
@@ -28,7 +28,7 @@ class ToolGuardRoleMatrixTest {
         props.getTool().setBlockedTools(List.of("executeShell", "formatDisk"));
         Map<String, List<String>> roles = new LinkedHashMap<>();
         roles.put("user", List.of("searchKnowledgeBase"));
-        roles.put("admin", List.of());                     // 空列表 = 零权限
+        roles.put("admin", List.of());                     // 空列表 = 不限制
         roles.put("readonly", List.of("searchKnowledgeBase"));
         props.getTool().setRoleAllowedTools(roles);
         props.getTool().setRateLimitPerMinute(30);
@@ -44,12 +44,11 @@ class ToolGuardRoleMatrixTest {
     }
 
     @Test
-    @DisplayName("admin: [] 是零权限——连 searchKnowledgeBase 都被拒")
-    void emptyAdminListDeniesEverything() {
+    @DisplayName("admin: [] 表示不限制——白名单外的工具也放行")
+    void emptyAdminListAllowsEverything() {
         ToolGuard g = newGuard();
-        assertThatThrownBy(() -> g.authorize("searchKnowledgeBase", "admin", "s3"))
-                .isInstanceOf(GuardrailViolation.class)
-                .hasMessageContaining("无权调用");
+        assertThatCode(() -> g.authorize("searchKnowledgeBase", "admin", "s3")).doesNotThrowAnyException();
+        assertThatCode(() -> g.authorize("calculate", "admin", "s3")).doesNotThrowAnyException();
     }
 
     @Test

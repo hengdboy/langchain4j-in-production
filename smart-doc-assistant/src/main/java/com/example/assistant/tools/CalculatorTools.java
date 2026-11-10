@@ -2,6 +2,7 @@ package com.example.assistant.tools;
 
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.exception.ToolErrorVisibleToLlm;
 
 /**
  * 新增：计算器工具
@@ -31,7 +32,7 @@ public class CalculatorTools {
             case MULTIPLY -> a * b;
             case DIVIDE -> {
                 if (b == 0) {
-                    throw new IllegalArgumentException("除数不能为零，请换个非零的第二个数字");
+                    throw ToolErrorVisibleToLlm.from("除数不能为零，请换个非零的第二个数字");
                 }
                 yield a / b;
             }
@@ -44,7 +45,7 @@ public class CalculatorTools {
             @P("总值") double total
     ) {
         if (total == 0) {
-            throw new IllegalArgumentException("总值不能为零");
+            throw ToolErrorVisibleToLlm.from("总值不能为零");
         }
         return (part / total) * 100;
     }

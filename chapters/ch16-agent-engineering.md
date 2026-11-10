@@ -29,6 +29,8 @@ Ch14 那版 Agent 是能用 curl 打穿的：问退款政策它去查知识库�
 动态工具注入：消息[你好，在吗] 租户=default 角色=USER 域=[] → 暴露 0 个工具：[]
 ```
 
+> **待重测**：这行是角色归一化与空工具日志拆分之前的输出。现在角色先过 `toLowerCase(Locale.ROOT)`（`USER` → `user`）；候选为空时打的是 `→ 路由未命中任何业务域，本轮不暴露工具`，不再出现"暴露 0 个工具"。
+
 暴露 0 个工具时模型没有可选项，政策类问题只能凭训练语料答。这行日志在 16.2.1 还会再出现一次，因为它是"漏召回"唯一能被看见的证据。
 
 这一章把这四件事补齐——工具按需暴露（`ToolProvider`）、调用留痕（审计回调）、异常兜底（三个 handler）、用量可算（listener + `tokenUsage`），再加上并发执行和记忆治理，凑成上线前的六件套。全部装在 `AiServices.builder()` 上，API 逐条对过 `1.22.0` 的 sources jar，项目编译通过。
@@ -152,44 +154,95 @@ public ToolProviderResult provideTools(ToolProviderRequest request) {
     // 租户/角色闸门（暴露时筛选）
     List<ToolCatalog.Entry> allowed = tenantFilter.filter(candidates, tenantId, role);
 
+    // 两种“空”要分开：路由没命中是正常情况；候选被权限闸门全筛掉是另一回事
+    if (allowed.isEmpty()) {
+        if (candidates.isEmpty()) {
+            log.info("动态工具注入：消息[{}] 租户={} 角色={} → 路由未命中任何业务域，本轮不暴露工具",
+                    shorten(text), tenantId, role);
+        } else {
+            log.warn("动态工具注入：消息[{}] 租户={} 角色={} 域={} → 候选 {} 个工具全被租户/角色闸门筛掉：{}",
+                    shorten(text), tenantId, role, domains, candidates.size(),
+                    candidates.stream().map(e -> e.spec().name()).toList());
+        }
+        return ToolProviderResult.builder().build();
+    }
+
+    if (allowed.size() < candidates.size()) {
+        List<String> denied = candidates.stream()
+                .filter(e -> !allowed.contains(e))
+                .map(e -> e.spec().name())
+                .toList();
+        log.info("动态工具注入：消息[{}] 租户={} 角色={} → 租户/角色闸门筛掉 {} 个工具：{}",
+                shorten(text), tenantId, role, denied.size(), denied);
+    }
+
     Map<ToolSpecification, ToolExecutor> selected = new HashMap<>();
     for (ToolCatalog.Entry e : allowed) {
         // 执行期护栏：用代理 executor 包裹真实执行器，
         // 在工具真正执行前先过 ToolGuard（黑名单/限流/角色白名单）。
-        // 注意：此处只在「暴露时」按租户/角色筛选（TenantToolFilter），
-        // ToolGuard 是「执行时」的兜底拦截——即使模型通过其他方式拿到了工具名，
+        // ToolGuard 是执行时兜底——即使模型通过其他方式拿到了工具名，
         // 没有相应权限也会被拦死。授权用的是请求线程捕获的角色，不是执行线程的 ThreadLocal。
-        ToolExecutor guarded = (toolExecutionRequest, memoryId) -> {
-            String toolName = e.spec().name();
-            String[] ctx = memoryId == null ? null : requestContexts.get(memoryId);
-            String execRole = ctx != null ? ctx[2] : role;
-            String execUser = ctx != null ? ctx[1] : String.valueOf(memoryId);
-            try {
-                toolGuard.authorize(toolName, execRole, execUser);
-            } catch (GuardrailViolation ex) {
-                log.warn("工具执行被护栏拦截 [{}] 角色={}：{}", toolName,
-                        execRole, ex.getMessage());
-                // 拦截后不执行真实工具，返回提示文本交由模型向用户解释
-                return "操作被安全策略拦截：" + ex.getMessage();
-            }
-            return e.executor().execute(toolExecutionRequest, memoryId);
-        };
-        selected.put(e.spec(), guarded);
+        selected.put(e.spec(), guardedExecutor(e, role));
     }
 
     log.info("动态工具注入：消息[{}] 租户={} 角色={} 域={} → 暴露 {} 个工具：{}",
-            text.length() > 20 ? text.substring(0, 20) + "…" : text,
+            shorten(text),
             tenantId, role, domains,
             selected.size(), selected.keySet().stream().map(ToolSpecification::name).toList());
     return ToolProviderResult.builder().addAll(selected).build();
 }
+
+private static String shorten(String text) {
+    return text.length() > 20 ? text.substring(0, 20) + "…" : text;
+}
+
+/** 执行期护栏代理：拒绝时返回 isError=true + blocked 属性，供模型分辨失败、审计留痕 */
+ToolExecutor guardedExecutor(ToolCatalog.Entry entry, String roleAtExposure) {
+    return new ToolExecutor() {
+        @Override
+        public String execute(ToolExecutionRequest request, Object memoryId) {
+            authorize(request.name(), memoryId, roleAtExposure);
+            return entry.executor().execute(request, memoryId);
+        }
+
+        @Override
+        public ToolExecutionResult executeWithContext(ToolExecutionRequest request,
+                                                      InvocationContext context) {
+            Object memoryId = context == null ? null : context.chatMemoryId();
+            try {
+                authorize(request.name(), memoryId, roleAtExposure);
+            } catch (GuardrailViolation ex) {
+                log.warn("工具执行被护栏拦截 [{}] reason={}：{}", request.name(),
+                        ex.getCode(), ex.getMessage());
+                return ToolExecutionResult.builder()
+                        .isError(true)
+                        .resultText("工具调用被拒绝：" + ex.getMessage()
+                                + "。不要编造或推测该工具应返回的数据，请直接告知用户当前无权完成该操作。")
+                        .attributes(Map.of("blocked", true, "blockReason", ex.getCode()))
+                        .build();
+            }
+            return entry.executor().executeWithContext(request, context);
+        }
+
+        private void authorize(String toolName, Object memoryId, String fallbackRole) {
+            String[] ctx = memoryId == null ? null : requestContexts.get(memoryId);
+            String capturedRole = (ctx != null ? ctx[2] : fallbackRole);
+            String execRole = (capturedRole == null || capturedRole.isBlank())
+                    ? "user" : capturedRole.toLowerCase(Locale.ROOT);
+            String execUser = ctx != null ? ctx[1] : String.valueOf(memoryId);
+            toolGuard.authorize(toolName, execRole, execUser);
+        }
+    };
+}
 ```
 
-`requestContexts.put(...)` 这行不是设计出来的，是 16.9.1 那次修出来的；没有它，代理 executor 里的 `requestContexts.get(memoryId)` 永远拿到 null。租户/角色闸门那一步传的是 `tenantId`/`role` 两个局部变量而不是 `RequestContext.tenantId()`——`provideTools` 本身还在请求线程上，读 ThreadLocal 也不算错，但谁把它挪进异步分支它就立刻静默失效，捕获一次、往后全用快照，等于把坑堵在写法上。`selected.put(e.spec(), guarded)` 放出去的是代理而不是 `e.executor()`，这一步决定 ToolGuard 到底是"暴露时筛一次"还是"执行时真拦"。
+`requestContexts.put(...)` 这行不是设计出来的，是 16.9.1 那次修出来的；没有它，代理 executor 里的 `requestContexts.get(memoryId)` 永远拿到 null。租户/角色闸门那一步传的是 `tenantId`/`role` 两个局部变量而不是 `RequestContext.tenantId()`——`provideTools` 本身还在请求线程上，读 ThreadLocal 也不算错，但谁把它挪进异步分支它就立刻静默失效，捕获一次、往后全用快照，等于把坑堵在写法上。`selected.put(e.spec(), guardedExecutor(e, role))` 放出去的是代理而不是 `e.executor()`，这一步决定 ToolGuard 到底是"暴露时筛一次"还是"执行时真拦"。
+
+空工具也不再是"静默返回一个空集合"：候选为空说明路由压根没命中，`info` 一行即可；候选有、全被权限闸门筛掉是另一回事，用 `warn` 并把工具名列出来。这两种情况在旧日志里都长成"暴露 0 个工具"，排障时分不出是路由漏召回还是权限收紧。
 
 > **坑点**：`ToolProviderResult.Builder` 的方法是 **`addAll(Map<ToolSpecification, ToolExecutor>)`** 或 `add(spec, executor)`，没有 `tools(...)`。`ToolExecutor` 在 `dev.langchain4j.service.tool` 包（不在 `agent.tool.execution`）。`ChatModel` 没有 `generate(String)`，轻量分类用 `chat(String)`（返回 `String`）。
 
-**执行期护栏（ToolGuard 包裹）——"看得见"不等于"有权跑"**。上面那段 `guarded` 就是它：真正执行前再过一次 `ToolGuard`（黑名单 / 角色白名单 / 限流，Ch21 的组件在这里提前上岗），被拦就返回 `操作被安全策略拦截：…` 的提示文本，交由模型向用户解释。它和暴露那道闸门是**两层正交的闸门**：`TenantToolFilter` 管"模型看得见哪些工具"（暴露时），`ToolGuard` 管"这个角色跑了才算数"（执行时兜底）——即使模型通过提示注入点名叫工具，没有权限也执行不了。16.10 里角色边界那条用例有这组边界的实测。
+**执行期护栏（ToolGuard 包裹）——"看得见"不等于"有权跑"**。上面那段 `guardedExecutor` 就是它：真正执行前再过一次 `ToolGuard`（黑名单 / 角色白名单 / 限流，Ch21 的组件在这里提前上岗），被拦就返回 `isError=true` 的 `工具调用被拒绝：…`，`blocked` / `blockReason` 放进 `attributes` 供审计消费，模型则被告知"不要编造，直接说明无权"。它和暴露那道闸门是**两层正交的闸门**：`TenantToolFilter` 管"模型看得见哪些工具"（暴露时），`ToolGuard` 管"这个角色跑了才算数"（执行时兜底）——即使模型通过提示注入点名叫工具，没有权限也执行不了。16.10 里角色边界那条用例有这组边界的实测。
 
 **真实效果**（2026-10-28 实测）：问"退款政策里运费谁出？再算 500×8"（`tenantA/u1001/role=user`），注入日志 `域=[refund, calc] → 暴露 3 个工具`——检索工具正常执行并给出完整答案，`calculate` 被 ToolGuard 以 `角色 [user] 无权调用工具 [calculate]` 拦下，审计如实留痕。
 
@@ -358,24 +411,48 @@ Agent 跑在生产，**工具不可能永远成功**：参数格式错、服务�
 
 ```java
 // 错误处理三件套：工具异常 / 参数解析失败 / 幻觉工具名，都兜底成友好文本引导模型纠正
-.toolExecutionErrorHandler((throwable, context) -> {
+.toolExecutionErrorHandler(
+        ToolExecutionErrorHandler.sendGenericMessageToLlmUnlessVisibleToLlm(
+                "工具执行失败，请稍后重试或告知用户。"))
+.toolArgumentsErrorHandler((error, context) -> {
     String tool = context.toolExecutionRequest().name();
-    log.warn("[错误处理] 工具[{}]执行异常: {}", tool, throwable.getMessage());
-    return ToolErrorHandlerResult.text(
-            "工具 [" + tool + "] 执行失败：" + throwable.getMessage()
-                    + "。请修正参数后重试，或换一种方式回答。");
-})
-.toolArgumentsErrorHandler((throwable, context) -> {
-    log.warn("[错误处理] 工具参数解析失败: {}", throwable.getMessage());
-    return ToolErrorHandlerResult.text(
-            "工具参数格式不正确：" + throwable.getMessage() + "。请重新生成参数。");
+    // 原始异常只进日志；回给模型的是稳定分类 + 参数名
+    log.warn("[错误处理] 工具[{}] 参数解析失败 session={} requestId={} {}: {}",
+            tool, context.memoryId(), context.toolExecutionRequest().id(),
+            error.getClass().getSimpleName(), error.getMessage());
+    return ToolErrorHandlerResult.text(ToolErrorMessages.argumentError(tool, error));
 })
 .hallucinatedToolNameStrategy(request ->
         ToolExecutionResultMessage.from(request,
                 "工具 [" + request.name() + "] 不存在，请只使用系统提供的工具。"))
 ```
 
-**实测"工具抛异常"场景**（2026-10-28，问"帮我算一下 5 除以 0 等于多少"）：
+`ToolErrorMessages.argumentError` 只回三类信息：工具名、错误分类（缺参 / 类型或取值 / JSON 非法）、下一步动作。原始异常消息（`Argument "a" is not convertable to double...`、Jackson 的解析位置、下游返回）只留在 WARN 日志里。原因在框架自己的 javadoc 里：异常消息是写给开发者的，可能带文件路径、SQL、参数原值，进模型后会顺聊天记忆和回答一路传播。
+
+> **第二个 provider 陷阱：参数错误会被 execution handler 接走**。`toolArgumentsErrorHandler` 只接 `ToolArgumentsException`；而 provider 自建的 `DefaultToolExecutor` 默认 `wrapToolArgumentsExceptions=false`，缺参、类型错误、坏 JSON 会以原始异常上抛，框架按"执行异常"分流。修法和 `propagate` 一样，在 builder 上显式打开：
+>
+> ```java
+> ToolExecutor executor = DefaultToolExecutor.builder()
+>         .object(tool)
+>         .originalMethod(m)
+>         .methodToInvoke(m)
+>         .wrapToolArgumentsExceptions(true)      // ← 参数错误才会进 arguments handler
+>         .propagateToolExecutionExceptions(true)
+>         .build();
+> ```
+>
+> 不开这一项时，配置看起来齐全，日志里却永远是"执行失败"，arguments handler 从未被调用。
+
+工具侧的业务异常要显式声明"这条消息可以给模型看"，否则统一回通用文案：
+
+```java
+// CalculatorTools：业务上可解释的失败
+throw ToolErrorVisibleToLlm.from("除数不能为零，请换个非零的第二个数字");
+```
+
+`sendGenericMessageToLlmUnlessVisibleToLlm` 的规则：实现了 `ToolErrorVisibleToLlm` 的异常把 `messageForLlm()` 交给模型；其余异常（SQL、NPE、下游 5xx）只回一句通用文案，原始异常和堆栈进 WARN 日志。这样"文案可控"和"不泄内部细节"同时成立。
+
+**实测"工具抛异常"场景**（2026-10-28，问"帮我算一下 5 除以 0 等于多少"）——**待重测**：
 
 ```
  [错误处理] 工具[calculate]执行异常: 除数不能为零，请换个非零的第二个数字 ← handler 接管，日志留痕
@@ -384,6 +461,8 @@ Agent 跑在生产，**工具不可能永远成功**：参数格式错、服务�
 → 模型拿到友好文本后体面收场：
 "计算器返回了错误，这个结果是符合数学定义的：5 ÷ 0 没有意义，即结果不存在……"   ← HTTP 200
 ```
+
+> **2026-11-10 待重测**：上面这轮输出早于本次错误处理改造。业务异常现在实现 `ToolErrorVisibleToLlm`，由 `sendGenericMessageToLlmUnlessVisibleToLlm` 直接放行，**handler 不再为它打 WARN**——框架只给"没标记、不能给模型看"的异常打 WARN + 堆栈。因此 `[错误处理]` 那行不会再现；`failed=true` 和模型收到"除数不能为零"这两点不变。重跑后替换本段输出。
 
 > **修复实录（2026-10-28）：provider 供给的工具，handler 会静默失明**。修这条实测时抓到的：第一次跑，`[错误处理]` 日志没出现、审计 `failed=false`——handler 根本没收到异常。根因在**执行器是谁建的**：`AiServices.tools(...)` 路径下框架自建执行器，`propagateToolExecutionExceptions=true`（`ToolService.java:243`），异常上抛给 handler；而 **`ToolProvider` 路径下执行器是 provider 自己建的——`new DefaultToolExecutor(...)` 的裸构造默认 `propagate=false`（`DefaultToolExecutor.java:63/71/81/130` 四条构造路径全是 false），异常就地转成 `isError=true` 的文本**，走到模型的"工具异常三层机制"第一层就停了（Ch14 14.4.5）。修法与框架同款，`DynamicToolProvider.java:91-96` 现在这么建：
 >
@@ -396,7 +475,7 @@ Agent 跑在生产，**工具不可能永远成功**：参数格式错、服务�
 >         .build();
 > ```
 >
-> 改完之后异常能上抛、handler 的 WARN 日志会打、审计的 `failed` 才是真的。**给 AiServices 配了错误处理三件套、工具却从 ToolProvider 来的读者，几乎必踩这一条**——它的表现不是报错，而是"兜底配置从未生效"的静默。
+> 改完之后异常能上抛、handler 会被调用、审计的 `failed` 才是真的（WARN 日志只给未标记 `ToolErrorVisibleToLlm` 的隐藏异常打）。**给 AiServices 配了错误处理三件套、工具却从 ToolProvider 来的读者，几乎必踩这一条**——它的表现不是报错，而是"兜底配置从未生效"的静默。
 
 同时审计把这次调用标记为 **`failed=true`**（`ToolExecution.hasFailed()`）——错误既被兜底，又被留痕。对照 Ch14 的默认行为：不配 handler 时同步模式的默认（`sendExceptionMessageToLlm`）兜的是同样的底，自定义 handler 的增量价值在**文案可控**（带工具名、带下一步指引）和**审计/告警挂钩**（这里打了 WARN 日志、审计记了 failed）。
 
@@ -611,9 +690,11 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 #    ① 的日志里审计已带 tenantA/u1001（修复前是 default/anonymous）
 ```
 
-这五组覆盖的是"注入 → 执行 → 留痕 → 归属"这条主链路。另外三个钩子——`toolArgumentsErrorHandler`（参数解析失败）、`hallucinatedToolNameStrategy`（幻觉工具名）、`maxToolCallingRoundTrips` 超限——本轮没有构造出触发条件，所以 16.6 那张表只有第一行带了实测。欠账记在 16.11。
+这五组覆盖的是"注入 → 执行 → 留痕 → 归属"这条主链路。错误处理的两个 handler 现在有自动化回归：`ToolErrorRoutingTest` 用脚本化 `ChatModel`（不发网络请求）锁住"缺参 / 类型错 / 坏 JSON 进 arguments handler、业务异常按原文放行、内部异常只回通用文案"。仍未实测的是 `hallucinatedToolNameStrategy`（幻觉工具名）和 `maxToolCallingRoundTrips(10)` 超限——这两条要模型配合才触发，欠账记在 16.11。
 
-> 生产里 `tenantId/userId/role` 应从 **JWT/网关头** 提取（本项目简化放到请求体演示）。另外留意角色值的大小写：`ToolGuard` 的白名单键是小写 `user/admin/readonly`，传 `USER` 会落进"deny by default"分支——本项目实测踩过（第一个用例之前那轮）。配置里 `admin: []`（空列表）的语义是**全禁**而不是"不限制"：这套实现是"整表为空才全放、列了角色就按白名单、白名单没列的工具一律拒绝"（`ToolGuard.java:81-97`，`roleMap.isEmpty()` 才 return，空列表走到 `!allowed.contains(toolName)` 必拦）。想让 admin 真不受限，只能整段删掉 `role-allowed-tools` 配置。`application.yml:104` 那句注释写的是"空列表 → 该角色不限制"，和实现相反——注释和语义对不上的配置，本身就是坑。
+> **2026-11-10 复核注记**：暴露层白名单改为与执行层同源后，②③ 里"calculate 被执行期拦截并入库"的旧输出已不适用——`user` 现在根本看不到 `calculate`，强制要求调用时审计也是 0 条（模型要么心算作答，要么说明工具未提供）；④ 里"需先关掉执行期护栏"也不再必要，因为 `admin: []` 的空列表权限已改为"不限制"。上述旧实测输出待重测，别拿它们当现行为。
+
+> 生产里 `tenantId/userId/role` 应从 **JWT/网关头** 提取（本项目简化放到请求体演示）。另外留意角色值的大小写：`ToolGuard` 的白名单键是小写 `user/admin/readonly`，传 `USER` 会落进"deny by default"分支——本项目实测踩过（第一个用例之前那轮）。配置里 `admin: []`（空列表）的语义是**该角色不限制**：整张映射表为空同样全放，只有角色未配置（如 `guest`）才 deny by default。这条判定由 `ToolGuard.isToolAllowedForRole()` 单点定义，暴露层 `TenantToolFilter` 和执行层 `authorize` 共用同一份，避免"模型看得见、一调就被拦"。注意空列表是**静默放开**——配置里多写一个 `[]`，该角色就拿到全部工具；做权限最小化时要写显式白名单，别用空列表。（历史上这版实现曾把空列表判成零权限，和注释相反；2026-11-10 修正为与注释、与 admin 高危工具确认流程一致。）
 
 ## 16.11 这版还没做的事
 
@@ -629,11 +710,11 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 
 **成本账里没有意图路由那一次调用**。`IntentRouter.java:60` 每次请求都要跑一遍 `routerModel.chat(prompt)`，而 listener 只挂在 AiService 的事件流上，这笔开销落在 16.5 那行日志之外。要么给路由单独包一层计时和 `ChatResponse.tokenUsage()` 统计，要么把分类降级成 embedding/关键词为主、只在低置信时才升级到 LLM。
 
-**三个兜底钩子只实测了一个，且这套东西没有自动化回归**。16.10 覆盖的是主链路；`toolArgumentsErrorHandler` 要模型吐出非法 JSON 才触发，`hallucinatedToolNameStrategy` 我这轮没触发过，`maxToolCallingRoundTrips(10)` 超限之后抛什么异常、怎么收场也没有记录。
+**两个兜底钩子还没有实测，回归也只覆盖了一半**。`toolArgumentsErrorHandler` 和 `toolExecutionErrorHandler` 已有 `ToolErrorRoutingTest` 五个用例锁住路由与文案（参数错误、业务异常、内部异常各归各位）；`hallucinatedToolNameStrategy` 我这轮没触发过，`maxToolCallingRoundTrips(10)` 超限之后抛什么异常、怎么收场也没有记录。
 
-更基础的是 `src/test/` 下只有 `ToolGuardRoleMatrixTest` 这一个纯单测，`TenantToolFilter`、`IntentRouter`、`DynamicToolProvider`、`AgentAuditService` 都还没有测试，而 `TenantToolFilter` 是本章自己标的"安全红线"——改错一处角色大小写（16.2 那个坑）照样不会有任何人拦住你。
+更基础的是 `src/test/` 下现在有四组纯单测——`ToolGuardRoleMatrixTest`（角色矩阵）、`ToolErrorRoutingTest`（错误分流）、`TenantToolFilterTest`（暴露层与执行层同源）、`GuardedToolExecutorTest`（拦截返回 `isError` + `blocked`）；`IntentRouter`、`DynamicToolProvider` 的编排链（路由→域映射→闸门）和 `AgentAuditService` 仍然没有测试，改错一处域映射或意图关键词，照样不会有任何人拦住你。
 
-最小补法是一组不依赖模型的纯单测：角色 × 租户矩阵，断言"哪个工具在哪个 `(tenant, role)` 下被暴露"。
+剩下的最小补法是给 `DynamicToolProvider.provideTools` 一组不依赖模型的编排测试：假 `ToolCatalog` + 假 router，断言"问题 → 域 → 暴露集合"这条链，以及并发派发后的审计归属。
 
 四件小事，够不上单独的坑点，但都会咬人。
 
@@ -658,6 +739,8 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 | **两层工具闸门** | `TenantToolFilter`（暴露时，模型看得见什么）与 `ToolGuard`（执行时，跑了才算数）正交叠加 |
 | **坑：并发吞上下文** | `executeToolsConcurrently` 把执行/回调挪到虚拟线程，ThreadLocal 请求上下文全丢——provideTools 时刻捕获快照（16.9.1） |
 | **坑：provider 吞异常** | ToolProvider 自建执行器默认 `propagate=false`，AiServices 的错误 handler 收不到工具异常——builder 显式开（16.6） |
+| **坑：参数错误分流** | 同一个 builder 还要开 `wrapToolArgumentsExceptions(true)`，否则缺参/类型错/坏 JSON 不是 `ToolArgumentsException`，会被 execution handler 接走，arguments handler 形同虚设（16.6） |
+| **坑：异常消息外泄** | 原始 `getMessage()` 可能带 SQL、路径、下游响应；用 `sendGenericMessageToLlmUnlessVisibleToLlm` + `ToolErrorVisibleToLlm` 只放行业务文案，其余回通用话术（16.6） |
 | **坑：ThreadLocal 清理** | 用 ThreadLocal 传租户/用户上下文，必须在请求结束调 `RequestContext.clear()`（内部是 `HOLDER.remove()`，`RequestContext.java:42-43`），否则线程池复用会串租户（16.9） |
 | **坑：角色大小写** | 曾因精确匹配 + 默认大写 `USER` 导致静默全禁；现已统一 `toLowerCase(Locale.ROOT)`，闸门再兜一层 `equalsIgnoreCase`（16.2） |
 | **没做完：记忆隔离** | 审计 key 已修成 `tenantId:userId:sessionId`，ChatMemory 的 key 还是裸 `sessionId`——同 ID 的两个租户共用会话上下文（16.3、16.11） |
@@ -665,16 +748,20 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 
 ### 项目代码状态（v0.20）
 
-- **`engineering/DynamicToolProvider.java`**（动态工具-编排）：**新增/重写（2026-10-28 两处修复，2026-11-09 角色归一化）**，ToolProvider 实现，编排意图路由→域映射→租户闸门→ToolGuard 包裹；修复并发上下文丢失（provideTools 快照）与执行器吞异常（propagate=true）；执行期角色统一 `toLowerCase(Locale.ROOT)`
+- **`engineering/DynamicToolProvider.java`**（动态工具-编排）：**新增/重写（2026-10-28 两处修复，2026-11-09 角色归一化）**，ToolProvider 实现，编排意图路由→域映射→租户闸门→ToolGuard 包裹；修复并发上下文丢失（provideTools 快照）与执行器吞异常（`propagate=true` + `wrapToolArgumentsExceptions=true`）；执行期角色统一 `toLowerCase(Locale.ROOT)`
 - **`engineering/ToolCatalog.java`**（动态工具-目录）：**新增**，工具按 domain/requiredRoles/enabledTenants 登记
 - **`engineering/IntentRouter.java`**（动态工具-路由）：**新增**，轻量 LLM 意图分类（关键词兜底），替换 contains
 - **`engineering/TenantToolFilter.java`**（动态工具-闸门）：**新增（2026-11-09 角色归一化）**，按 tenantId/role 过滤（安全红线）；入口统一小写，`roleAllowed` 用 `equalsIgnoreCase` 兜底
 - **`engineering/RequestContext.java`**（租户上下文）：**新增（2026-11-09 角色归一化）**，ThreadLocal 承载 tenantId/userId/role，请求级隔离；`set` 里做 `toLowerCase(Locale.ROOT)`，缺省 `user`
+- **`engineering/ToolErrorMessages.java`**（错误文案）：**新增（2026-11-10）**，把参数解析异常分类成"缺参 / 类型或取值 / JSON 非法"三类文案，原始异常只进 WARN 日志
 - **`engineering/AgentAuditService.java`**（审计）：**新增/重写（2026-10-28 修复查询侧 key）**，afterToolExecution 留痕，复合 key `tenantId:userId:sessionId` + 显式租户/用户的 record 重载与 getAudit + 按租户/用户查询
 - **`engineering/EngineeringAgent.java`**（助手）：**新增**，工程化 Agent 接口（@MemoryId + @UserMessage → Result）
-- **`config/EngineeringAgentConfig.java`**（配置）：**新增（2026-10-28 审计改走上下文快照）**，六件套装配（toolProvider 含 routerModel + 审计 + 并发 + 错误处理三件套 + listener 含 tokenUsage）
+- **`config/EngineeringAgentConfig.java`**（配置）：**新增（2026-10-28 审计改走上下文快照；2026-11-10 错误处理改造）**，六件套装配（toolProvider 含 routerModel + 审计 + 并发 + 错误处理三件套 + listener 含 tokenUsage）；参数错误改走分类文案，执行异常用 `sendGenericMessageToLlmUnlessVisibleToLlm`
 - **`controller/EngineeringAgentController.java`**（接口）：**新增（2026-10-28 audit 加租户参数；2026-11-09 接入输入/输出护栏）**，`POST /api/agent/engineering/chat`（入参带 tenantId/userId/role）+ `GET /api/agent/audit?tenantId=&userId=`；`inputGuard.sanitize` 的返回值现在真正作为问题传入 Agent，不再丢弃
 - **`guardrail/ToolGuard.java` + `ToolGuardRoleMatrixTest.java`**（工具护栏）：**v0.20 新增**，执行期黑名单/限流/角色白名单；角色键统一小写后再查表，矩阵测试覆盖 `USER`/`user`/未知角色
+- **`test/engineering/ToolErrorRoutingTest.java`**（错误路由回归）：**新增（2026-11-10）**，脚本化 ChatModel + 真实 AiServices，5 个用例锁住 arguments/execution handler 分流与文案脱敏，零网络依赖
+- **`test/engineering/TenantToolFilterTest.java`**（暴露层回归）：**新增**，7 个用例断言"暴露集合 == `ToolGuard` 放行判定"，覆盖 `USER` 大小写、`admin: []`、未配置角色 deny、`requiredRoles` 交集、工具层总开关
+- **`test/engineering/GuardedToolExecutorTest.java`**（执行期护栏回归）：**新增**，5 个用例锁住拦截返回 `isError=true` + `blocked`/`blockReason`、限流拒绝可区分、放行路径正常委托
 - **`config/AiServiceConfig.java` / `application.yml`**（记忆）：**零改动**——`maxMessages(6)` 窗口 + `ttl-days: 30` 本就是 Ch05 落地的配置（16.7 讲解）。欠账也在这里：memoryId 仍是裸 `sessionId`，没带租户
 - **`assistant/ResearchAgent.java` / `config/AgentConfig.java`**（旧 Agent）：**零改动**——工程化 Agent 是独立新增，不破坏 Ch14
 
@@ -682,7 +769,7 @@ curl -X POST http://localhost:8090/api/agent/engineering/chat \
 
 1. 删掉 `IntentRouter.fallbackByKeyword` 里某个域（比如 calc）的关键词，问一句"128 乘以 7"，看 LLM 分类还会不会命中 calc；再把 `classifyByLlm` 整段注释掉、只留关键词，问一句"你好"，数一下日志里暴露了几个工具。两组日志摆在一起，漏召回和误召回各罚多少就看得见了。
 2. 把 `DynamicToolProvider.java:116` 附近的 `requestContexts.put(...)` 注释掉，用两个会话分别以 `tenantA/u1001`、`tenantB/u2002` 问需要两个工具的问题，再查 `GET /api/agent/audit?tenantId=tenantA`。`[审计]` 那两行会变成 `租户=default 用户=anonymous`：`contextFor` 返回 null，回调落到 `AgentAuditService.java:49-53` 那个读 ThreadLocal 的重载，而它此刻正在虚拟线程上。恢复注释重问一遍，对比两次的第一行。只发单工具的问题撞不出这个 bug——单工具不派发，ThreadLocal 还在。
-3. 问"5 除以 0"让 `calculate` 抛一次异常，记下 `[错误处理]` 那行日志和审计里的 `failed=true`；再把 `DynamicToolProvider.java:91-96` 换回裸构造 `DefaultToolExecutor.builder().object(tool).methodToInvoke(m).build()`，重问一次。这回异常被就地包成 `isError` 文本喂回模型，`[错误处理]` 不打、`failed` 也不是 true，而最终答案看着还是对的——16.6 说的静默失明就是这个形状。
+3. 先跑 `mvn -Dtest=ToolErrorRoutingTest test` 拿到 5 个绿，再删掉 `DynamicToolProvider` 里的 `.wrapToolArgumentsExceptions(true)` 重跑——前三个参数错误用例会变红，arguments handler 根本没被调用。把它加回去，再删掉 `.propagateToolExecutionExceptions(true)`，后两个用例的 `executionHandled` 同样变 false：异常被就地包成 `isError` 文本，handler 收不到。两次变红就是 16.6 那两个 provider 陷阱的活标本。
 4. `AiServiceConfig.java:33` 的 `maxMessages(6)` 改成 `2`，连问四轮、每轮都带一个工具，第五轮追问"我第一句问的是什么"。窗口数的是消息条数，工具结果也占名额，带工具的轮次把窗口吃满得比想象中快。想知道裁掉的到底是哪几条，在 `chatMemoryProvider` 那行打断点，或者把 `memory.messages()` 的 size 和前一条消息打进日志。
 5. `executeToolsConcurrently()` 对"先查知识库、再根据结果算数"这种有依赖的任务不产生并行：模型要拿到 `searchKnowledgeBase` 的结果填进下一轮请求，才知道该给 `calculate` 什么参数，这条链必然串行，而且每轮只有一个工具，连派发都不会发生（16.4）。被并行的是模型在同一轮里同时发出的多个请求，16.4 那两行 `[virtual-76]`、`[virtual-78]` 属于这一类。
 

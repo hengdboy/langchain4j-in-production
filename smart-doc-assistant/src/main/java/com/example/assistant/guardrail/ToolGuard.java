@@ -62,6 +62,32 @@ public class ToolGuard {
         checkRolePermission(toolName, role);
     }
 
+    /**
+     * 角色白名单判定（不抛异常、不计限流）——暴露层 {@code TenantToolFilter} 与执行层
+     * {@link #authorize} 共用同一份 {@code role-allowed-tools}。
+     *
+     * <p>暴露层如果自己另写一套规则，就会出现"模型看得见、一调就被拦"的白跑一轮；
+     * 这里把判定抽成单一入口，暴露层用它筛，执行层用它兜底。
+     *
+     * <p>语义与 {@link #authorize} 一致：工具层关闭或整张表未配置 → 不限；
+     * 角色未配置（deny by default）→ 拒绝；角色配置空列表 → 该角色不限制；
+     * 否则工具必须在该角色列表内。
+     */
+    public boolean isToolAllowedForRole(String toolName, String role) {
+        if (!properties.getTool().isEnabled()) {
+            return true;
+        }
+        Map<String, List<String>> roleMap = properties.getTool().getRoleAllowedTools();
+        if (roleMap == null || roleMap.isEmpty()) {
+            return true;
+        }
+        List<String> allowed = roleMap.get(normalizeRole(role));
+        if (allowed == null) {
+            return false;
+        }
+        return allowed.isEmpty() || allowed.contains(toolName);
+    }
+
     /** 黑名单：永远禁止。 */
     private void checkBlacklist(String toolName) {
         List<String> blocked = properties.getTool().getBlockedTools();
@@ -74,31 +100,31 @@ public class ToolGuard {
     }
 
     /**
-     * 角色白名单：roleAllowedTools 为空表示"该角色无限制"；
-     * 否则该角色只能用列表内的工具。
+     * 角色白名单：整张表为空或该角色的列表为空表示"不限制"；
+     * 角色未配置为 deny by default；否则该角色只能用列表内的工具。
      */
     private void checkRolePermission(String toolName, String role) {
-        Map<String, List<String>> roleMap = properties.getTool().getRoleAllowedTools();
-        if (roleMap == null || roleMap.isEmpty()) {
+        if (isToolAllowedForRole(toolName, role)) {
             return;
         }
-        // 防御性归一化：yml 配置 key 是小写（user/admin/readonly），
-        // 上游传入的 role 可能来自各种来源（JWT/网关头/默认值），统一转小写再匹配
-        String normalized = (role == null || role.isBlank()) ? "user" : role.toLowerCase(Locale.ROOT);
-        List<String> allowed = roleMap.get(normalized);
+        // 能走到这里说明表非空且拒绝：再区分"角色没配置"与"工具不在列表"两种原因
+        List<String> allowed = properties.getTool().getRoleAllowedTools().get(normalizeRole(role));
         if (allowed == null) {
             log.warn("[ToolGuard] role '{}' has no allowed-tools entry (deny by default)", role);
             metrics.incrementToolBlock(toolName);
             throw new GuardrailViolation("tool.role_unknown",
                     "角色 [" + role + "] 无可用工具权限");
         }
-        if (!allowed.contains(toolName)) {
-            log.warn("[ToolGuard] tool '{}' not in role '{}' whitelist ({})",
-                    toolName, role, allowed);
-            metrics.incrementToolBlock(toolName);
-            throw new GuardrailViolation("tool.not_in_role_whitelist",
-                    "角色 [" + role + "] 无权调用工具 [" + toolName + "]");
-        }
+        log.warn("[ToolGuard] tool '{}' not in role '{}' whitelist ({})",
+                toolName, role, allowed);
+        metrics.incrementToolBlock(toolName);
+        throw new GuardrailViolation("tool.not_in_role_whitelist",
+                "角色 [" + role + "] 无权调用工具 [" + toolName + "]");
+    }
+
+    /** 防御性归一化：role 可能来自 JWT/网关头/默认值，统一转小写再匹配 yml 的小写键。 */
+    private static String normalizeRole(String role) {
+        return (role == null || role.isBlank()) ? "user" : role.toLowerCase(Locale.ROOT);
     }
 
     /**
