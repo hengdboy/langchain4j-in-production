@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import dev.langchain4j.mcp.protocol.McpJsonRpcMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/mcp")
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "chat.mcp.server.enabled", havingValue = "true")
 public class McpHttpController {
 
     private final McpJsonRpcDispatcher dispatcher;

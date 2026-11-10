@@ -6,6 +6,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.rag.RetrievalAugmentor;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,6 +15,8 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>与 {@link McpServerStarter}（独立进程、stdio 传输）不同，本类让 MCP Server 作为
  * Spring Bean 注入到现有的 smart-doc-assistant Web 应用中，通过 HTTP 端点暴露。
+ * 默认不装配：必须显式配置 {@code chat.mcp.server.enabled=true}，避免本地开发时
+ * 一个忘配的 API Key 把知识库暴露到公网。
  *
  * <h2>为什么不直接用 stdio</h2>
  * <ul>
@@ -33,6 +36,7 @@ import org.springframework.context.annotation.Configuration;
  * @since v0.17
  */
 @Configuration
+@ConditionalOnProperty(name = "chat.mcp.server.enabled", havingValue = "true")
 public class McpServerConfig {
 
     /**

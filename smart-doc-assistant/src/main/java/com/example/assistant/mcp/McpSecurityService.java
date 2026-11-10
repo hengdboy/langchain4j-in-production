@@ -3,6 +3,7 @@ package com.example.assistant.mcp;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,8 +21,9 @@ import java.util.List;
  * </ol>
  *
  * <h2>启动时校验</h2>
- * <p>API Key 在 {@link PostConstruct} 阶段校验：禁止空值、禁止过短（&lt;16 字符）。
- * 避免{@code application.yml} 配错时使用默认值或空 Key 上线造成万能 Key 漏洞。
+ * <p>本类只在 {@code chat.mcp.server.enabled=true} 时装配。API Key 在 {@link PostConstruct}
+ * 阶段校验：禁止空值、禁止过短（&lt;16 字符）、禁止历史默认值——
+ * 避免{@code application.yml} 配错时使用空 Key 或演示 Key 上线造成万能 Key 漏洞。
  *
  * <h2>生产化建议</h2>
  * <ul>
@@ -36,33 +38,38 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "chat.mcp.server.enabled", havingValue = "true")
 public class McpSecurityService {
 
     /** 最小 API Key 长度。低于此长度视为弱密钥，启动期直接抛异常。 */
     private static final int MIN_API_KEY_LENGTH = 16;
 
+    /** 历史默认值（曾经的 @Value 缺省值），必须拒绝，防止老配置原样上线。 */
+    private static final String LEGACY_DEFAULT_KEY = "dev-mcp-key-replace-in-production";
+
     private final String apiKey;
     private final List<String> allowedTools;
 
-    public McpSecurityService(@Value("${chat.mcp.api-key:dev-mcp-key-replace-in-production}") String apiKey) {
+    public McpSecurityService(@Value("${chat.mcp.api-key:}") String apiKey) {
         this.apiKey = apiKey;
         this.allowedTools = KnowledgeBaseMcpTools.TOOL_NAMES;
     }
 
     /**
-     * 启动期校验 API Key 强度。空 / 缺省值 / 过短 → 直接抛异常阻断启动。
+     * 启动期校验 API Key 强度。空 / 过短 / 历史默认值 → 直接抛异常阻断启动。
      * 比运行时拒绝更安全（运维事故无法"带病上线"）。
      */
     @PostConstruct
     void validateConfig() {
-        if (apiKey == null || apiKey.length() < MIN_API_KEY_LENGTH) {
+        if (apiKey == null || apiKey.isBlank() || apiKey.length() < MIN_API_KEY_LENGTH) {
             throw new IllegalStateException(
                     "Invalid chat.mcp.api-key: must be at least " + MIN_API_KEY_LENGTH
                             + " characters (current length=" + (apiKey == null ? 0 : apiKey.length())
-                            + "). Set 'chat.mcp.api-key' in application.yml to a strong secret.");
+                            + "). Set 'chat.mcp.api-key' (or env CHAT_MCP_API_KEY) to a strong secret.");
         }
-        if ("dev-mcp-key-replace-in-production".equals(apiKey)) {
-            log.warn("[MCP Security] Using default API key — change chat.mcp.api-key for production!");
+        if (LEGACY_DEFAULT_KEY.equals(apiKey)) {
+            throw new IllegalStateException(
+                    "chat.mcp.api-key is still the legacy demo key. Generate a real secret before enabling the MCP server.");
         }
         log.info("[MCP Security] API key validated (length={}), {} tools whitelisted",
                 apiKey.length(), allowedTools.size());

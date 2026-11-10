@@ -149,6 +149,16 @@ chat:
       initialization: ${CHAT_MCP_TIMEOUT_INIT:5s}
       tool-execution: ${CHAT_MCP_TIMEOUT_TOOL:20s}
       resources: ${CHAT_MCP_TIMEOUT_RES:10s}
+    # ------------------------------------------------------------
+    # MCP Server 端（本应用作为 MCP 服务器，HTTP 暴露 /mcp）
+    # ------------------------------------------------------------
+    # 默认关闭：与上面的 mcp.enabled（本应用作为 MCP 客户端）是两个独立开关。
+    # 开启后必须同时提供 api-key，否则启动失败（空值/过短/历史演示 Key 都会被拒）。
+    # 本地验证：export CHAT_MCP_API_KEY=$(openssl rand -hex 16)
+    #           mvn spring-boot:run -Dspring-boot.run.arguments="--chat.mcp.server.enabled=true"
+    server:
+      enabled: ${CHAT_MCP_SERVER_ENABLED:false}
+      api-key: ${CHAT_MCP_API_KEY:}
   # ============================================================
   # Embedding 配置（Ch08）
   # ============================================================

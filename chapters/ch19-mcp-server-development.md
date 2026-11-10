@@ -340,6 +340,7 @@ stdio 适合本地子进程，生产环境通常需要**远程 MCP Server**—�
 
 ```java
 @Configuration
+@ConditionalOnProperty(name = "chat.mcp.server.enabled", havingValue = "true")
 public class McpServerConfig {
 
     /**
@@ -364,6 +365,8 @@ public class McpServerConfig {
     }
 }
 ```
+
+`@ConditionalOnProperty` 是这一版新加的：默认不装配，显式 `chat.mcp.server.enabled=true` 才生效。没有它，本地开发跑 `mvn spring-boot:run` 就会顺手把 `/mcp` 挂到 8090 上，Key 配没配、强不强全靠自觉。
 
 ### 19.6.2 McpServerFactory：消除重复装配
 
@@ -394,6 +397,7 @@ public final class McpServerFactory {
 @RestController
 @RequestMapping("/mcp")
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "chat.mcp.server.enabled", havingValue = "true")
 public class McpHttpController {
 
     private final McpJsonRpcDispatcher dispatcher;
@@ -410,39 +414,56 @@ public class McpHttpController {
         // P0-2 修复：透传 id 节点（保留 number/string/null 类型）
         JsonNode rawId = request.get("id");
         Object id = (rawId == null || rawId.isNull()) ? null : rawId;
+        log.info("[MCP HTTP] method={} id={}", method, rawId);
 
         // 鉴权：initialize/ping 是握手阶段免鉴权
         if (!method.equals("initialize") && !method.equals("ping") && !method.equals("notifications/initialized")) {
             if (!securityService.isAuthorized(authHeader, apiKeyHeader)) {
+                log.warn("[MCP HTTP] unauthorized request, method={}", method);
                 return ResponseEntity.status(401)
-                        .body(JsonRpcResponse.error(id, -32001, "Unauthorized"));
+                        .body(JsonRpcResponse.error(id, -32001, "Unauthorized: invalid or missing API key"));
             }
             // 工具白名单检查
             if (method.equals("tools/call")) {
                 String toolName = request.path("params").path("name").asText("");
                 if (!securityService.isToolAllowed(toolName)) {
+                    log.warn("[MCP HTTP] tool not in whitelist: {}", toolName);
                     return ResponseEntity.status(403)
-                            .body(JsonRpcResponse.error(id, -32601, "Tool not allowed: " + toolName));
+                            .body(JsonRpcResponse.error(id, -32601, "Tool not allowed: " + toolName
+                                    + " (allowed: " + securityService.allowedToolList() + ")"));
                 }
             }
         }
 
         Object response;
-        try { response = dispatcher.handle(request); }
-        catch (Exception e) { response = JsonRpcResponse.error(id, -32603, e.getMessage()); }
+        Throwable error = null;
+        try {
+            response = dispatcher.handle(request);
+        } catch (Exception e) {
+            log.error("[MCP HTTP] dispatcher error: {}", e.getMessage(), e);
+            error = e;
+            response = JsonRpcResponse.error(id, -32603, "Internal error: " + e.getMessage());
+        }
 
-        // 审计 + 耗时
+        // 审计 + 耗时：只对 tools/call 留痕
         if (method.equals("tools/call")) {
             String toolName = request.path("params").path("name").asText("");
             auditService.record(toolName, request.path("params").path("arguments").toString(),
-                    System.currentTimeMillis() - start, false);
+                    System.currentTimeMillis() - start, error != null);
         }
+        log.info("[MCP HTTP] response id={} duration={}ms", rawId, System.currentTimeMillis() - start);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/audit")
-    public Map<String, Object> recentAudit(/*鉴权头*/) {
-        return Map.of("entries", auditService.recent(20), "count", 20);
+    public Map<String, Object> recentAudit(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestHeader(value = "X-MCP-API-Key", required = false) String apiKeyHeader,
+            @RequestParam(defaultValue = "20") int n) {
+        if (!securityService.isAuthorized(authHeader, apiKeyHeader)) {
+            return Map.of("error", "Unauthorized");
+        }
+        return Map.of("entries", auditService.recent(n), "count", n);
     }
 }
 ```
@@ -639,40 +660,47 @@ public class JsonRpcResponse {
 ```java
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "chat.mcp.server.enabled", havingValue = "true")
 public class McpSecurityService {
 
     private static final int MIN_API_KEY_LENGTH = 16;
+    private static final String LEGACY_DEFAULT_KEY = "dev-mcp-key-replace-in-production";
 
     private final String apiKey;
     private final List<String> allowedTools;
 
-    public McpSecurityService(@Value("${chat.mcp.api-key:dev-mcp-key-replace-in-production}") String apiKey) {
+    // 缺省值是空串：没有配置 Key 就启动失败，而不是偷偷用演示 Key 上线
+    public McpSecurityService(@Value("${chat.mcp.api-key:}") String apiKey) {
         this.apiKey = apiKey;
-        // P1-2 修复：单一真相源——从 KnowledgeBaseMcpTools.TOOL_NAMES 直接读取
         this.allowedTools = KnowledgeBaseMcpTools.TOOL_NAMES;
     }
 
-    /** P0-3 修复：启动期校验，禁止空/默认值/过短 Key 上线 */
+    /** 启动期校验：空 / 过短 / 历史演示 Key 一律阻断启动 */
     @PostConstruct
     void validateConfig() {
-        if (apiKey == null || apiKey.length() < MIN_API_KEY_LENGTH) {
+        if (apiKey == null || apiKey.isBlank() || apiKey.length() < MIN_API_KEY_LENGTH) {
             throw new IllegalStateException("Invalid chat.mcp.api-key: must be at least "
-                    + MIN_API_KEY_LENGTH + " characters (current length=" + (apiKey == null ? 0 : apiKey.length()) + ")");
+                    + MIN_API_KEY_LENGTH + " characters (current length="
+                    + (apiKey == null ? 0 : apiKey.length()) + ")");
         }
-        if ("dev-mcp-key-replace-in-production".equals(apiKey)) {
-        log.warn(" [MCP Security] Using default API key — change chat.mcp.api-key for production!");
+        if (LEGACY_DEFAULT_KEY.equals(apiKey)) {
+            throw new IllegalStateException(
+                    "chat.mcp.api-key is still the legacy demo key. Generate a real secret before enabling the MCP server.");
         }
     }
 
     public boolean isAuthorized(String authHeader, String customHeader) {
-        // P2-2 修复：Bearer 大小写不敏感
-        if (authHeader != null && authHeader.trim().length() > 7) {
-            String prefix = authHeader.trim().substring(0, 7);
-            if (prefix.equalsIgnoreCase("Bearer ")) {
-                return constantTimeEquals(authHeader.trim().substring(7).trim(), apiKey);
+        if (authHeader != null) {
+            // HTTP 规范：scheme 部分大小写不敏感（bearer / Bearer / BEARER 都应识别）
+            String trimmed = authHeader.trim();
+            if (trimmed.length() > 7 && trimmed.substring(0, 7).equalsIgnoreCase("Bearer ")) {
+                return constantTimeEquals(trimmed.substring(7).trim(), apiKey);
             }
         }
-        return customHeader != null && constantTimeEquals(customHeader.trim(), apiKey);
+        if (customHeader != null) {
+            return constantTimeEquals(customHeader.trim(), apiKey);
+        }
+        return false;
     }
 
     /** 常量时间比较，防时序攻击 */
@@ -687,18 +715,23 @@ public class McpSecurityService {
 
 **P0-3 修复重点**：原实现 `apiKey=null` 或 `apiKey=""` 时 `constantTimeEquals("", "")` 返回 true——**空 Key 当万能 Key**。启动期直接抛异常阻断，比运行时拒绝更安全（运维事故无法"带病上线"）。
 
+**只校验还不够**：`dev-mcp-key-replace-in-production` 有 34 个字符，能通过"至少 16 字符"那一关。旧版对这个值只打一条 WARN 就放行，而 `/mcp` 端点在任何配置下都注册——忘了配 Key 的部署等于对公网开放知识库。现在做两件事：端点默认不装配（`@ConditionalOnProperty`，要求显式 `chat.mcp.server.enabled=true`），演示 Key 也当作非法值直接拒绝。
+
 ### 19.8.2 McpAuditService：调用审计 + 敏感字段 redact
 
 ```java
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "chat.mcp.server.enabled", havingValue = "true")
 public class McpAuditService {
 
     private static final int MAX_ENTRIES = 500;
-    private static final String[] SENSITIVE_KEYS = {
+    /** 命中任一片段就整值替换（小写比较） */
+    private static final List<String> SENSITIVE_KEY_PARTS = List.of(
             "password", "passwd", "secret", "token", "apikey", "api_key",
-            "auth", "credential", "private", "session"
-    };
+            "authorization", "credential", "private", "session"
+    );
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     // P0-6 修复：环形 buffer 容量上限（避免长时间运行内存泄漏）
     private final AuditEntry[] ringBuffer = new AuditEntry[MAX_ENTRIES];
@@ -724,14 +757,35 @@ public class McpAuditService {
         return out;
     }
 
-    /** P1-5 修复：把 "password":"123456" → "password":"***" */
+    /** 按 JSON 结构递归：字段名忽略大小写、按片段匹配，命中则整个值换 "***" */
     static String redact(String args) {
         if (args == null || args.isEmpty()) return args;
-        String out = args;
-        for (String key : SENSITIVE_KEYS) {
-            out = out.replaceAll("(\"" + Pattern.quote(key) + "\"\\s*:\\s*\")([^\"]*)(\")", "$1***$3");
+        try {
+            JsonNode root = MAPPER.readTree(args);
+            if (root == null) return "[unparseable]";
+            redactNode(root);
+            return MAPPER.writeValueAsString(root);
+        } catch (JsonProcessingException e) {
+            return "[unparseable]";
         }
-        return out;
+    }
+
+    private static void redactNode(JsonNode node) {
+        if (node instanceof ObjectNode obj) {
+            List<String> fieldNames = new ArrayList<>();
+            obj.fieldNames().forEachRemaining(fieldNames::add);
+            for (String field : fieldNames) {
+                if (isSensitiveKey(field)) obj.put(field, "***");
+                else redactNode(obj.get(field));
+            }
+        } else if (node instanceof ArrayNode array) {
+            for (JsonNode item : array) redactNode(item);
+        }
+    }
+
+    private static boolean isSensitiveKey(String key) {
+        String k = key.toLowerCase(Locale.ROOT);
+        return SENSITIVE_KEY_PARTS.stream().anyMatch(k::contains);
     }
 
     public record AuditEntry(long timestamp, String toolName, String arguments, long durationMs, boolean failed) {}
@@ -742,7 +796,7 @@ public class McpAuditService {
 - 环形 buffer 容量 500 条（教学版内存），超过覆盖最旧
 - audit 日志 redact 常见敏感字段，避免用户问"我的密码是123456"被原样写入日志
 
-> **生产化**：`McpAuditService` 仅做内存版演示。生产应写 ELK / 数据库，且 redact 应改用 Jackson 树遍历（更可靠）。
+**为什么不用正则**：最初版本拿 `"password":"..."` 这种精确小写字段名去 `replaceAll`，注释写着"容忍后缀"，实际 `apiKey`、`accessToken`、`passwordHash` 一个都匹配不上——文档与行为两张皮。改成 Jackson 树遍历后，字段名统一转小写按片段匹配，嵌套对象和数组一并覆盖；连 JSON 都解析不了的入参直接记成 `[unparseable]`，宁可丢信息也不把疑似密钥写进日志。
 
 ## 19.9 端点验证
 
@@ -755,10 +809,15 @@ public class McpAuditService {
 > 下面的命令全部用数字 id。
 
 ```bash
+# 0. 启动服务：HTTP 模式的 MCP Server 默认关闭，必须显式打开并提供 Key
+#    （只开开关不给 Key，启动期会直接抛 IllegalStateException）
+export MCP_KEY=$(openssl rand -hex 16)
+CHAT_MCP_SERVER_ENABLED=true CHAT_MCP_API_KEY=$MCP_KEY mvn spring-boot:run
+
 # 1. 列出 MCP Server 暴露的工具（id 用数字 1）
 curl -s -X POST http://localhost:8090/mcp \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-mcp-key-replace-in-production" \
+  -H "Authorization: Bearer $MCP_KEY" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 ```json
@@ -769,12 +828,14 @@ curl -s -X POST http://localhost:8090/mcp \
 # 2. 调用工具（参数名是 question，不是 query —— 写错会拿到业务错误而非参数错误）
 curl -s -X POST http://localhost:8090/mcp \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-mcp-key-replace-in-production" \
+  -H "Authorization: Bearer $MCP_KEY" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"searchKnowledgeBase","arguments":{"question":"七天无理由退货的条件是什么？","topK":3,"minScore":0.5}}}'
 ```
 
 > **参数名写错时的返回长这样**——不是 JSON-RPC 的 `-32602 Invalid params`，
-> 而是工具方法体里的业务校验抛出的异常被 SDK 包成 `isError`：
+> 而是工具方法体里的业务校验抛出的异常被 SDK 包成 `isError`。
+> **待重测**：下表是修复前的实测输出；空问题现在在进入 embedding 之前就抛
+> `ToolErrorVisibleToLlm`，错误文案会变成中文提示，字段语义不变。
 > ```json
 > {"id":2,"result":{"content":[{"text":"text cannot be null or blank","type":"text"}],"isError":true},"jsonrpc":"2.0"}
 > ```
@@ -784,7 +845,7 @@ curl -s -X POST http://localhost:8090/mcp \
 # 3. Resources 原语（4 个 classpath:docs/ 下的文件）
 curl -s -X POST http://localhost:8090/mcp \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-mcp-key-replace-in-production" \
+  -H "Authorization: Bearer $MCP_KEY" \
   -d '{"jsonrpc":"2.0","id":3,"method":"resources/list","params":{}}'
 ```
 ```json
@@ -795,14 +856,14 @@ curl -s -X POST http://localhost:8090/mcp \
 # 4. Resources 读取（text 格式）
 curl -s -X POST http://localhost:8090/mcp \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-mcp-key-replace-in-production" \
+  -H "Authorization: Bearer $MCP_KEY" \
   -d '{"jsonrpc":"2.0","id":4,"method":"resources/read","params":{"uri":"docs://refund-policy.txt"}}'
 # → {"id":4,"result":{"contents":[{"uri":"docs://refund-policy.txt","mimeType":"text/plain; charset=utf-8","text":"退款政策说明（客服处理依据）..."}]}}
 
 # 5. Resources 读取（blob 格式，PDF 走 base64）
 curl -s -X POST http://localhost:8090/mcp \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-mcp-key-replace-in-production" \
+  -H "Authorization: Bearer $MCP_KEY" \
   -d '{"jsonrpc":"2.0","id":6,"method":"resources/read","params":{"uri":"docs://report.pdf"}}'
 # → {"id":6,"result":{"contents":[{"uri":"docs://report.pdf","mimeType":"application/pdf","blob":"JVBERi0xLjQKJZOMi54gUmVwb3J0TGFi..."}]}}
 ```
@@ -811,7 +872,7 @@ curl -s -X POST http://localhost:8090/mcp \
 # 6. Prompts 原语 + {{var}} 替换（3 个模板：review-code / summarize-doc / qa-policy-check）
 curl -s -X POST http://localhost:8090/mcp \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-mcp-key-replace-in-production" \
+  -H "Authorization: Bearer $MCP_KEY" \
   -d '{"jsonrpc":"2.0","id":7,"method":"prompts/get","params":{"name":"qa-policy-check","arguments":{"question":"运费谁出","context":"用户买的机器坏了"}}}'
 ```
 ```json
@@ -823,7 +884,7 @@ curl -s -X POST http://localhost:8090/mcp \
 # 7. 工具白名单验证（不在 TOOL_NAMES 里的工具直接 403）
 curl -s -w '\nstatus:%{http_code}\n' -X POST http://localhost:8090/mcp \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-mcp-key-replace-in-production" \
+  -H "Authorization: Bearer $MCP_KEY" \
   -d '{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"rm_rf","arguments":{}}}'
 ```
 ```json
@@ -834,7 +895,7 @@ status:403
 ```bash
 # 8. 审计查询（只记录 tools/call）
 curl -s "http://localhost:8090/mcp/audit?n=10" \
-  -H "Authorization: Bearer dev-mcp-key-replace-in-production"
+  -H "Authorization: Bearer $MCP_KEY"
 ```
 ```json
 {"entries":[{"timestamp":1793196807289,"toolName":"searchKnowledgeBase","arguments":"{\"query\":\"退款政策\"}","durationMs":5,"failed":false}],"count":10}
@@ -882,7 +943,7 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 |---|---|---|---|
 | **P0-1** | McpHttpController 双 "not not" typo | 审计日志看不清 | 改为 "not in" |
 | **P0-2** | JSON-RPC id 强转 long | 客户端用字符串 id 时收不到关联响应 | `JsonRpcResponse.id` 改 `Object`；Dispatcher / Controller 透传 JsonNode（自实现的 Resources/Prompts 分支支持字符串 id，但**官方 SDK 的 Tools 分支仍然只认数字 id**，见坑点 16） |
-| **P0-3** | 空 API Key 万能 Key漏洞 | `constantTimeEquals("", "")` 返回 true → 任意 Key 通过鉴权 | `@PostConstruct` 校验 ≥16 字符，违者启动失败 |
+| **P0-3** | 空 API Key 万能 Key漏洞 | `constantTimeEquals("", "")` 返回 true → 任意 Key 通过鉴权 | `@PostConstruct` 校验空/过短/历史演示 Key，违者启动失败；`/mcp` 端点默认不装配（要求 `chat.mcp.server.enabled=true`） |
 | **P0-4** | try-with-resources 资源顺序 | awaitClose() 抛异常时 ctx.close() 漏执行 | 显式 try-finally，反顺序释放 |
 | **P0-5** | stdio 启动器日志污染 stdout | Spring Boot 默认日志写 stdout → 协议流污染 → 客户端断开 | 编程式重配 Logback：stderr only |
 | **P0-6** | 审计无上限 | 长时间运行 entries 无限增长 → 内存泄漏 | 环形 buffer MAX_ENTRIES=500，覆盖最旧 |
@@ -898,10 +959,10 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 |---|---|---|---|
 | 1 | **stdio 日志污染 stdout** | 客户端解析失败立即断开 | `redirectLogbackToStderr()` 编程式接管；`org.springframework.boot.logging.LoggingSystem=none` |
 | 2 | **JSON-RPC id 类型丢失** | 客户端用字符串 id 时收不到响应 | id 用 `Object` 承载，透传 JsonNode；官方 SDK 的 Tools 分支仍只认数字 id（坑点 16） |
-| 3 | **空 / 默认 API Key 上线** | 任意 Key 通过鉴权 | `@PostConstruct` 启动期校验 |
+| 3 | **空 / 演示 API Key 上线** | 任意 Key 通过鉴权，或 `/mcp` 忘了关就对公网开放 | `@PostConstruct` 启动期校验（空/过短/演示 Key 都拒）+ 端点默认不装配 |
 | 4 | **工具白名单两个真相源漂移** | 加新工具忘了同步白名单 | `KnowledgeBaseMcpTools.TOOL_NAMES` 单一来源 |
 | 5 | **PDF 当文本读存乱码** | clients 拿到 base64 乱码 | MCP 规范的 `blob` 字段（二进制）+ `text` 字段（文本） |
-| 6 | **审计日志泄露敏感数据** | 用户问"密码是 123456"被原样写入 | `redact()` 正则过滤 password/token/apiKey 等关键字 |
+| 6 | **审计日志泄露敏感数据** | 用户问"密码是 123456"被原样写入 | `redact()` 按 JSON 树遍历，字段名忽略大小写按片段匹配（`apiKey` / `accessToken` 也覆盖） |
 | 7 | **args 类型丢失（数字/布尔变字符串）** | 客户端传 `false: true` 被当成 "true" 文本 | `parseArgs()` 保留原始 JSON 类型（number/bool/object/array） |
 | 8 | **McpResourcesProvider 硬编码文件名** | 新增文档要改两个地方 | 待办：抽 `DocsScanner` 工具类统一扫描（**P1-1**） |
 | 9 | **Prompts `{{var}}` 不替换** | LLM 看到原始 `{{language}}` 当成指令 | `renderTemplate()` 正则替换；缺值时换空字符串 |
@@ -912,7 +973,7 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 | 14 | **commons-logging 与 spring-jcl 并存** | stdout 多出一行 `Standard Commons Logging discovery in action with spring-jcl...`，客户端解析失败 | 排除 `commons-logging:commons-logging`（spring-jcl 提供同一套 API）。本例来自 pdfbox 的传递依赖 |
 | 15 | **子进程读不到 `application.yml`** | 用 `AnnotationConfigApplicationContext` 时 `@Value` 全部落到注解默认值，和配置文件不一致（例如 reranker 变成 dashscope 却缺 key，启动即失败） | 启动器里手动 `YamlPropertySourceLoader` 加载 `application.yml` 进 Environment |
 | 16 | **Tools 分支的 id 必须用数字** | 传字符串 id → **HTTP 200 但响应体长度 0**（不是 4xx，静默丢弃，客户端以为服务端无响应） | 官方 SDK 的 `extractId()` 只认 `idNode.isNumber()`；Tools 调用一律用数字 id。资源/提示原语是自实现分支，字符串 id 也能正常返回 |
-| 17 | **工具参数名写错报的是业务错误** | 传 `query` 而工具签名是 `question` → 返回 `isError:true` + `"text cannot be null or blank"`，不是 `-32602 Invalid params` | 看 `isError` 字段区分"参数写错"和"服务端故障"；JSON Schema 里 `required` 列出的字段名就是准确参数名 |
+| 17 | **工具参数名写错报的是业务错误** | 传 `query` 而工具签名是 `question` → 返回 `isError:true` + 工具层参数校验文案（本章是"问题不能为空…"），不是 `-32602 Invalid params` | 看 `isError` 字段区分"参数写错"和"服务端故障"；JSON Schema 里 `required` 列出的字段名就是准确参数名 |
 
 ## 19.12 本章小结
 
@@ -947,8 +1008,9 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 | 协议 | `mcp/McpJsonRpcDispatcher.java` | **新增**：装饰器模式分发 Tools/Resources/Prompts |
 | 资源 | `mcp/McpResourcesProvider.java` | **新增**：classpath:docs/ 扫描 + blob/text 双格式 |
 | 提示 | `mcp/McpPromptsProvider.java` | **新增**：3 个模板 + `{{var}}` 渲染 |
-| 安全 | `mcp/McpSecurityService.java` | **新增**：API Key 启动期校验 + Bearer 大小写不敏感 |
-| 审计 | `mcp/McpAuditService.java` | **新增**：环形 buffer + redact |
+| 安全 | `mcp/McpSecurityService.java` | **新增**：`chat.mcp.server.enabled` 开关 + API Key 启动期校验（空/过短/演示 Key 都拒）+ Bearer 大小写不敏感 |
+| 审计 | `mcp/McpAuditService.java` | **新增**：环形 buffer + Jackson 树遍历 redact |
+| 测试 | `mcp/*Test.java` | **新增**：空问题、审计脱敏、鉴权矩阵、JSON-RPC 分发 4 组单测 |
 | 文档 | `chapters/ch19-mcp-server-development.md` | **新增**：本章 |
 | README | `smart-doc-assistant/README.md` | **新增**：端点速查表 |
 
@@ -959,7 +1021,7 @@ stdout 应该只有两行 JSON-RPC 响应（`initialize` 与 `tools/list`），�
 ### 练习题
 
 1. 用 `npx @modelcontextprotocol/inspector` 启动 MCP Inspector，给 stdio 启动器测一遍 tools/list + tools/call + resources/read + prompts/get，验证本章所有功能。
-2. 把 `chat.mcp.api-key` 设为空字符串，启动主应用——观察启动失败抛 `IllegalStateException`（验证 P0-3 修复）。
+2. 打开 `chat.mcp.server.enabled=true`，把 `chat.mcp.api-key` 设为空字符串（或历史演示 Key `dev-mcp-key-replace-in-production`），启动主应用——观察启动失败抛 `IllegalStateException`（验证 P0-3 修复）。
 3. 给 `McpPromptsProvider` 加一个新模板 `extract-fields`（用 {{fields}} {{text}} 占位符），用 curl 验证 `{{text}}` 被替换成传入的字符串。
 4. 修改 `McpSecurityService.allowedTools`（或 `KnowledgeBaseMcpTools.TOOL_NAMES`），加一个新工具名但**不**在 `KnowledgeBaseMcpTools` 类加 @Tool 方法——重启后用 curl 调该工具，观察返回 403 Forbidden（验证白名单真相源）。
 5. 思考题：为什么 stdio 启动器**不能用 Spring Boot 自动配置**？提示：思考 Spring Boot 启动时哪些组件会写 stdout/启动 HTTP 服务器/读 application.yml。

@@ -13,6 +13,7 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.exception.ToolErrorVisibleToLlm;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import lombok.extern.slf4j.Slf4j;
 
@@ -190,13 +191,16 @@ public class KnowledgeBaseMcpTools {
     }
 
     /**
-     * 校验 question：null / blank 直接返回"（问题不能为空）"，
-     * 避免后续 {@code embeddingModel.embed(null)} 抛 NPE 让工具调用链路断裂。
+     * 校验 question：null / blank 直接抛 {@link ToolErrorVisibleToLlm} 异常。
+     *
+     * <p>不能返回空串继续往下走——空串会被当成正常查询塞进 embedding 模型，
+     * 检索结果无意义还白烧一次调用。抛异常后官方 SDK 捕获并返回
+     * {@code isError:true}，错误消息原样交给 LLM，模型可以自己补全问题重试。
      */
     private String requireQuestion(String question) {
         if (question == null || question.isBlank()) {
             log.warn("[MCP] tool called with empty/null question");
-            return ""; // sentinel；本工具不返回结果给 caller，调用方拿到 "（问题不能为空）" 后续会改
+            throw ToolErrorVisibleToLlm.from("问题不能为空：请提供用户的自然语言问题后重试。");
         }
         return question;
     }

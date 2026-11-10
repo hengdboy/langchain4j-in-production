@@ -1,10 +1,17 @@
 package com.example.assistant.mcp;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * MCP 深度开发：MCP 工具调用审计服务（呼应 ）。
@@ -36,16 +43,19 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "chat.mcp.server.enabled", havingValue = "true")
 public class McpAuditService {
 
     /** 最大保留审计条数；超过后覆盖最旧记录（环形 buffer）。 */
     private static final int MAX_ENTRIES = 500;
 
-    /** 命中敏感字段 redact 的关键字（不区分大小写）。 */
-    private static final String[] SENSITIVE_KEYS = {
+    /** 命中敏感字段 redact 的关键字片段（小写比较；命中即整值替换）。 */
+    private static final List<String> SENSITIVE_KEY_PARTS = List.of(
             "password", "passwd", "secret", "token", "apikey", "api_key",
-            "auth", "credential", "private", "session"
-    };
+            "authorization", "credential", "private", "session"
+    );
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final AuditEntry[] ringBuffer = new AuditEntry[MAX_ENTRIES];
     private int writeIndex = 0;
@@ -82,25 +92,52 @@ public class McpAuditService {
     public record AuditEntry(long timestamp, String toolName, String arguments, long durationMs, boolean failed) {}
 
     /**
-     * 过滤参数 JSON 里的敏感字段。简单策略：把 {@code "key":"value"} 中匹配
-     * {@link #SENSITIVE_KEYS} 的 value 替换为 {@code "***"}。
+     * 过滤参数 JSON 里的敏感字段：按 JSON 结构递归遍历，凡是字段名（忽略大小写）
+     * 包含 {@link #SENSITIVE_KEY_PARTS} 任一片段，就把该字段的整个值替换为 {@code "***"}。
      *
-     * <p>只过滤 {@code "...":"..."} 的字符串值对，不动对象/数组结构；
-     * 对真正敏感场景应使用结构化 redact（如 Jackson 树遍历），此处仅做兜底。
+     * <p>早期版本用正则匹配 {@code "key":"value"}，只认精确的小写字段名——
+     * {@code apiKey}、{@code accessToken}、{@code passwordHash} 这类驼峰/带后缀的写法
+     * 全部漏掉，与文档声称的"容忍后缀"不符。改成树遍历后不再有这层错配。
+     *
+     * <p>解析失败时返回 {@code "[unparseable]"} 而不是原样透传——宁可丢信息，
+     * 也不让一段无法解析的文本把可能的密钥写进日志。
      */
     static String redact(String args) {
         if (args == null || args.isEmpty()) {
             return args;
         }
-        String out = args;
-        for (String key : SENSITIVE_KEYS) {
-            // 匹配 "key" 或 "key..." 形式（容忍后缀，如 api_key、apiKey）
-            // 用单词边界，但 JSON 的引号特殊
-            out = out.replaceAll(
-                    "(\"" + java.util.regex.Pattern.quote(key) + "\"\\s*:\\s*\")([^\"]*)(\")",
-                    "$1***$3"
-            );
+        try {
+            JsonNode root = MAPPER.readTree(args);
+            if (root == null) {
+                return "[unparseable]";
+            }
+            redactNode(root);
+            return MAPPER.writeValueAsString(root);
+        } catch (JsonProcessingException e) {
+            return "[unparseable]";
         }
-        return out;
+    }
+
+    private static void redactNode(JsonNode node) {
+        if (node instanceof ObjectNode obj) {
+            List<String> fieldNames = new ArrayList<>();
+            obj.fieldNames().forEachRemaining(fieldNames::add);
+            for (String field : fieldNames) {
+                if (isSensitiveKey(field)) {
+                    obj.put(field, "***");
+                } else {
+                    redactNode(obj.get(field));
+                }
+            }
+        } else if (node instanceof ArrayNode array) {
+            for (JsonNode item : array) {
+                redactNode(item);
+            }
+        }
+    }
+
+    private static boolean isSensitiveKey(String key) {
+        String k = key.toLowerCase(Locale.ROOT);
+        return SENSITIVE_KEY_PARTS.stream().anyMatch(k::contains);
     }
 }
