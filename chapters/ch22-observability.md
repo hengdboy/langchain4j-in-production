@@ -42,7 +42,7 @@ flowchart LR
 
 ## 22.2 关键事实：LangChain4j 1.22.0 的可观测性 API（实测验证）
 
-写本章前**核实**（你方法论的"写前先核实"铁律）：
+写本章前**核实**（先核实，再写）：
 
 ```
 $ javap ChatModelListener.class

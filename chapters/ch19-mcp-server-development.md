@@ -60,7 +60,7 @@ Ch17 讲的是**用**别人的 MCP Server（Node.js 写的 demo-server.mjs，std
 > If you want to build a Java-based MCP **stdio server** (a local subprocess launched by an MCP client),  
 > use the community module: `langchain4j-community-mcp-server`.
 
-**实测**（写代码前的核实——方法论铁律）：
+**实测**（写代码前先核实）：
 
 ```bash
 # 1. 核心模块 langchain4j-mcp: 173 个 class，全部 client/transport/protocol/registry 侧，无 server 包
@@ -96,7 +96,7 @@ dev/langchain4j/community/mcp/server/transport/StdioMcpServerTransport.class
 - 1.22.0-beta32 这版**仍然只支持 stdio 传输**（`StdioMcpServerTransport`），无官方 HTTP 实现——从 1.19 到 1.22，这几个类一直没变
 - **只支持 Tools 原语**（`@Tool` 注解），无 `@McpResource` / `@McpPrompt`——Resources/Prompts 要自实现
 
-> **坑点**：写本章前我差点下了"LangChain4j 没有 Server SDK" 的错误结论。**实测 + 看官方文档原文** 才发现是社区包而不是核心包。**永远不要凭印象写 API**——这是你的方法论里"写代码前先核实"的核心铁律。
+> **坑点**：写本章前我差点下了"LangChain4j 没有 Server SDK" 的错误结论。**实测 + 看官方文档原文** 才发现是社区包而不是核心包。**别凭印象写 API**——写代码前先核实，在哪儿都一样。
 
 ## 19.3 协议回顾（30 秒）
 

@@ -299,7 +299,7 @@ public CandidateContext submit(CreateCandidateRequest req, boolean useRealAgent)
 
 **出题也过脱敏画像。** 面试题必须来自候选人真实写过的技能——用脱敏画像出题，顺带堵死"照着年龄出简单题"这类隐性歧视：出题器根本不知道候选人的年龄性别。
 
-**@Agent 接口必须用 AgenticServices 构造。** 这是 beta32 实验线的规矩：
+**@Agent 接口必须用 AgenticServices 构造。** beta32 实验线只认这条路：
 
 ```java
 @Bean

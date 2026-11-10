@@ -286,7 +286,7 @@ Ch22 的 `CostChatModelListener` 在这里升级为按 Agent 维度的核算（�
 | MCP 内存目录 | HTTP MCP + 内部只读 API + 鉴权 | 外部看到的是假数据 |
 | application-local.yml 存 key | KMS/Vault | key 进 yml 就是进 git 的前奏 |
 
-三条安全红线，照抄即可：
+三条安全边界，配置照这个写：
 
 1. **简历字段加密存储 + 字段级权限**：`resume_text` 是 PII 密集区，库被拖走时它不能是明文
 2. **背调必须在候选人书面授权后**：本项目把背调查询设计在 `OFFER_SENT` 之后——状态机本身就是合规护栏的一部分

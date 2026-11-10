@@ -41,7 +41,7 @@ flowchart TB
 
 ## 21.2 关键发现：LangChain4j 1.22.0-beta32 的 Guardrail 现状（实测验证）
 
-写本章前的**核实**（你方法论的"写前先核实"铁律）：
+写本章前的**核实**（先核实，再写）：
 
 ```
 $ jar tf langchain4j-guardrails-1.22.0-beta32.jar
