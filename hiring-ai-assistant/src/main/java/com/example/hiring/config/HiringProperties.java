@@ -18,7 +18,6 @@ public class HiringProperties {
 
     private Fsm fsm = new Fsm();
     private Scheduler scheduler = new Scheduler();
-    private Agent agent = new Agent();
     private Bandit bandit = new Bandit();
     private Mcp mcp = new Mcp();
     private Demo demo = new Demo();
@@ -44,19 +43,6 @@ public class HiringProperties {
 
         /** Bandit 评估周期（毫秒）—— 结算 bandit_outcome 队列 */
         private long banditEvalIntervalMs = 600_000L;  // 10 min
-    }
-
-    // ============== Agent 处理相关 ==============
-    @Data
-    public static class Agent {
-        /** 单个 Agent 调用超时（毫秒） */
-        private long callTimeoutMs = 30_000L;  // 30s
-
-        /** Agent 重试次数（失败后） */
-        private int maxRetries = 2;
-
-        /** Agent 重试间隔（毫秒） */
-        private long retryIntervalMs = 2_000L;  // 2s
     }
 
     // ============== Bandit 多臂老虎机 ==============

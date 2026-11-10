@@ -105,15 +105,6 @@ hiring:
     # Bandit 评估 —— 每 10 分钟结算一次
     bandit-eval-interval-ms: 600000
 
-  # ============== Agent 处理（详见 HiringProperties.Agent） ==============
-  agent:
-    # 单个 Agent 调用超时 30s
-    call-timeout-ms: 30000
-    # 失败重试 2 次
-    max-retries: 2
-    # 重试间隔 2s
-    retry-interval-ms: 2000
-
   # ============== 多臂老虎机（详见 HiringProperties.Bandit） ==============
   bandit:
     strategy: thompson-sampling     # 算法选择

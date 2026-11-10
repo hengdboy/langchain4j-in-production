@@ -4,8 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 管理进行中的 SSE 会话，支持"用户主动取消生成"。
@@ -17,56 +19,77 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * 注意：这只关闭了客户端连接，并不能真的"杀掉"LLM 厂商的请求。
  * LLM 仍会生成到下一个 token 到达为止，但不会再写到客户端。
+ *
+ * key 设计：早期版本直接用 sessionId 当 key，同一个用户开两个标签页时
+ * 后一个会覆盖前一个，旧连接永远泄漏且无法取消。现在用 sessionId#序号
+ * 作为 streamId，一个 session 可以同时挂多条流，取消时按前缀批量处理。
+ *
  * @author hengdboy
  */
 @Component
 @Slf4j
 public class StreamSessionManager {
 
-    private final Map<String, SseEmitter> sessions = new ConcurrentHashMap<>();
+    /** key = streamId（sessionId#自增序号），value = 对应的 emitter */
+    private final Map<String, SseEmitter> streams = new ConcurrentHashMap<>();
+
+    private final AtomicLong seq = new AtomicLong();
 
     /**
-     * 注册新的 SSE 会话
+     * 注册新的 SSE 流，返回本次流的唯一 id
+     *
+     * @return streamId，注销时需要原样传回
      */
-    public void register(String sessionId, SseEmitter emitter) {
-        sessions.put(sessionId, emitter);
-        log.debug("SSE session registered: {} (active: {})", sessionId, sessions.size());
+    public String register(String sessionId, SseEmitter emitter) {
+        String streamId = sessionId + "#" + seq.incrementAndGet();
+        streams.put(streamId, emitter);
+        log.debug("SSE stream registered: {} (active: {})", streamId, streams.size());
+        return streamId;
     }
 
     /**
-     * 会话结束时注销
+     * 单条流结束时注销
      */
-    public void unregister(String sessionId) {
-        SseEmitter removed = sessions.remove(sessionId);
+    public void unregister(String streamId) {
+        SseEmitter removed = streams.remove(streamId);
         if (removed != null) {
-            log.debug("SSE session unregistered: {} (active: {})", sessionId, sessions.size());
+            log.debug("SSE stream unregistered: {} (active: {})", streamId, streams.size());
         }
     }
 
     /**
-     * 主动取消指定会话
+     * 取消某个 session 下所有进行中的流
      *
-     * @return true 表示成功取消，false 表示会话不存在
+     * @return true 表示至少取消了一条
      */
     public boolean cancel(String sessionId) {
-        SseEmitter emitter = sessions.remove(sessionId);
-        if (emitter == null) {
-            return false;
+        String prefix = sessionId + "#";
+        boolean cancelled = false;
+
+        // 先拷贝 key 快照，避免遍历过程中 remove 影响迭代
+        for (String streamId : new ArrayList<>(streams.keySet())) {
+            if (!streamId.startsWith(prefix)) {
+                continue;
+            }
+            SseEmitter emitter = streams.remove(streamId);
+            if (emitter == null) {
+                continue;
+            }
+            try {
+                emitter.complete();
+                cancelled = true;
+                log.info("SSE stream cancelled: {}", streamId);
+            } catch (Exception e) {
+                log.warn("Failed to cancel stream {}", streamId, e);
+            }
         }
-        try {
-            emitter.complete();
-            log.info("SSE session cancelled: {}", sessionId);
-            return true;
-        } catch (Exception e) {
-            log.warn("Failed to cancel session {}", sessionId, e);
-            return false;
-        }
+        return cancelled;
     }
 
     /**
-     * 当前活跃 SSE 会话数（监控用）
+     * 当前活跃 SSE 流数（监控用）
      */
     public int activeCount() {
-        return sessions.size();
+        return streams.size();
     }
 }

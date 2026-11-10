@@ -34,7 +34,7 @@ mvn spring-boot:run                     # 默认监听 :8090
 | Ch03 | `/api/review/analyze` | POST | `{reviews[]}` | `string` | Few-shot 评论分析 |
 | Ch03 | `/api/review/analyze-v3` | POST | `{reviews[]}` | `ReviewAnalysis` | 结构化输出 POJO（Ch07 落地） |
 | Ch04 | `/api/chat/stream` | POST | `{sessionId, message}` | SSE | 流式对话（`-N` 接收） |
-| Ch04 | `/api/creative/stream` | POST | `{topic}` | SSE | 创意流式 |
+| Ch04 | `/api/creative/stream` | POST | `{topic, sessionId?}` | SSE | 创意流式（带 sessionId 可取消） |
 | Ch04 | `/api/chat/stream/active` | GET | — | JSON | 当前活跃流式会话数 |
 | Ch04 | `/api/chat/stream/cancel` | POST | `{sessionId}` | JSON | 主动取消流式 |
 
