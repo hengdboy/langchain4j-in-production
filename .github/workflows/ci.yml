@@ -82,7 +82,10 @@ jobs:
       - name: Init MySQL schema
         working-directory: hiring-ai-assistant
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client > /dev/null
+          # mysql-client 在 ubuntu-24.04 runner 上 dpkg 链有时是坏的，default-mysql-client 更稳
+          # 错误输出别吞（> /dev/null 会让 CI 日志只剩退出码，无法排查）
+          sudo apt-get update -qq
+          sudo apt-get install -y default-mysql-client
           mysql -h 127.0.0.1 -uhiring -phiring_pass hiringdb < src/main/resources/db/schema.sql
       # 父 pom 的 enforcer 强制 JDK 21（更高版本 Lombok 失效）；
       # runner 默认 JDK 可能更新——setup-java 已把 JAVA_HOME 指到 21
